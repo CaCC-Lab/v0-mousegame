@@ -1,12 +1,31 @@
 {
   "name": "mousegame",
   "version": "0.1.0",
+  "description": "A fun fruit harvest game built with Next.js and Electron",
   "private": true,
+  "main": "electron/main.js",
+  "author": {
+    "name": "Fruit Harvest Game Team",
+    "email": "support@fruitharvestgame.com"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui",
+    "test:e2e:debug": "playwright test --debug",
+    "electron": "electron .",
+    "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:3000 && NODE_ENV=development electron .\"",
+    "electron:build": "npm run build && next export && electron-builder",
+    "dist": "npm run build && next export && electron-builder --publish=never",
+    "build:win": "npm run build && next export && electron-builder --win",
+    "build:mac": "npm run build && next export && electron-builder --mac",
+    "build:linux": "npm run build && next export && electron-builder --linux"
   },
   "dependencies": {
     "@radix-ui/react-dialog": "^1.1.1",
@@ -25,13 +44,49 @@
     "tailwindcss-animate": "^1.0.7"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+    "@types/jest": "^29.5.14",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "concurrently": "^9.1.2",
+    "electron": "^36.3.1",
+    "electron-builder": "^26.0.12",
     "eslint": "^8",
     "eslint-config-next": "14.2.8",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^30.0.0-beta.3",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "wait-on": "^8.0.3",
+    "@playwright/test": "^1.40.0",
+    "axe-playwright": "^2.0.0"
+  },
+  "build": {
+    "appId": "com.fruitharvestgame.app",
+    "productName": "Fruit Harvest Game",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "out/**/*"
+    ],
+    "mac": {
+      "category": "public.app-category.games",
+      "icon": "build/icon.icns"
+    },
+    "win": {
+      "target": "nsis",
+      "icon": "build/icon.ico"
+    },
+    "linux": {
+      "target": "AppImage",
+      "category": "Game",
+      "icon": "build/icon.png"
+    }
   }
 }
