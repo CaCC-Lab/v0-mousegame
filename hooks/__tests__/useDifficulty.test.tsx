@@ -1,129 +1,167 @@
 import { renderHook, act } from '@testing-library/react'
 import { useDifficulty } from '../useDifficulty'
-import { DifficultyManager } from '../../lib/difficultyManager'
 
-jest.mock('../../lib/difficultyManager')
-
+/**
+ * useDifficultyの実装テスト（モックなし）
+ * CLAUDE.md規約に従い、実際の実装をテストします
+ */
 describe('useDifficulty', () => {
-  let mockDifficultyManager: jest.Mocked<DifficultyManager>
-
   beforeEach(() => {
-    mockDifficultyManager = {
-      getCurrentDifficulty: jest.fn().mockReturnValue('normal'),
-      setDifficulty: jest.fn(),
-      getCurrentConfig: jest.fn().mockReturnValue({
-        fruitCount: 10,
-        gameSpeed: 1.0,
-        timeLimitMultiplier: 1.0,
-        fruitSpeedMultiplier: 1.0,
-        scoreMultiplier: 1.0,
-        description: 'バランスの取れた標準的な難易度です',
-      }),
-      getAdjustedGameTime: jest.fn().mockReturnValue(180),
-      getAdjustedScore: jest.fn().mockReturnValue(100),
-      getAvailableDifficulties: jest.fn().mockReturnValue(['easy', 'normal', 'hard']),
-      getDifficultyDescriptions: jest.fn().mockReturnValue({
-        easy: 'フルーツが少なく、時間に余裕があります',
-        normal: 'バランスの取れた標準的な難易度です',
-        hard: 'フルーツが多く、時間制限が厳しくなります',
-      }),
-    } as any
-
-    ;(DifficultyManager as jest.MockedClass<typeof DifficultyManager>).mockImplementation(() => mockDifficultyManager)
-  })
-
-  afterEach(() => {
-    jest.clearAllMocks()
+    localStorage.clear()
   })
 
   describe('Initialization', () => {
-    it('should create difficulty manager instance', () => {
-      renderHook(() => useDifficulty())
-      expect(DifficultyManager).toHaveBeenCalledTimes(1)
-    })
-
-    it('should return current difficulty', () => {
+    it('returns default difficulty on first load', () => {
       const { result } = renderHook(() => useDifficulty())
       expect(result.current.currentDifficulty).toBe('normal')
     })
 
-    it('should return current config', () => {
+    it('returns current config for default difficulty', () => {
       const { result } = renderHook(() => useDifficulty())
-      expect(result.current.currentConfig).toEqual({
-        fruitCount: 10,
-        gameSpeed: 1.0,
-        timeLimitMultiplier: 1.0,
-        fruitSpeedMultiplier: 1.0,
-        scoreMultiplier: 1.0,
-        description: 'バランスの取れた標準的な難易度です',
-      })
+      const config = result.current.currentConfig
+      
+      expect(config).toHaveProperty('fruitCount')
+      expect(config).toHaveProperty('gameSpeed')
+      expect(config).toHaveProperty('timeLimitMultiplier')
+      expect(config).toHaveProperty('fruitSpeedMultiplier')
+      expect(config).toHaveProperty('scoreMultiplier')
+      expect(config).toHaveProperty('description')
+      
+      // Normal difficulty defaults
+      expect(config.fruitCount).toBe(10)
+      expect(config.gameSpeed).toBe(1.0)
+      expect(config.timeLimitMultiplier).toBe(1.0)
+    })
+
+    it('loads saved difficulty from localStorage', () => {
+      // 事前に難易度を保存
+      localStorage.setItem('fruitHarvestDifficulty', 'hard')
+      
+      const { result } = renderHook(() => useDifficulty())
+      expect(result.current.currentDifficulty).toBe('hard')
     })
   })
 
   describe('Difficulty Management', () => {
-    it('should change difficulty', () => {
+    it('changes difficulty', () => {
       const { result } = renderHook(() => useDifficulty())
       
       act(() => {
         result.current.setDifficulty('hard')
       })
       
-      expect(mockDifficultyManager.setDifficulty).toHaveBeenCalledWith('hard')
+      expect(result.current.currentDifficulty).toBe('hard')
+      expect(localStorage.getItem('fruitHarvestDifficulty')).toBe('hard')
     })
 
-    it('should get available difficulties', () => {
+    it('returns available difficulties', () => {
       const { result } = renderHook(() => useDifficulty())
       expect(result.current.availableDifficulties).toEqual(['easy', 'normal', 'hard'])
     })
 
-    it('should get difficulty descriptions', () => {
+    it('returns difficulty descriptions', () => {
       const { result } = renderHook(() => useDifficulty())
-      expect(result.current.difficultyDescriptions).toEqual({
-        easy: 'フルーツが少なく、時間に余裕があります',
-        normal: 'バランスの取れた標準的な難易度です',
-        hard: 'フルーツが多く、時間制限が厳しくなります',
-      })
+      const descriptions = result.current.difficultyDescriptions
+      
+      expect(descriptions).toHaveProperty('easy')
+      expect(descriptions).toHaveProperty('normal')
+      expect(descriptions).toHaveProperty('hard')
+      
+      expect(descriptions.easy).toContain('フルーツが少なく')
+      expect(descriptions.normal).toContain('バランス')
+      expect(descriptions.hard).toContain('フルーツが多く')
     })
   })
 
   describe('Adjusted Values', () => {
-    it('should get adjusted game time', () => {
+    it('calculates adjusted game time based on difficulty', () => {
       const { result } = renderHook(() => useDifficulty())
       
-      const adjustedTime = result.current.getAdjustedGameTime(180)
-      expect(adjustedTime).toBe(180)
-      expect(mockDifficultyManager.getAdjustedGameTime).toHaveBeenCalledWith(180)
+      // Normal difficulty (multiplier = 1.0)
+      expect(result.current.getAdjustedGameTime(180)).toBe(180)
+      
+      // Easy difficulty (multiplier = 1.5)
+      act(() => {
+        result.current.setDifficulty('easy')
+      })
+      expect(result.current.getAdjustedGameTime(180)).toBe(270)
+      
+      // Hard difficulty (multiplier = 0.8)
+      act(() => {
+        result.current.setDifficulty('hard')
+      })
+      expect(result.current.getAdjustedGameTime(180)).toBe(144)
     })
 
-    it('should get adjusted score', () => {
+    it('calculates adjusted score based on difficulty', () => {
       const { result } = renderHook(() => useDifficulty())
       
-      const adjustedScore = result.current.getAdjustedScore(100)
-      expect(adjustedScore).toBe(100)
-      expect(mockDifficultyManager.getAdjustedScore).toHaveBeenCalledWith(100)
+      // Normal difficulty (multiplier = 1.0)
+      expect(result.current.getAdjustedScore(100)).toBe(100)
+      
+      // Easy difficulty (multiplier = 0.8)
+      act(() => {
+        result.current.setDifficulty('easy')
+      })
+      expect(result.current.getAdjustedScore(100)).toBe(80)
+      
+      // Hard difficulty (multiplier = 1.2)
+      act(() => {
+        result.current.setDifficulty('hard')
+      })
+      expect(result.current.getAdjustedScore(100)).toBe(120)
     })
   })
 
   describe('State Updates', () => {
-    it('should update state when difficulty changes', () => {
-      mockDifficultyManager.getCurrentDifficulty.mockReturnValue('hard')
-      mockDifficultyManager.getCurrentConfig.mockReturnValue({
-        fruitCount: 12,
-        gameSpeed: 1.3,
-        timeLimitMultiplier: 0.8,
-        fruitSpeedMultiplier: 1.5,
-        scoreMultiplier: 1.2,
-        description: 'フルーツが多く、時間制限が厳しくなります',
-      })
-
+    it('updates config when difficulty changes', () => {
       const { result } = renderHook(() => useDifficulty())
+      
+      const normalConfig = result.current.currentConfig
+      expect(normalConfig.fruitCount).toBe(10)
+      
+      act(() => {
+        result.current.setDifficulty('easy')
+      })
+      
+      const easyConfig = result.current.currentConfig
+      expect(easyConfig.fruitCount).toBe(8)
+      expect(easyConfig.gameSpeed).toBe(0.8)
       
       act(() => {
         result.current.setDifficulty('hard')
       })
+      
+      const hardConfig = result.current.currentConfig
+      expect(hardConfig.fruitCount).toBe(12)
+      expect(hardConfig.gameSpeed).toBe(1.3)
+    })
 
-      expect(result.current.currentDifficulty).toBe('hard')
-      expect(result.current.currentConfig.fruitCount).toBe(12)
+    it('persists difficulty changes across hook instances', () => {
+      const { result: result1 } = renderHook(() => useDifficulty())
+      
+      act(() => {
+        result1.current.setDifficulty('hard')
+      })
+      
+      // 新しいフックインスタンスを作成
+      const { result: result2 } = renderHook(() => useDifficulty())
+      expect(result2.current.currentDifficulty).toBe('hard')
+    })
+  })
+
+  describe('Edge Cases', () => {
+    it('handles invalid difficulty gracefully', () => {
+      localStorage.setItem('fruitHarvestDifficulty', 'invalid')
+      
+      const { result } = renderHook(() => useDifficulty())
+      // デフォルトのnormalに戻る
+      expect(result.current.currentDifficulty).toBe('normal')
+    })
+
+    it('handles empty localStorage gracefully', () => {
+      const { result } = renderHook(() => useDifficulty())
+      expect(result.current.currentDifficulty).toBe('normal')
     })
   })
 })

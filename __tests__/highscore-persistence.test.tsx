@@ -17,7 +17,7 @@ describe('High Score Persistence', () => {
   })
 
   test('should initialize high score from localStorage', () => {
-    // Set a high score in localStorage
+    // Set a high score in localStorage (JSON stringified as number)
     window.localStorage.setItem('fruitHarvestHighScore', '1000')
     
     const { result } = renderHook(() => useGameLogic())
@@ -75,13 +75,17 @@ describe('High Score Persistence', () => {
     
     // Manually set time to 0 to end game
     act(() => {
-      // Advance time by the game duration
-      jest.advanceTimersByTime(180000) // 3 minutes
+      // Advance time by the game duration (stage 1 is 60 seconds)
+      jest.advanceTimersByTime(60000) // 60 seconds
+    })
+    
+    // Wait for game state to update
+    await waitFor(() => {
+      expect(result.current.gameState).toBe('idle')
     })
     
     // The game should have ended
     expect(result.current.timeLeft).toBe(0)
-    expect(result.current.gameState).toBe('idle')
     
     if (currentScore > 0) {
       expect(result.current.highScore).toBe(currentScore)
@@ -90,7 +94,7 @@ describe('High Score Persistence', () => {
     }
   })
 
-  test('should not update high score if current score is lower', () => {
+  test('should not update high score if current score is lower', async () => {
     jest.useFakeTimers()
     // Set existing high score
     window.localStorage.setItem('fruitHarvestHighScore', '1000')
@@ -109,12 +113,16 @@ describe('High Score Persistence', () => {
     
     // Fast forward to end of game
     act(() => {
-      jest.advanceTimersByTime(180000) // 3 minutes
+      jest.advanceTimersByTime(60000) // 60 seconds
+    })
+    
+    // Wait for game state to update
+    await waitFor(() => {
+      expect(result.current.gameState).toBe('idle')
     })
     
     // Game should have ended
     expect(result.current.timeLeft).toBe(0)
-    expect(result.current.gameState).toBe('idle')
     expect(result.current.highScore).toBe(1000) // Should remain unchanged
     
     // Verify localStorage still has the old high score
@@ -152,12 +160,16 @@ describe('High Score Persistence', () => {
     
     // End first game
     act(() => {
-      jest.advanceTimersByTime(180000) // 3 minutes
+      jest.advanceTimersByTime(60000) // 60 seconds
+    })
+    
+    // Wait for game state to update
+    await waitFor(() => {
+      expect(result.current.gameState).toBe('idle')
     })
     
     // Game should have ended
     expect(result.current.timeLeft).toBe(0)
-    expect(result.current.gameState).toBe('idle')
     
     if (firstGameScore > 0) {
       expect(result.current.highScore).toBe(firstGameScore)
@@ -233,7 +245,7 @@ describe('High Score Persistence', () => {
     })
     
     expect(result.current.isHardMode).toBe(true)
-    expect(window.localStorage.getItem('fruitHarvestHardMode')).toBe('true')
+    expect(window.localStorage.getItem('fruitHarvestHardMode')).toBe('true') // boolean true is stored as string "true"
   })
 
   test('should restore hard mode setting from localStorage', () => {

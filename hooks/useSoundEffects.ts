@@ -50,7 +50,9 @@ export function useSoundEffects(): UseSoundEffectsReturn {
 
   const setVolume = useCallback((newVolume: number) => {
     soundManagerRef.current?.setVolume(newVolume)
-    setVolumeState(newVolume)
+    // SoundManagerがクランプした値を取得
+    const actualVolume = soundManagerRef.current?.getVolume() ?? newVolume
+    setVolumeState(actualVolume)
   }, [])
 
   return {

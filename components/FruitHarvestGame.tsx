@@ -50,6 +50,7 @@ export function FruitHarvestGame() {
     soundEffects,
     difficulty,
     powerUps,
+    activePowerUpEffects,
     stage,
   } = useGameLogic()
 
@@ -64,7 +65,7 @@ export function FruitHarvestGame() {
   } = useAnimation()
   
   const handleStageSelect = useCallback((stageNumber: number) => {
-    const selected = stage.selectStage(stageNumber)
+    const selected = stage?.selectStage(stageNumber) ?? false
     if (selected) {
       setShowStageSelector(false)
       resetGame()
@@ -245,8 +246,8 @@ export function FruitHarvestGame() {
 
   // Check for stage clear when game ends
   useEffect(() => {
-    if (gameState === 'idle' && score > 0 && stage.currentStageInfo) {
-      const isStageCompleted = stage.checkStageCompletion(score, harvestedFruits)
+    if (gameState === 'idle' && score > 0 && stage?.currentStageInfo) {
+      const isStageCompleted = stage?.checkStageCompletion(score, harvestedFruits) ?? false
       if (isStageCompleted) {
         setShowStageClearMessage(true)
         // Trigger stage complete animation at center of game area
@@ -305,9 +306,9 @@ export function FruitHarvestGame() {
                 </span>
               )}
             </div>
-            {stage.currentStageInfo && (
+            {stage?.currentStageInfo && (
               <div className="text-sm font-medium dark:text-white">
-                ステージ {stage.currentStage}: {stage.currentStageInfo.name}
+                ステージ {stage?.currentStage}: {stage?.currentStageInfo?.name}
               </div>
             )}
           </div>
@@ -359,14 +360,14 @@ export function FruitHarvestGame() {
         {/* Harvested Fruits Area */}
         <div className="bg-green-100 dark:bg-green-900 p-4">
           {/* Stage Goals */}
-          {stage.currentStageInfo && (
+          {stage?.currentStageInfo && (
             <div className="mb-3 text-center text-sm dark:text-gray-200">
               <div className="font-medium">ステージ目標:</div>
               <div className="flex justify-center space-x-4 mt-1">
-                <span>スコア: {score} / {stage.currentStageInfo.targetScore}</span>
-                {stage.currentStageInfo.targetFruits.total && (
+                <span>スコア: {score} / {stage?.currentStageInfo?.targetScore}</span>
+                {stage?.currentStageInfo?.targetFruits?.total && (
                   <span>
-                    フルーツ: {Object.values(harvestedFruits).reduce((sum, count) => sum + count, 0)} / {stage.currentStageInfo.targetFruits.total}
+                    フルーツ: {Object.values(harvestedFruits).reduce((sum, count) => sum + count, 0)} / {stage?.currentStageInfo?.targetFruits?.total}
                   </span>
                 )}
               </div>
@@ -387,6 +388,7 @@ export function FruitHarvestGame() {
         {/* Game Play Area */}
         <div
           ref={gameAreaRef}
+          data-testid="game-area"
           className="relative h-[60vh] bg-green-300 dark:bg-green-800 overflow-hidden select-none"
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
@@ -541,8 +543,8 @@ export function FruitHarvestGame() {
       {/* Stage Selector Dialog */}
       {showStageSelector && (
         <StageSelector
-          stages={stage.allStages}
-          currentStage={stage.currentStage}
+          stages={stage?.allStages ?? []}
+          currentStage={stage?.currentStage ?? 1}
           onSelectStage={handleStageSelect}
           onClose={() => setShowStageSelector(false)}
         />
@@ -558,12 +560,12 @@ export function FruitHarvestGame() {
             className="bg-yellow-400 dark:bg-yellow-600 text-white px-8 py-6 rounded-lg shadow-2xl"
           >
             <h2 className="text-3xl font-bold mb-2">🎉 ステージクリア！ 🎉</h2>
-            <p className="text-lg text-center">ステージ {stage.currentStage} をクリアしました！</p>
+            <p className="text-lg text-center">ステージ {stage?.currentStage} をクリアしました！</p>
             <div className="mt-4 flex justify-center space-x-4">
               <Button
                 onClick={() => {
                   setShowStageClearMessage(false)
-                  stage.nextStage()
+                  stage?.nextStage()
                   resetGame()
                 }}
                 className="pointer-events-auto bg-green-500 hover:bg-green-600 text-white"

@@ -1,16 +1,19 @@
 import { AnimationManager } from '../animationManager'
 import { AnimationType, ParticleEffect } from '../../types/animation'
 
+/**
+ * AnimationManagerの実装テスト（モックなし）
+ * CLAUDE.md規約に従い、実際の実装をテストします
+ */
 describe('AnimationManager', () => {
   let manager: AnimationManager
 
   beforeEach(() => {
     manager = new AnimationManager()
-    jest.clearAllMocks()
   })
 
   describe('constructor', () => {
-    it('should initialize with empty particles and no combo', () => {
+    it('initializes with empty particles and no combo', () => {
       expect(manager.getParticles()).toEqual([])
       expect(manager.getComboInfo()).toEqual({
         count: 0,
@@ -22,7 +25,7 @@ describe('AnimationManager', () => {
   })
 
   describe('createParticleEffect', () => {
-    it('should create particle effects for fruit collection', () => {
+    it('creates particle effects for fruit collection', () => {
       const particles = manager.createParticleEffect(100, 200, 'fruitCollect')
       
       expect(particles).toBeInstanceOf(Array)
@@ -40,14 +43,14 @@ describe('AnimationManager', () => {
       })
     })
 
-    it('should create different particles for power-up collection', () => {
+    it('creates different particles for power-up collection', () => {
       const particles = manager.createParticleEffect(150, 250, 'powerUpCollect')
       
       expect(particles.length).toBeGreaterThan(5)
       expect(particles.some(p => p.type === 'star')).toBe(true)
     })
 
-    it('should create confetti for stage completion', () => {
+    it('creates confetti for stage completion', () => {
       const particles = manager.createParticleEffect(400, 300, 'stageComplete')
       
       expect(particles.length).toBeGreaterThan(20)
@@ -56,14 +59,14 @@ describe('AnimationManager', () => {
   })
 
   describe('addParticles', () => {
-    it('should add particles to the manager', () => {
+    it('adds particles to the manager', () => {
       const particles = manager.createParticleEffect(100, 100, 'fruitCollect')
       manager.addParticles(particles)
       
       expect(manager.getParticles().length).toBe(particles.length)
     })
 
-    it('should append to existing particles', () => {
+    it('appends to existing particles', () => {
       const particles1 = manager.createParticleEffect(100, 100, 'fruitCollect')
       const particles2 = manager.createParticleEffect(200, 200, 'powerUpCollect')
       
@@ -75,7 +78,7 @@ describe('AnimationManager', () => {
   })
 
   describe('updateParticles', () => {
-    it('should update particle positions based on velocity', () => {
+    it('updates particle positions based on velocity', () => {
       const particle: ParticleEffect = {
         id: '1',
         x: 100,
@@ -95,7 +98,7 @@ describe('AnimationManager', () => {
       expect(updatedParticles[0].y).toBeCloseTo(99.68) // 100 + (-20 * 0.016)
     })
 
-    it('should apply gravity if specified', () => {
+    it('applies gravity if specified', () => {
       const particle: ParticleEffect = {
         id: '1',
         x: 100,
@@ -116,7 +119,7 @@ describe('AnimationManager', () => {
       expect(updatedParticles[0].y).toBeCloseTo(105) // 100 + (50 * 0.1)
     })
 
-    it('should remove expired particles', () => {
+    it('removes expired particles', () => {
       const particle: ParticleEffect = {
         id: '1',
         x: 100,
@@ -136,7 +139,7 @@ describe('AnimationManager', () => {
   })
 
   describe('combo system', () => {
-    it('should track combo count', () => {
+    it('tracks combo count', () => {
       manager.recordFruitCollect()
       expect(manager.getComboInfo().count).toBe(1)
       
@@ -144,41 +147,37 @@ describe('AnimationManager', () => {
       expect(manager.getComboInfo().count).toBe(2)
     })
 
-    it('should reset combo after time window', () => {
-      jest.spyOn(Date, 'now')
-        .mockReturnValueOnce(1000)
-        .mockReturnValueOnce(1500) // Within 2s window
-        .mockReturnValueOnce(4000) // Outside 2s window
-      
+    it('resets combo after time window', async () => {
+      // 最初のフルーツを収集
       manager.recordFruitCollect()
       expect(manager.getComboInfo().count).toBe(1)
       
+      // 少し待つ（時間窓内）
+      await new Promise(resolve => setTimeout(resolve, 100))
       manager.recordFruitCollect()
       expect(manager.getComboInfo().count).toBe(2)
       
+      // 時間窓を超えて待つ
+      await new Promise(resolve => setTimeout(resolve, 2100))
       manager.recordFruitCollect()
-      expect(manager.getComboInfo().count).toBe(1) // Reset
+      expect(manager.getComboInfo().count).toBe(1) // リセットされる
     })
 
-    it('should calculate combo multiplier', () => {
-      jest.spyOn(Date, 'now').mockReturnValue(1000)
-      
-      // Build up combo
+    it('calculates combo multiplier', () => {
+      // コンボを構築
       for (let i = 0; i < 3; i++) {
         manager.recordFruitCollect()
       }
       expect(manager.getComboInfo().multiplier).toBe(1.5)
       
-      // Continue to 5
+      // 5まで続ける
       for (let i = 0; i < 2; i++) {
         manager.recordFruitCollect()
       }
       expect(manager.getComboInfo().multiplier).toBe(2.0)
     })
 
-    it('should get combo message', () => {
-      jest.spyOn(Date, 'now').mockReturnValue(1000)
-      
+    it('gets combo message', () => {
       expect(manager.getComboMessage()).toBeNull()
       
       for (let i = 0; i < 3; i++) {
@@ -186,10 +185,26 @@ describe('AnimationManager', () => {
       }
       expect(manager.getComboMessage()).toBe('コンボ x3!')
     })
+
+    it('maintains combo within time window', () => {
+      // 連続してフルーツを収集
+      const initialTime = Date.now()
+      
+      manager.recordFruitCollect()
+      const firstComboInfo = manager.getComboInfo()
+      expect(firstComboInfo.count).toBe(1)
+      expect(firstComboInfo.lastCollectTime).toBeGreaterThanOrEqual(initialTime)
+      
+      // すぐに次を収集
+      manager.recordFruitCollect()
+      const secondComboInfo = manager.getComboInfo()
+      expect(secondComboInfo.count).toBe(2)
+      expect(secondComboInfo.lastCollectTime).toBeGreaterThan(firstComboInfo.lastCollectTime)
+    })
   })
 
   describe('animation presets', () => {
-    it('should get animation config for type', () => {
+    it('gets animation config for type', () => {
       const config = manager.getAnimationConfig('fruitCollect')
       
       expect(config).toHaveProperty('duration')
@@ -198,7 +213,7 @@ describe('AnimationManager', () => {
       expect(config.type).toBe('fruitCollect')
     })
 
-    it('should return ui transition for unknown type', () => {
+    it('returns ui transition for unknown type', () => {
       const config = manager.getAnimationConfig('unknown' as AnimationType)
       
       expect(config.type).toBe('uiTransition')
@@ -206,7 +221,7 @@ describe('AnimationManager', () => {
   })
 
   describe('clearParticles', () => {
-    it('should clear all particles', () => {
+    it('clears all particles', () => {
       const particles = manager.createParticleEffect(100, 100, 'fruitCollect')
       manager.addParticles(particles)
       
@@ -217,7 +232,7 @@ describe('AnimationManager', () => {
   })
 
   describe('reset', () => {
-    it('should reset particles and combo', () => {
+    it('resets particles and combo', () => {
       manager.addParticles(manager.createParticleEffect(100, 100, 'fruitCollect'))
       manager.recordFruitCollect()
       manager.recordFruitCollect()

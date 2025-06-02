@@ -28,8 +28,9 @@ describe('Internationalization (i18n)', () => {
     test('should display current language', () => {
       render(<FruitHarvestGame />)
       
-      // Should show current language (default Japanese)
-      expect(screen.getByText(/日本語|ja/i)).toBeInTheDocument()
+      // Should show current language (default Japanese) - button shows JA
+      const languageButton = screen.getByRole('button', { name: /language/i })
+      expect(languageButton).toHaveTextContent(/JA/i)
     })
 
     test('should toggle between Japanese and English', async () => {
@@ -39,14 +40,14 @@ describe('Internationalization (i18n)', () => {
       const languageToggle = screen.getByRole('button', { name: /language|言語|en|ja/i })
       
       // Initially in Japanese
-      expect(screen.getByText(/得点:/)).toBeInTheDocument()
+      expect(screen.getAllByText(/得点:/).length).toBeGreaterThan(0)
       expect(screen.getByText(/最高得点:/)).toBeInTheDocument()
       
       // Click to switch to English
       await user.click(languageToggle)
       
       await waitFor(() => {
-        expect(screen.getByText(/Score:/)).toBeInTheDocument()
+        expect(screen.getAllByText(/Score:/).length).toBeGreaterThan(0)
         expect(screen.getByText(/High Score:/)).toBeInTheDocument()
       })
       
@@ -54,7 +55,7 @@ describe('Internationalization (i18n)', () => {
       await user.click(languageToggle)
       
       await waitFor(() => {
-        expect(screen.getByText(/得点:/)).toBeInTheDocument()
+        expect(screen.getAllByText(/得点:/).length).toBeGreaterThan(0)
         expect(screen.getByText(/最高得点:/)).toBeInTheDocument()
       })
     })
@@ -70,24 +71,24 @@ describe('Internationalization (i18n)', () => {
       // Switch to English
       await user.click(languageToggle)
       
-      // Check localStorage
-      expect(window.localStorage.getItem('fruitHarvestLanguage')).toBe('en')
+      // Check localStorage (should be JSON stringified)
+      expect(window.localStorage.getItem('fruitHarvestLanguage')).toBe('"en"')
       
       // Switch back to Japanese
       await user.click(languageToggle)
       
-      // Check localStorage
-      expect(window.localStorage.getItem('fruitHarvestLanguage')).toBe('ja')
+      // Check localStorage (should be JSON stringified)
+      expect(window.localStorage.getItem('fruitHarvestLanguage')).toBe('"ja"')
     })
 
     test('should restore language preference from localStorage', () => {
-      // Set English in localStorage
-      window.localStorage.setItem('fruitHarvestLanguage', 'en')
+      // Set English in localStorage (JSON stringified)
+      window.localStorage.setItem('fruitHarvestLanguage', '"en"')
       
       render(<FruitHarvestGame />)
       
       // Should be in English
-      expect(screen.getByText(/Score:/)).toBeInTheDocument()
+      expect(screen.getAllByText(/Score:/).length).toBeGreaterThan(0)
       expect(screen.getByText(/High Score:/)).toBeInTheDocument()
     })
   })
@@ -105,8 +106,8 @@ describe('Internationalization (i18n)', () => {
 
     test('should translate game controls in English', async () => {
       const user = userEvent.setup()
-      // Set to English
-      window.localStorage.setItem('fruitHarvestLanguage', 'en')
+      // Set to English (JSON stringified)
+      window.localStorage.setItem('fruitHarvestLanguage', '"en"')
       
       render(<FruitHarvestGame />)
       
@@ -121,15 +122,17 @@ describe('Internationalization (i18n)', () => {
       const user = userEvent.setup()
       render(<FruitHarvestGame />)
       
-      // Japanese format
-      expect(screen.getByText(/分.*秒/)).toBeInTheDocument()
+      // Japanese format (1分00秒)
+      expect(screen.getByText(/\d+分\d+秒/)).toBeInTheDocument()
       
       // Switch to English
       const languageToggle = screen.getByRole('button', { name: /language|言語|en|ja/i })
       await user.click(languageToggle)
       
-      // English format
-      expect(screen.getByText(/min.*sec|:/)).toBeInTheDocument()
+      // English format (1:00)
+      await waitFor(() => {
+        expect(screen.getByText(/\d+:\d{2}/)).toBeInTheDocument()
+      })
     })
 
     test('should translate pause/resume text', async () => {
@@ -164,15 +167,15 @@ describe('Internationalization (i18n)', () => {
       // Check Japanese content
       await waitFor(() => {
         expect(screen.getByText('フルーツハーベストゲームのあそびかた')).toBeInTheDocument()
-        expect(screen.getByText(/りんご: クリックして収穫/)).toBeInTheDocument()
+        expect(screen.getByText(/🍎 りんご: クリックして収穫/)).toBeInTheDocument()
         expect(screen.getByText(/制限時間は3分間です/)).toBeInTheDocument()
       })
     })
 
     test('should translate help dialog content in English', async () => {
       const user = userEvent.setup()
-      // Set to English
-      window.localStorage.setItem('fruitHarvestLanguage', 'en')
+      // Set to English (JSON stringified)
+      window.localStorage.setItem('fruitHarvestLanguage', '"en"')
       
       render(<FruitHarvestGame />)
       
@@ -183,7 +186,7 @@ describe('Internationalization (i18n)', () => {
       // Check English content
       await waitFor(() => {
         expect(screen.getByText('How to Play Fruit Harvest Game')).toBeInTheDocument()
-        expect(screen.getByText(/Apple: Click to harvest/)).toBeInTheDocument()
+        expect(screen.getByText(/🍎 Apple: Click to harvest/)).toBeInTheDocument()
         expect(screen.getByText(/Time limit is 3 minutes/)).toBeInTheDocument()
       })
     })
@@ -200,7 +203,7 @@ describe('Internationalization (i18n)', () => {
       render(<FruitHarvestGame />)
       
       // Should default to English
-      expect(screen.getByText(/Score:/)).toBeInTheDocument()
+      expect(screen.getAllByText(/Score:/).length).toBeGreaterThan(0)
     })
 
     test('should fallback to Japanese for unsupported languages', () => {
@@ -213,7 +216,7 @@ describe('Internationalization (i18n)', () => {
       render(<FruitHarvestGame />)
       
       // Should fallback to Japanese
-      expect(screen.getByText(/得点:/)).toBeInTheDocument()
+      expect(screen.getAllByText(/得点:/).length).toBeGreaterThan(0)
     })
 
     test('should override system language with saved preference', () => {
@@ -223,13 +226,13 @@ describe('Internationalization (i18n)', () => {
         configurable: true,
       })
       
-      // But user preference is Japanese
-      window.localStorage.setItem('fruitHarvestLanguage', 'ja')
+      // But user preference is Japanese (JSON stringified)
+      window.localStorage.setItem('fruitHarvestLanguage', '"ja"')
       
       render(<FruitHarvestGame />)
       
       // Should use Japanese
-      expect(screen.getByText(/得点:/)).toBeInTheDocument()
+      expect(screen.getAllByText(/得点:/).length).toBeGreaterThan(0)
     })
   })
 })

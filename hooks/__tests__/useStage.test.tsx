@@ -1,89 +1,66 @@
 import { renderHook, act } from '@testing-library/react'
 import { useStage } from '../useStage'
-import { StageManager } from '../../lib/stageManager'
 import { HarvestedFruits } from '../../types/game'
 
-// Mock StageManager
-jest.mock('../../lib/stageManager')
-const MockedStageManager = StageManager as jest.MockedClass<typeof StageManager>
-
+/**
+ * useStageの実装テスト（モックなし）
+ * CLAUDE.md規約に従い、実際の実装をテストします
+ */
 describe('useStage', () => {
-  let mockManager: jest.Mocked<StageManager>
-
   beforeEach(() => {
-    jest.clearAllMocks()
-    
-    mockManager = {
-      getCurrentStage: jest.fn().mockReturnValue(1),
-      getStageInfo: jest.fn().mockReturnValue({
-        number: 1,
-        name: 'フルーツ畑',
-        description: 'フルーツ収穫の基本を学びましょう',
-        targetScore: 100,
-        targetFruits: { total: 10 },
-        timeLimit: 60,
-        unlocked: true,
-        completed: false,
-        highScore: 0,
-        difficulty: {
-          fruitCount: 8,
-          fruitSpeed: 1.0,
-          powerUpSpawnRate: 0.1
-        }
-      }),
-      getCompletedStages: jest.fn().mockReturnValue([]),
-      isStageCompleted: jest.fn().mockReturnValue(false),
-      completeStage: jest.fn(),
-      moveToNextStage: jest.fn().mockReturnValue(true),
-      selectStage: jest.fn().mockReturnValue(true),
-      getTotalScore: jest.fn().mockReturnValue(0),
-      getAllStages: jest.fn().mockReturnValue([]),
-      reset: jest.fn()
-    } as any
-
-    MockedStageManager.mockImplementation(() => mockManager)
+    localStorage.clear()
   })
 
   describe('initialization', () => {
-    it('should initialize with stage manager', () => {
+    it('initializes with stage 1', () => {
       const { result } = renderHook(() => useStage())
       
       expect(result.current.currentStage).toBe(1)
       expect(result.current.currentStageInfo).toBeDefined()
       expect(result.current.currentStageInfo?.name).toBe('フルーツ畑')
+      expect(result.current.currentStageInfo?.unlocked).toBe(true)
     })
 
-    it('should create StageManager instance', () => {
-      renderHook(() => useStage())
+    it('loads saved stage progress', () => {
+      // 事前にプログレスを保存
+      const savedProgress = {
+        currentStage: 2,
+        completedStages: [1],
+        totalScore: 150,
+        unlockedStages: [1, 2]
+      }
+      localStorage.setItem('stageProgress', JSON.stringify(savedProgress))
       
-      expect(MockedStageManager).toHaveBeenCalledTimes(1)
+      const { result } = renderHook(() => useStage())
+      
+      expect(result.current.currentStage).toBe(2)
+      expect(result.current.completedStages).toEqual([1])
+      expect(result.current.totalScore).toBe(150)
     })
   })
 
   describe('checkStageCompletion', () => {
-    it('should check if stage is completed', () => {
+    it('checks if stage is completed', () => {
       const { result } = renderHook(() => useStage())
       
-      const score = 150
+      const score = 50
       const harvestedFruits: HarvestedFruits = {
-        apple: 5,
-        blueberry: 3,
-        lemon: 2,
-        watermelon: 2
+        apple: 2,
+        blueberry: 2,
+        lemon: 1,
+        watermelon: 1
       }
       
-      let isCompleted
+      let isCompleted = false
       act(() => {
         isCompleted = result.current.checkStageCompletion(score, harvestedFruits)
       })
       
-      expect(mockManager.isStageCompleted).toHaveBeenCalledWith(1, score, harvestedFruits)
+      // Stage 1 requires 100 score and 10 total fruits
       expect(isCompleted).toBe(false)
     })
 
-    it('should complete stage when requirements are met', () => {
-      mockManager.isStageCompleted.mockReturnValue(true)
-      
+    it('completes stage when requirements are met', () => {
       const { result } = renderHook(() => useStage())
       
       const score = 150
@@ -94,134 +71,172 @@ describe('useStage', () => {
         watermelon: 2
       }
       
-      let isCompleted
+      let isCompleted = false
       act(() => {
         isCompleted = result.current.checkStageCompletion(score, harvestedFruits)
       })
       
-      expect(mockManager.completeStage).toHaveBeenCalledWith(1, score)
       expect(isCompleted).toBe(true)
+      expect(result.current.completedStages).toContain(1)
+      expect(result.current.currentStageInfo?.completed).toBe(true)
+      expect(result.current.currentStageInfo?.highScore).toBeGreaterThanOrEqual(score)
+    })
+
+    it('unlocks next stage after completion', () => {
+      const { result } = renderHook(() => useStage())
+      
+      const score = 150
+      const harvestedFruits: HarvestedFruits = {
+        apple: 5,
+        blueberry: 3,
+        lemon: 2,
+        watermelon: 2
+      }
+      
+      act(() => {
+        result.current.checkStageCompletion(score, harvestedFruits)
+      })
+      
+      // Stage 2 should be unlocked
+      const stage2 = result.current.allStages.find(s => s.number === 2)
+      expect(stage2?.unlocked).toBe(true)
     })
   })
 
   describe('nextStage', () => {
-    it('should move to next stage', () => {
+    it('moves to next stage when available', () => {
       const { result } = renderHook(() => useStage())
       
-      let moved
+      // まずステージ1を完了
+      const score = 150
+      const harvestedFruits: HarvestedFruits = {
+        apple: 5,
+        blueberry: 3,
+        lemon: 2,
+        watermelon: 2
+      }
+      
+      act(() => {
+        result.current.checkStageCompletion(score, harvestedFruits)
+      })
+      
+      let moved = false
       act(() => {
         moved = result.current.nextStage()
       })
       
-      expect(mockManager.moveToNextStage).toHaveBeenCalled()
       expect(moved).toBe(true)
-    })
-
-    it('should update current stage info after moving', () => {
-      mockManager.getCurrentStage.mockReturnValue(2)
-      mockManager.getStageInfo.mockReturnValue({
-        number: 2,
-        name: 'リンゴ園',
-        description: 'リンゴを中心に収穫しましょう',
-        targetScore: 200,
-        targetFruits: { apple: 10, total: 20 },
-        timeLimit: 90,
-        unlocked: true,
-        completed: false,
-        highScore: 0,
-        difficulty: {
-          fruitCount: 10,
-          fruitSpeed: 1.2,
-          powerUpSpawnRate: 0.15
-        }
-      })
-      
-      const { result } = renderHook(() => useStage())
-      
-      act(() => {
-        result.current.nextStage()
-      })
-      
       expect(result.current.currentStage).toBe(2)
       expect(result.current.currentStageInfo?.name).toBe('リンゴ園')
+    })
+
+    it('does not move if next stage is locked', () => {
+      const { result } = renderHook(() => useStage())
+      
+      // ステージ1を完了していない状態
+      let moved = false
+      act(() => {
+        moved = result.current.nextStage()
+      })
+      
+      expect(moved).toBe(false)
+      expect(result.current.currentStage).toBe(1)
     })
   })
 
   describe('selectStage', () => {
-    it('should select a specific stage', () => {
+    it('selects an unlocked stage', () => {
       const { result } = renderHook(() => useStage())
       
-      let selected
+      // ステージ1と2を完了
+      act(() => {
+        const score = 150
+        const harvestedFruits: HarvestedFruits = {
+          apple: 5,
+          blueberry: 3,
+          lemon: 2,
+          watermelon: 2
+        }
+        result.current.checkStageCompletion(score, harvestedFruits)
+        result.current.nextStage()
+        
+        // ステージ2も完了
+        const score2 = 250
+        const harvestedFruits2: HarvestedFruits = {
+          apple: 12,
+          blueberry: 5,
+          lemon: 3,
+          watermelon: 2
+        }
+        result.current.checkStageCompletion(score2, harvestedFruits2)
+      })
+      
+      let selected = false
+      act(() => {
+        selected = result.current.selectStage(1)
+      })
+      
+      expect(selected).toBe(true)
+      expect(result.current.currentStage).toBe(1)
+    })
+
+    it('does not select a locked stage', () => {
+      const { result } = renderHook(() => useStage())
+      
+      let selected = false
       act(() => {
         selected = result.current.selectStage(3)
       })
       
-      expect(mockManager.selectStage).toHaveBeenCalledWith(3)
-      expect(selected).toBe(true)
-    })
-
-    it('should update current stage info after selecting', () => {
-      mockManager.getCurrentStage.mockReturnValue(3)
-      mockManager.getStageInfo.mockReturnValue({
-        number: 3,
-        name: 'ブルーベリー農園',
-        description: 'ブルーベリーのダブルクリックに挑戦',
-        targetScore: 300,
-        targetFruits: { blueberry: 15, total: 30 },
-        timeLimit: 90,
-        unlocked: true,
-        completed: false,
-        highScore: 0,
-        difficulty: {
-          fruitCount: 10,
-          fruitSpeed: 1.3,
-          powerUpSpawnRate: 0.2
-        }
-      })
-      
-      const { result } = renderHook(() => useStage())
-      
-      act(() => {
-        result.current.selectStage(3)
-      })
-      
-      expect(result.current.currentStage).toBe(3)
-      expect(result.current.currentStageInfo?.name).toBe('ブルーベリー農園')
+      expect(selected).toBe(false)
+      expect(result.current.currentStage).toBe(1)
     })
   })
 
   describe('getAllStages', () => {
-    it('should return all stages', () => {
-      const allStages = [
-        { number: 1, name: 'Stage 1', unlocked: true, completed: true },
-        { number: 2, name: 'Stage 2', unlocked: true, completed: false },
-        { number: 3, name: 'Stage 3', unlocked: false, completed: false }
-      ]
-      mockManager.getAllStages.mockReturnValue(allStages as any)
-      
+    it('returns all stages with their current state', () => {
       const { result } = renderHook(() => useStage())
       
-      expect(result.current.allStages).toEqual(allStages)
+      expect(result.current.allStages).toHaveLength(6)
+      expect(result.current.allStages[0].unlocked).toBe(true)
+      expect(result.current.allStages[1].unlocked).toBe(false)
+      
+      // ステージ1を完了
+      act(() => {
+        const score = 150
+        const harvestedFruits: HarvestedFruits = {
+          apple: 5,
+          blueberry: 3,
+          lemon: 2,
+          watermelon: 2
+        }
+        result.current.checkStageCompletion(score, harvestedFruits)
+      })
+      
+      expect(result.current.allStages[0].completed).toBe(true)
+      expect(result.current.allStages[1].unlocked).toBe(true)
     })
   })
 
   describe('reset', () => {
-    it('should reset stage progress', () => {
+    it('resets all stage progress', () => {
       const { result } = renderHook(() => useStage())
       
+      // いくつかのステージを完了
       act(() => {
-        result.current.reset()
+        const score = 150
+        const harvestedFruits: HarvestedFruits = {
+          apple: 5,
+          blueberry: 3,
+          lemon: 2,
+          watermelon: 2
+        }
+        result.current.checkStageCompletion(score, harvestedFruits)
+        result.current.nextStage()
       })
       
-      expect(mockManager.reset).toHaveBeenCalled()
-    })
-
-    it('should update state after reset', () => {
-      mockManager.getCurrentStage.mockReturnValue(1)
-      mockManager.getCompletedStages.mockReturnValue([])
-      mockManager.getTotalScore.mockReturnValue(0)
-      
-      const { result } = renderHook(() => useStage())
+      expect(result.current.currentStage).toBe(2)
+      expect(result.current.completedStages.length).toBeGreaterThan(0)
       
       act(() => {
         result.current.reset()
@@ -230,6 +245,58 @@ describe('useStage', () => {
       expect(result.current.currentStage).toBe(1)
       expect(result.current.completedStages).toEqual([])
       expect(result.current.totalScore).toBe(0)
+      expect(result.current.currentStageInfo?.completed).toBe(false)
+      expect(result.current.currentStageInfo?.highScore).toBe(0)
+    })
+
+    it('clears localStorage on reset', () => {
+      const { result } = renderHook(() => useStage())
+      
+      // ステージを進める
+      act(() => {
+        const score = 150
+        const harvestedFruits: HarvestedFruits = {
+          apple: 5,
+          blueberry: 3,
+          lemon: 2,
+          watermelon: 2
+        }
+        result.current.checkStageCompletion(score, harvestedFruits)
+      })
+      
+      expect(localStorage.getItem('stageProgress')).toBeTruthy()
+      
+      act(() => {
+        result.current.reset()
+      })
+      
+      expect(localStorage.getItem('stageProgress')).toBeNull()
+    })
+  })
+
+  describe('stage persistence', () => {
+    it('maintains progress across hook instances', () => {
+      const { result: result1 } = renderHook(() => useStage())
+      
+      // 最初のインスタンスでステージを進める
+      act(() => {
+        const score = 150
+        const harvestedFruits: HarvestedFruits = {
+          apple: 5,
+          blueberry: 3,
+          lemon: 2,
+          watermelon: 2
+        }
+        result1.current.checkStageCompletion(score, harvestedFruits)
+        result1.current.nextStage()
+      })
+      
+      // 新しいインスタンスを作成
+      const { result: result2 } = renderHook(() => useStage())
+      
+      expect(result2.current.currentStage).toBe(2)
+      expect(result2.current.completedStages).toContain(1)
+      expect(result2.current.allStages[0].completed).toBe(true)
     })
   })
 })

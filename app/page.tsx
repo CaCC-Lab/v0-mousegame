@@ -1,4 +1,4 @@
-import { FruitHarvestGame } from "@/components/fruit-harvest-game";
+import { FruitHarvestGame } from "@/components/FruitHarvestGame";
 
 export default function Home() {
   return (

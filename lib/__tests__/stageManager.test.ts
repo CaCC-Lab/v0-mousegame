@@ -1,67 +1,64 @@
 import { StageManager } from '../stageManager'
 import { HarvestedFruits } from '../../types/game'
 
-// Mock localStorage
-const mockLocalStorage = {
-  getItem: jest.fn(),
-  setItem: jest.fn(),
-  removeItem: jest.fn(),
-  clear: jest.fn(),
-  length: 0,
-  key: jest.fn()
-}
-
-Object.defineProperty(window, 'localStorage', {
-  value: mockLocalStorage,
-  writable: true
-})
-
+/**
+ * StageManagerの実装テスト（モックなし）
+ * CLAUDE.md規約に従い、実際の実装をテストします
+ */
 describe('StageManager', () => {
   let manager: StageManager
 
   beforeEach(() => {
-    jest.clearAllMocks()
-    mockLocalStorage.getItem.mockReturnValue(null)
+    localStorage.clear()
     manager = new StageManager()
   })
 
   describe('constructor', () => {
-    it('should initialize with stage 1', () => {
+    it('initializes with stage 1', () => {
       expect(manager.getCurrentStage()).toBe(1)
       expect(manager.getStageInfo(1)?.unlocked).toBe(true)
     })
 
-    it('should load saved progress from localStorage', () => {
+    it('loads saved progress from localStorage', () => {
+      // 事前にプログレスを保存
       const savedProgress = {
         currentStage: 3,
         completedStages: [1, 2],
         totalScore: 500,
         unlockedStages: [1, 2, 3]
       }
-      mockLocalStorage.getItem.mockReturnValue(JSON.stringify(savedProgress))
+      localStorage.setItem('stageProgress', JSON.stringify(savedProgress))
       
       const savedManager = new StageManager()
       expect(savedManager.getCurrentStage()).toBe(3)
       expect(savedManager.getCompletedStages()).toEqual([1, 2])
     })
+
+    it('handles invalid localStorage data gracefully', () => {
+      localStorage.setItem('stageProgress', 'invalid json')
+      
+      const newManager = new StageManager()
+      expect(newManager.getCurrentStage()).toBe(1)
+      expect(newManager.getCompletedStages()).toEqual([])
+    })
   })
 
   describe('getStageInfo', () => {
-    it('should return stage information', () => {
+    it('returns stage information', () => {
       const stage1 = manager.getStageInfo(1)
       expect(stage1).toBeDefined()
       expect(stage1?.name).toBe('フルーツ畑')
       expect(stage1?.targetScore).toBe(100)
     })
 
-    it('should return null for invalid stage', () => {
+    it('returns null for invalid stage', () => {
       expect(manager.getStageInfo(0)).toBeNull()
       expect(manager.getStageInfo(999)).toBeNull()
     })
   })
 
   describe('isStageCompleted', () => {
-    it('should check if stage requirements are met', () => {
+    it('checks if stage requirements are met', () => {
       const score = 150
       const harvestedFruits: HarvestedFruits = {
         apple: 5,
@@ -74,7 +71,7 @@ describe('StageManager', () => {
       expect(manager.isStageCompleted(1, score, harvestedFruits)).toBe(true)
     })
 
-    it('should fail if score requirement not met', () => {
+    it('fails if score requirement not met', () => {
       const score = 50
       const harvestedFruits: HarvestedFruits = {
         apple: 5,
@@ -86,7 +83,7 @@ describe('StageManager', () => {
       expect(manager.isStageCompleted(1, score, harvestedFruits)).toBe(false)
     })
 
-    it('should fail if fruit requirement not met', () => {
+    it('fails if fruit requirement not met', () => {
       const score = 150
       const harvestedFruits: HarvestedFruits = {
         apple: 2,
@@ -98,7 +95,7 @@ describe('StageManager', () => {
       expect(manager.isStageCompleted(1, score, harvestedFruits)).toBe(false)
     })
 
-    it('should check specific fruit requirements', () => {
+    it('checks specific fruit requirements', () => {
       const score = 250
       const harvestedFruits: HarvestedFruits = {
         apple: 12,
@@ -113,7 +110,7 @@ describe('StageManager', () => {
   })
 
   describe('completeStage', () => {
-    it('should mark stage as completed and unlock next stage', () => {
+    it('marks stage as completed and unlocks next stage', () => {
       const score = 150
       manager.completeStage(1, score)
       
@@ -123,32 +120,34 @@ describe('StageManager', () => {
       expect(manager.getCompletedStages()).toContain(1)
     })
 
-    it('should update high score if better', () => {
+    it('updates high score if better', () => {
       manager.completeStage(1, 150)
       manager.completeStage(1, 200)
       
       expect(manager.getStageInfo(1)?.highScore).toBe(200)
     })
 
-    it('should not update high score if worse', () => {
+    it('does not update high score if worse', () => {
       manager.completeStage(1, 200)
       manager.completeStage(1, 150)
       
       expect(manager.getStageInfo(1)?.highScore).toBe(200)
     })
 
-    it('should save progress to localStorage', () => {
+    it('saves progress to localStorage', () => {
       manager.completeStage(1, 150)
       
-      expect(mockLocalStorage.setItem).toHaveBeenCalledWith(
-        'stageProgress',
-        expect.any(String)
-      )
+      const savedData = localStorage.getItem('stageProgress')
+      expect(savedData).toBeTruthy()
+      
+      const parsed = JSON.parse(savedData!)
+      expect(parsed.completedStages).toContain(1)
+      expect(parsed.unlockedStages).toContain(2)
     })
   })
 
   describe('moveToNextStage', () => {
-    it('should advance to next stage if available', () => {
+    it('advances to next stage if available', () => {
       manager.completeStage(1, 150)
       const moved = manager.moveToNextStage()
       
@@ -156,15 +155,15 @@ describe('StageManager', () => {
       expect(manager.getCurrentStage()).toBe(2)
     })
 
-    it('should not advance if next stage is locked', () => {
+    it('does not advance if next stage is locked', () => {
       const moved = manager.moveToNextStage()
       
       expect(moved).toBe(false)
       expect(manager.getCurrentStage()).toBe(1)
     })
 
-    it('should not advance past last stage', () => {
-      // Complete all stages
+    it('does not advance past last stage', () => {
+      // すべてのステージを完了
       for (let i = 1; i <= 5; i++) {
         manager.completeStage(i, 1000)
         manager.moveToNextStage()
@@ -177,7 +176,7 @@ describe('StageManager', () => {
   })
 
   describe('selectStage', () => {
-    it('should select unlocked stage', () => {
+    it('selects unlocked stage', () => {
       manager.completeStage(1, 150)
       manager.completeStage(2, 250)
       
@@ -186,25 +185,38 @@ describe('StageManager', () => {
       expect(manager.getCurrentStage()).toBe(2)
     })
 
-    it('should not select locked stage', () => {
+    it('does not select locked stage', () => {
       const selected = manager.selectStage(3)
       expect(selected).toBe(false)
+      expect(manager.getCurrentStage()).toBe(1)
+    })
+
+    it('allows selecting stage 1 always', () => {
+      manager.completeStage(1, 150)
+      manager.moveToNextStage()
+      
+      const selected = manager.selectStage(1)
+      expect(selected).toBe(true)
       expect(manager.getCurrentStage()).toBe(1)
     })
   })
 
   describe('getTotalScore', () => {
-    it('should calculate total score across all stages', () => {
+    it('calculates total score across all stages', () => {
       manager.completeStage(1, 150)
       manager.completeStage(2, 250)
-      manager.completeStage(1, 180) // Update stage 1
+      manager.completeStage(1, 180) // ステージ1を更新
       
       expect(manager.getTotalScore()).toBe(430) // 180 + 250
+    })
+
+    it('returns 0 when no stages completed', () => {
+      expect(manager.getTotalScore()).toBe(0)
     })
   })
 
   describe('reset', () => {
-    it('should reset all progress', () => {
+    it('resets all progress', () => {
       manager.completeStage(1, 150)
       manager.completeStage(2, 250)
       manager.moveToNextStage()
@@ -218,16 +230,16 @@ describe('StageManager', () => {
       expect(manager.getStageInfo(2)?.unlocked).toBe(false)
     })
 
-    it('should clear localStorage', () => {
+    it('clears localStorage', () => {
       manager.completeStage(1, 150)
       manager.reset()
       
-      expect(mockLocalStorage.removeItem).toHaveBeenCalledWith('stageProgress')
+      expect(localStorage.getItem('stageProgress')).toBeNull()
     })
   })
 
   describe('getAllStages', () => {
-    it('should return all stages with current state', () => {
+    it('returns all stages with current state', () => {
       manager.completeStage(1, 150)
       
       const allStages = manager.getAllStages()
@@ -235,6 +247,21 @@ describe('StageManager', () => {
       expect(allStages[0].completed).toBe(true)
       expect(allStages[0].highScore).toBe(150)
       expect(allStages[1].unlocked).toBe(true)
+    })
+  })
+
+  describe('persistence across instances', () => {
+    it('maintains state across StageManager instances', () => {
+      manager.completeStage(1, 150)
+      manager.completeStage(2, 200)
+      manager.selectStage(2)
+      
+      // 新しいインスタンスを作成
+      const newManager = new StageManager()
+      expect(newManager.getCurrentStage()).toBe(2)
+      expect(newManager.getCompletedStages()).toEqual([1, 2])
+      expect(newManager.getStageInfo(1)?.highScore).toBe(150)
+      expect(newManager.getStageInfo(2)?.highScore).toBe(200)
     })
   })
 })

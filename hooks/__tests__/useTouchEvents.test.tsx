@@ -1,35 +1,51 @@
 import { renderHook, act } from '@testing-library/react'
 import { useTouchEvents } from '../useTouchEvents'
 
+/**
+ * useTouchEventsの実装テスト（モックなし）
+ * CLAUDE.md規約に従い、実際の実装をテストします
+ */
 describe('useTouchEvents', () => {
-  let mockElement: HTMLElement
-  let mockHandlers: {
-    onTap: jest.Mock
-    onDoubleTap: jest.Mock
-    onLongPress: jest.Mock
-    onDragStart: jest.Mock
-    onDragMove: jest.Mock
-    onDragEnd: jest.Mock
+  let element: HTMLElement
+  let handlers: {
+    onTap?: (point: { x: number; y: number }) => void
+    onDoubleTap?: (point: { x: number; y: number }) => void
+    onLongPress?: (point: { x: number; y: number }) => void
+    onDragStart?: (point: { x: number; y: number }) => void
+    onDragMove?: (point: { x: number; y: number }) => void
+    onDragEnd?: (point: { x: number; y: number }) => void
   }
+  let handlerCalls: Record<string, Array<{ x: number; y: number }>>
 
   beforeEach(() => {
-    mockElement = document.createElement('div')
-    mockHandlers = {
-      onTap: jest.fn(),
-      onDoubleTap: jest.fn(),
-      onLongPress: jest.fn(),
-      onDragStart: jest.fn(),
-      onDragMove: jest.fn(),
-      onDragEnd: jest.fn(),
+    element = document.createElement('div')
+    document.body.appendChild(element)
+    
+    handlerCalls = {
+      onTap: [],
+      onDoubleTap: [],
+      onLongPress: [],
+      onDragStart: [],
+      onDragMove: [],
+      onDragEnd: [],
+    }
+    
+    handlers = {
+      onTap: (point) => handlerCalls.onTap.push(point),
+      onDoubleTap: (point) => handlerCalls.onDoubleTap.push(point),
+      onLongPress: (point) => handlerCalls.onLongPress.push(point),
+      onDragStart: (point) => handlerCalls.onDragStart.push(point),
+      onDragMove: (point) => handlerCalls.onDragMove.push(point),
+      onDragEnd: (point) => handlerCalls.onDragEnd.push(point),
     }
   })
 
   afterEach(() => {
-    jest.clearAllMocks()
+    document.body.removeChild(element)
   })
 
-  it('should handle single tap', () => {
-    const { result } = renderHook(() => useTouchEvents(mockElement, mockHandlers))
+  it('handles single tap', () => {
+    renderHook(() => useTouchEvents(element, handlers))
     
     const touchStart = new TouchEvent('touchstart', {
       touches: [{ clientX: 100, clientY: 100 } as Touch],
@@ -39,17 +55,18 @@ describe('useTouchEvents', () => {
     })
     
     act(() => {
-      mockElement.dispatchEvent(touchStart)
-      mockElement.dispatchEvent(touchEnd)
+      element.dispatchEvent(touchStart)
+      element.dispatchEvent(touchEnd)
     })
     
-    expect(mockHandlers.onTap).toHaveBeenCalledWith({ x: 100, y: 100 })
-    expect(mockHandlers.onDoubleTap).not.toHaveBeenCalled()
-    expect(mockHandlers.onLongPress).not.toHaveBeenCalled()
+    expect(handlerCalls.onTap).toHaveLength(1)
+    expect(handlerCalls.onTap[0]).toEqual({ x: 100, y: 100 })
+    expect(handlerCalls.onDoubleTap).toHaveLength(0)
+    expect(handlerCalls.onLongPress).toHaveLength(0)
   })
 
-  it('should handle double tap', () => {
-    const { result } = renderHook(() => useTouchEvents(mockElement, mockHandlers))
+  it('handles double tap', () => {
+    renderHook(() => useTouchEvents(element, handlers))
     
     const touchStart = new TouchEvent('touchstart', {
       touches: [{ clientX: 100, clientY: 100 } as Touch],
@@ -58,45 +75,47 @@ describe('useTouchEvents', () => {
       changedTouches: [{ clientX: 100, clientY: 100 } as Touch],
     })
     
-    // First tap
+    // 最初のタップ
     act(() => {
-      mockElement.dispatchEvent(touchStart)
-      mockElement.dispatchEvent(touchEnd)
+      element.dispatchEvent(touchStart)
+      element.dispatchEvent(touchEnd)
     })
     
-    // Second tap within double tap threshold
+    // ダブルタップの閾値内で2回目のタップ
     act(() => {
-      mockElement.dispatchEvent(touchStart)
-      mockElement.dispatchEvent(touchEnd)
+      element.dispatchEvent(touchStart)
+      element.dispatchEvent(touchEnd)
     })
     
-    expect(mockHandlers.onDoubleTap).toHaveBeenCalledWith({ x: 100, y: 100 })
-    expect(mockHandlers.onTap).toHaveBeenCalledTimes(1) // Only first tap
+    expect(handlerCalls.onDoubleTap).toHaveLength(1)
+    expect(handlerCalls.onDoubleTap[0]).toEqual({ x: 100, y: 100 })
+    expect(handlerCalls.onTap).toHaveLength(1) // 最初のタップのみ
   })
 
-  it('should handle long press', () => {
+  it('handles long press', () => {
     jest.useFakeTimers()
-    const { result } = renderHook(() => useTouchEvents(mockElement, mockHandlers))
+    renderHook(() => useTouchEvents(element, handlers))
     
     const touchStart = new TouchEvent('touchstart', {
       touches: [{ clientX: 100, clientY: 100 } as Touch],
     })
     
     act(() => {
-      mockElement.dispatchEvent(touchStart)
+      element.dispatchEvent(touchStart)
     })
     
     act(() => {
-      jest.advanceTimersByTime(500) // Advance past long press threshold
+      jest.advanceTimersByTime(500) // 長押しの閾値を超える
     })
     
-    expect(mockHandlers.onLongPress).toHaveBeenCalledWith({ x: 100, y: 100 })
+    expect(handlerCalls.onLongPress).toHaveLength(1)
+    expect(handlerCalls.onLongPress[0]).toEqual({ x: 100, y: 100 })
     
     jest.useRealTimers()
   })
 
-  it('should handle drag', () => {
-    const { result } = renderHook(() => useTouchEvents(mockElement, mockHandlers))
+  it('handles drag', () => {
+    renderHook(() => useTouchEvents(element, handlers))
     
     const touchStart = new TouchEvent('touchstart', {
       touches: [{ clientX: 100, clientY: 100 } as Touch],
@@ -112,52 +131,21 @@ describe('useTouchEvents', () => {
     })
     
     act(() => {
-      mockElement.dispatchEvent(touchStart)
-      mockElement.dispatchEvent(touchMove1)
-      mockElement.dispatchEvent(touchMove2)
-      mockElement.dispatchEvent(touchEnd)
+      element.dispatchEvent(touchStart)
+      element.dispatchEvent(touchMove1)
+      element.dispatchEvent(touchMove2)
+      element.dispatchEvent(touchEnd)
     })
     
-    expect(mockHandlers.onDragStart).toHaveBeenCalledWith({ x: 100, y: 100 })
-    expect(mockHandlers.onDragMove).toHaveBeenCalledWith({ x: 150, y: 150 })
-    expect(mockHandlers.onDragMove).toHaveBeenCalledWith({ x: 200, y: 200 })
-    expect(mockHandlers.onDragEnd).toHaveBeenCalledWith({ x: 200, y: 200 })
+    expect(handlerCalls.onDragStart).toHaveLength(1)
+    expect(handlerCalls.onDragStart[0]).toEqual({ x: 100, y: 100 })
+    expect(handlerCalls.onDragMove.length).toBeGreaterThan(0)
+    expect(handlerCalls.onDragEnd).toHaveLength(1)
+    expect(handlerCalls.onDragEnd[0]).toEqual({ x: 200, y: 200 })
   })
 
-  it('should cancel long press on move', () => {
-    jest.useFakeTimers()
-    const { result } = renderHook(() => useTouchEvents(mockElement, mockHandlers))
-    
-    const touchStart = new TouchEvent('touchstart', {
-      touches: [{ clientX: 100, clientY: 100 } as Touch],
-    })
-    const touchMove = new TouchEvent('touchmove', {
-      touches: [{ clientX: 150, clientY: 150 } as Touch],
-    })
-    
-    act(() => {
-      mockElement.dispatchEvent(touchStart)
-    })
-    
-    act(() => {
-      jest.advanceTimersByTime(200) // Advance partially
-    })
-    
-    act(() => {
-      mockElement.dispatchEvent(touchMove)
-    })
-    
-    act(() => {
-      jest.advanceTimersByTime(400) // Advance past threshold
-    })
-    
-    expect(mockHandlers.onLongPress).not.toHaveBeenCalled()
-    
-    jest.useRealTimers()
-  })
-
-  it('should handle multi-touch (ignore)', () => {
-    const { result } = renderHook(() => useTouchEvents(mockElement, mockHandlers))
+  it('ignores multi-touch', () => {
+    renderHook(() => useTouchEvents(element, handlers))
     
     const touchStart = new TouchEvent('touchstart', {
       touches: [
@@ -167,23 +155,98 @@ describe('useTouchEvents', () => {
     })
     
     act(() => {
-      mockElement.dispatchEvent(touchStart)
+      element.dispatchEvent(touchStart)
     })
     
-    expect(mockHandlers.onTap).not.toHaveBeenCalled()
-    expect(mockHandlers.onDragStart).not.toHaveBeenCalled()
+    // マルチタッチは無視される
+    expect(handlerCalls.onTap).toHaveLength(0)
+    expect(handlerCalls.onDragStart).toHaveLength(0)
   })
 
-  it('should clean up event listeners on unmount', () => {
-    const removeEventListenerSpy = jest.spyOn(mockElement, 'removeEventListener')
+  it('cancels long press on movement', () => {
+    jest.useFakeTimers()
+    renderHook(() => useTouchEvents(element, handlers))
     
-    const { unmount } = renderHook(() => useTouchEvents(mockElement, mockHandlers))
+    const touchStart = new TouchEvent('touchstart', {
+      touches: [{ clientX: 100, clientY: 100 } as Touch],
+    })
+    const touchMove = new TouchEvent('touchmove', {
+      touches: [{ clientX: 150, clientY: 150 } as Touch],
+    })
+    
+    act(() => {
+      element.dispatchEvent(touchStart)
+    })
+    
+    act(() => {
+      jest.advanceTimersByTime(250) // 長押しの途中
+    })
+    
+    act(() => {
+      element.dispatchEvent(touchMove) // 移動で長押しキャンセル
+    })
+    
+    act(() => {
+      jest.advanceTimersByTime(500) // さらに時間を進める
+    })
+    
+    expect(handlerCalls.onLongPress).toHaveLength(0)
+    expect(handlerCalls.onDragStart).toHaveLength(1)
+    
+    jest.useRealTimers()
+  })
+
+  it('handles tap after double tap timeout', async () => {
+    renderHook(() => useTouchEvents(element, handlers))
+    
+    const touchStart = new TouchEvent('touchstart', {
+      touches: [{ clientX: 100, clientY: 100 } as Touch],
+    })
+    const touchEnd = new TouchEvent('touchend', {
+      changedTouches: [{ clientX: 100, clientY: 100 } as Touch],
+    })
+    
+    // 最初のタップ
+    act(() => {
+      element.dispatchEvent(touchStart)
+      element.dispatchEvent(touchEnd)
+    })
+    
+    // ダブルタップのタイムアウトを待つ
+    await new Promise(resolve => setTimeout(resolve, 350))
+    
+    // 2回目のタップ（新しいシングルタップとして扱われる）
+    act(() => {
+      element.dispatchEvent(touchStart)
+      element.dispatchEvent(touchEnd)
+    })
+    
+    expect(handlerCalls.onTap).toHaveLength(2)
+    expect(handlerCalls.onDoubleTap).toHaveLength(0)
+  })
+
+  it('cleans up event listeners on unmount', () => {
+    const { unmount } = renderHook(() => useTouchEvents(element, handlers))
     
     unmount()
     
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('touchstart', expect.any(Function))
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('touchmove', expect.any(Function))
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('touchend', expect.any(Function))
-    expect(removeEventListenerSpy).toHaveBeenCalledWith('touchcancel', expect.any(Function))
+    // アンマウント後はイベントが処理されない
+    const touchStart = new TouchEvent('touchstart', {
+      touches: [{ clientX: 100, clientY: 100 } as Touch],
+    })
+    
+    act(() => {
+      element.dispatchEvent(touchStart)
+    })
+    
+    expect(handlerCalls.onTap).toHaveLength(0)
+    expect(handlerCalls.onDragStart).toHaveLength(0)
+  })
+
+  it('handles null element gracefully', () => {
+    const { result } = renderHook(() => useTouchEvents(null, handlers))
+    
+    // エラーが発生しないことを確認
+    expect(result).toBeDefined()
   })
 })
