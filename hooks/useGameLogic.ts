@@ -151,28 +151,36 @@ export function useGameLogic() {
         // Check if time is frozen
         const isTimeFrozen = powerUps.isEffectActive('freezeTime')
         if (!isTimeFrozen) {
-          setTimeLeft(prevTime => prevTime - 1)
+          setTimeLeft(prevTime => {
+            const newTime = prevTime - 1
+            if (newTime <= 0) {
+              // タイマーが0になったらすぐに処理を実行
+              setTimeout(() => {
+                setGameState('idle')
+                powerUps.stopSpawning()
+                
+                // Check stage completion
+                const isStageCompleted = stage.checkStageCompletion(score, harvestedFruits)
+                
+                if (isStageCompleted) {
+                  soundEffects.playHighScoreSound()
+                } else {
+                  soundEffects.playGameOverSound()
+                }
+                
+                if (score > highScore) {
+                  setHighScore(score)
+                }
+              }, 0)
+              return 0
+            }
+            return newTime
+          })
         }
       }, 1000)
-    } else if (timeLeft === 0 && gameState === 'playing') {
-      setGameState('idle')
-      powerUps.stopSpawning()
-      
-      // Check stage completion
-      const isStageCompleted = stage.checkStageCompletion(score, harvestedFruits)
-      
-      if (isStageCompleted) {
-        soundEffects.playHighScoreSound()
-      } else {
-        soundEffects.playGameOverSound()
-      }
-      
-      if (score > highScore) {
-        setHighScore(score)
-      }
     }
     return () => clearInterval(timer)
-  }, [gameState, timeLeft, score, highScore, soundEffects, powerUps, stage, harvestedFruits])
+  }, [gameState, score, highScore, soundEffects, powerUps, stage, harvestedFruits])
 
   // Animation effect
   useEffect(() => {

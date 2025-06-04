@@ -39,8 +39,7 @@ app/
 components/
 ├── DifficultySelector.tsx  # 難易度選択UI
 ├── Fruit.tsx               # フルーツコンポーネント
-├── FruitHarvestGame.tsx    # メインゲームコンポーネント（削除予定）
-├── fruit-harvest-game.tsx  # メインゲームコンポーネント（正式版）
+├── FruitHarvestGame.tsx    # メインゲームコンポーネント
 ├── Particle.tsx            # パーティクルエフェクト単体
 ├── ParticleContainer.tsx   # パーティクルコンテナ
 ├── PowerUp.tsx             # パワーアップアイテム

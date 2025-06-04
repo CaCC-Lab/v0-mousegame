@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react'
+import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FruitHarvestGame } from '../FruitHarvestGame'
 
@@ -201,8 +201,6 @@ describe('FruitHarvestGame Integration Tests', () => {
 
   describe('ハイスコアの永続化', () => {
     it('ハイスコアがLocalStorageに保存される', async () => {
-      const user = userEvent.setup({ delay: null })
-      
       // 初回レンダリング
       const { unmount } = render(<FruitHarvestGame />)
       

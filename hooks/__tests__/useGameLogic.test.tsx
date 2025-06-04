@@ -1,5 +1,6 @@
 import { renderHook, act } from '@testing-library/react'
 import { useGameLogic } from '../useGameLogic'
+import type { FruitType, InteractionType } from '../../types/game'
 
 /**
  * useGameLogicの実装テスト（モックなし）
@@ -146,23 +147,32 @@ describe('useGameLogic', () => {
       result.current.startGame()
     })
 
-    // スコアを獲得
-    const appleFruit = result.current.fruits.find(f => f.type === 'apple')
-    if (appleFruit) {
+    // スコアを獲得（適切な操作タイプを使用）
+    const fruit = result.current.fruits[0]
+    if (fruit) {
+      const action = fruit.type === 'apple' ? 'click' :
+                     fruit.type === 'blueberry' ? 'doubleClick' :
+                     fruit.type === 'lemon' ? 'rightClick' : 'drop'
       act(() => {
-        result.current.handleFruitInteraction(appleFruit, 'click')
+        result.current.handleFruitInteraction(fruit, action as InteractionType)
       })
     }
 
     const currentScore = result.current.score
     expect(currentScore).toBeGreaterThan(0)
 
-    // ゲームを終了
+    // タイマーを進めてゲームを終了させる
     act(() => {
-      result.current.resetGame()
+      jest.advanceTimersByTime(60000) // 60秒進める
     })
 
-    // ハイスコアが更新されているか確認
+    // setTimeoutも実行
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    // ゲームが終了してハイスコアが更新されているか確認
+    expect(result.current.gameState).toBe('idle')
     expect(result.current.highScore).toBeGreaterThanOrEqual(currentScore)
   })
 
@@ -186,20 +196,25 @@ describe('useGameLogic', () => {
     })
 
     // 各フルーツタイプをテスト
-    const fruitTypes = ['apple', 'blueberry', 'lemon', 'watermelon'] as const
+    const fruitActions: Record<string, InteractionType> = {
+      apple: 'click',
+      blueberry: 'doubleClick',
+      lemon: 'rightClick',
+      watermelon: 'drop'
+    }
 
-    fruitTypes.forEach(type => {
+    Object.entries(fruitActions).forEach(([type, action]) => {
       const fruit = result.current.fruits.find(f => f.type === type)
       if (fruit) {
         const initialScore = result.current.score
-        const initialCount = result.current.harvestedFruits[type]
+        const initialCount = result.current.harvestedFruits[type as FruitType['type']]
 
         act(() => {
-          result.current.handleFruitInteraction(fruit, 'click')
+          result.current.handleFruitInteraction(fruit, action)
         })
 
         expect(result.current.score).toBeGreaterThan(initialScore)
-        expect(result.current.harvestedFruits[type]).toBeGreaterThan(initialCount)
+        expect(result.current.harvestedFruits[type as FruitType['type']]).toBeGreaterThan(initialCount)
       }
     })
   })
@@ -249,24 +264,66 @@ describe('useGameLogic', () => {
       result.current.startGame()
     })
 
-    // スコアを獲得
+    // スコアを獲得（適切な操作タイプを使用）
     const fruit = result.current.fruits[0]
     if (fruit) {
+      const action = fruit.type === 'apple' ? 'click' :
+                     fruit.type === 'blueberry' ? 'doubleClick' :
+                     fruit.type === 'lemon' ? 'rightClick' : 'drop'
       act(() => {
-        result.current.handleFruitInteraction(fruit, 'click')
+        result.current.handleFruitInteraction(fruit, action as InteractionType)
       })
     }
 
     const score = result.current.score
     expect(score).toBeGreaterThan(0)
 
-    // ゲームをリセット
+    // タイマーを進めてゲームを終了させる
     act(() => {
-      result.current.resetGame()
+      jest.advanceTimersByTime(60000) // 60秒進める
+    })
+
+    // setTimeoutも実行
+    act(() => {
+      jest.runAllTimers()
     })
 
     // 新しいフックインスタンスでハイスコアが保持されているか確認
     const { result: newResult } = renderHook(() => useGameLogic())
     expect(newResult.current.highScore).toBe(result.current.highScore)
+  })
+
+  it('changes state to idle when timer reaches 0', () => {
+    const { result } = renderHook(() => useGameLogic())
+
+    // ゲーム開始
+    act(() => {
+      result.current.startGame()
+    })
+
+    expect(result.current.gameState).toBe('playing')
+    expect(result.current.timeLeft).toBe(60) // ステージ1は60秒
+
+    // タイマーを59秒進める
+    act(() => {
+      jest.advanceTimersByTime(59000)
+    })
+
+    expect(result.current.gameState).toBe('playing')
+    expect(result.current.timeLeft).toBe(1)
+
+    // 最後の1秒を進める
+    act(() => {
+      jest.advanceTimersByTime(1000)
+    })
+
+    // setTimeoutも進める必要がある
+    act(() => {
+      jest.runAllTimers()
+    })
+
+    // ゲームステートが'idle'に変更されているか確認
+    expect(result.current.gameState).toBe('idle')
+    expect(result.current.timeLeft).toBe(0)
   })
 })

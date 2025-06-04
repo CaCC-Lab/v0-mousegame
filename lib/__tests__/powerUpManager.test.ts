@@ -1,5 +1,5 @@
 import { PowerUpManager } from '../powerUpManager'
-import { PowerUpType, POWERUP_CONFIGS } from '../../types/powerup'
+import { PowerUpType } from '../../types/powerup'
 
 /**
  * PowerUpManagerの実装テスト（モックなし）

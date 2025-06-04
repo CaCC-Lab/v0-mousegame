@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, waitFor, fireEvent } from '@testing-library/react'
+import { render, screen, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { SoundControls } from '../SoundControls'
 
@@ -85,7 +85,6 @@ describe('SoundControls', () => {
   })
 
   it('calls onVolumeChange when slider is moved', async () => {
-    const user = userEvent.setup()
     let newVolume: number | null = null
     
     render(

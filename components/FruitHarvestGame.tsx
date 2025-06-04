@@ -50,7 +50,6 @@ export function FruitHarvestGame() {
     soundEffects,
     difficulty,
     powerUps,
-    activePowerUpEffects,
     stage,
   } = useGameLogic()
 
@@ -122,7 +121,7 @@ export function FruitHarvestGame() {
       setDraggedFruit(fruit)
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
-  }, [handleFruitInteraction])
+  }, [handleFruitClick])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (draggedFruit) {
@@ -146,7 +145,7 @@ export function FruitHarvestGame() {
       }
       setDraggedFruit(null)
     }
-  }, [draggedFruit, handleFruitInteraction])
+  }, [draggedFruit, handleFruitClick])
 
   // Add harvest animation when fruit is collected
   // This is currently a placeholder for future animation improvements
