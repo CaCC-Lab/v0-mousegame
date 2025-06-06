@@ -1,0 +1,54 @@
+<svg width="1024" height="1024" viewBox="0 0 1024 1024" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="512" cy="512" r="480" fill="#F0F9FF" stroke="#3B82F6" stroke-width="40"/>
+  
+  <!-- Basket -->
+  <path d="M300 600 L350 750 L674 750 L724 600 Z" fill="#8B4513" stroke="#654321" stroke-width="8"/>
+  <rect x="280" y="580" width="464" height="40" rx="20" fill="#A0522D"/>
+  
+  <!-- Apple -->
+  <circle cx="400" cy="520" r="80" fill="#FF6B6B"/>
+  <path d="M400 440 Q400 420 410 410" stroke="#8B4513" stroke-width="8" fill="none"/>
+  <ellipse cx="400" cy="445" rx="20" ry="8" fill="#FFE4E1"/>
+  
+  <!-- Blueberry cluster -->
+  <circle cx="550" cy="500" r="35" fill="#4C1D95"/>
+  <circle cx="520" cy="510" r="35" fill="#5B21B6"/>
+  <circle cx="580" cy="510" r="35" fill="#6D28D9"/>
+  <circle cx="550" cy="530" r="35" fill="#7C3AED"/>
+  
+  <!-- Lemon -->
+  <ellipse cx="650" cy="520" rx="60" ry="50" fill="#FDE047" transform="rotate(15 650 520)"/>
+  <circle cx="630" cy="510" r="8" fill="#FBBF24" opacity="0.6"/>
+  
+  <!-- Watermelon slice -->
+  <path d="M350 480 Q450 400 550 480 L350 480" fill="#FF6B6B"/>
+  <path d="M360 470 Q450 410 540 470 L360 470" fill="#FF1744"/>
+  <circle cx="400" cy="450" r="4" fill="#000000"/>
+  <circle cx="450" cy="440" r="4" fill="#000000"/>
+  <circle cx="500" cy="450" r="4" fill="#000000"/>
+  
+  <!-- Sparkles -->
+  <g opacity="0.8">
+    <path d="M200 300 L210 320 L190 320 Z" fill="#FDE047"/>
+    <path d="M190 310 L210 310 L200 330 Z" fill="#FDE047"/>
+  </g>
+  
+  <g opacity="0.8" transform="translate(600, 200)">
+    <path d="M0 0 L10 20 L-10 20 Z" fill="#FDE047"/>
+    <path d="M-10 10 L10 10 L0 30 Z" fill="#FDE047"/>
+  </g>
+  
+  <g opacity="0.8" transform="translate(800, 400)">
+    <path d="M0 0 L10 20 L-10 20 Z" fill="#FDE047"/>
+    <path d="M-10 10 L10 10 L0 30 Z" fill="#FDE047"/>
+  </g>
+  
+  <!-- Game Title Background -->
+  <rect x="200" y="820" width="624" height="120" rx="60" fill="#3B82F6" opacity="0.9"/>
+  
+  <!-- Game Title -->
+  <text x="512" y="895" font-family="Arial, sans-serif" font-size="72" font-weight="bold" fill="white" text-anchor="middle">
+    Fruit Harvest
+  </text>
+</svg>

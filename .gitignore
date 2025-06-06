@@ -15,6 +15,9 @@
 
 # production
 /build
+# Electron icon files are needed
+!/build/icon.*
+!/build/*.svg
 
 # misc
 .DS_Store

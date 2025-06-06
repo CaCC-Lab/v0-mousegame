@@ -36,9 +36,11 @@
   - ✅ SoundManagerは空のファイルでも正常動作することを確認
 
 ### 🟡 低優先度（軽微な問題）
-- [ ] **Electronアイコンの作成・配置**
-  - build/icon.png, icon.ico, icon.icnsが未配置
-  - デフォルトアイコンが表示される
+- [x] **Electronアイコンの作成・配置**
+  - ✅ build/icon.png, icon.ico, icon.icnsを配置完了
+  - ✅ SVGデザインファイル（icon.svg）を作成
+  - ✅ 各プラットフォーム用のアイコンファイルを生成
+  - ✅ Linux AppImageビルドでアイコン統合を確認
 - [x] **ゲーム終了時のステート修正**
   - ✅ タイマー0秒時に確実に'idle'への変更を行うよう修正
   - ✅ setTimeLeftコールバック内で状態変更を実装
