@@ -55,7 +55,7 @@ export function SoundControls({
           aria-valuemax={1}
           aria-valuenow={volume}
         />
-        <span className="text-sm text-gray-600 dark:text-gray-400 w-10 text-right">
+        <span className="text-sm text-gray-600 w-10 text-right">
           {volumePercentage}%
         </span>
       </div>

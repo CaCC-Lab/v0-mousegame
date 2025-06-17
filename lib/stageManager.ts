@@ -30,12 +30,13 @@ export class StageManager {
   private loadProgress(): StageProgress | null {
     if (typeof window === 'undefined') return null
     
-    const saved = localStorage.getItem('stageProgress')
-    if (!saved) return null
-    
     try {
+      const saved = localStorage.getItem('stageProgress')
+      if (!saved) return null
+      
       return JSON.parse(saved)
-    } catch {
+    } catch (error) {
+      console.warn('ステージ進行状況の読み込みに失敗しました。新規ゲームとして開始します。', error)
       return null
     }
   }
@@ -43,7 +44,11 @@ export class StageManager {
   private saveProgress(): void {
     if (typeof window === 'undefined') return
     
-    localStorage.setItem('stageProgress', JSON.stringify(this.progress))
+    try {
+      localStorage.setItem('stageProgress', JSON.stringify(this.progress))
+    } catch (error) {
+      console.warn('ステージ進行状況の保存に失敗しました。', error)
+    }
   }
 
   private applyProgress(progress: StageProgress): void {
@@ -65,9 +70,16 @@ export class StageManager {
 
     // Load high scores from localStorage
     this.stages.forEach(stage => {
-      const highScore = localStorage.getItem(`stage${stage.number}HighScore`)
-      if (highScore) {
-        stage.highScore = parseInt(highScore, 10)
+      try {
+        const highScore = localStorage.getItem(`stage${stage.number}HighScore`)
+        if (highScore) {
+          const score = parseInt(highScore, 10)
+          if (!isNaN(score) && score >= 0) {
+            stage.highScore = score
+          }
+        }
+      } catch (error) {
+        console.warn(`ステージ${stage.number}のハイスコア読み込みに失敗しました。`, error)
       }
     })
   }

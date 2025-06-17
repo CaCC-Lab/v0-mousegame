@@ -40,23 +40,6 @@ describe('FruitHarvestGame Integration Tests', () => {
       expect(screen.getByText(/High Score: 0/)).toBeInTheDocument()
     })
 
-    it('ダークモードトグルが機能する', async () => {
-      const user = userEvent.setup({ delay: null })
-      render(<FruitHarvestGame />)
-      
-      // ダークモード切り替えボタンを探す
-      const darkModeSwitch = screen.getByRole('switch', { name: /Dark Mode/i })
-      
-      // 初期状態を確認（システム設定に依存）
-      const initialChecked = darkModeSwitch.getAttribute('aria-checked') === 'true'
-      
-      // クリックして切り替え
-      await user.click(darkModeSwitch)
-      
-      // 状態が変更されたことを確認
-      const newChecked = darkModeSwitch.getAttribute('aria-checked') === 'true'
-      expect(newChecked).toBe(!initialChecked)
-    })
   })
 
   describe('ゲームの開始と進行', () => {
@@ -244,7 +227,7 @@ describe('FruitHarvestGame Integration Tests', () => {
       render(<FruitHarvestGame />)
       
       // ヘルプボタンをクリック
-      const helpButton = screen.getByLabelText('あそびかた')
+      const helpButton = screen.getByText('How to Play')
       await user.click(helpButton)
       
       // ヘルプ内容が表示される

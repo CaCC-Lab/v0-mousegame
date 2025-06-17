@@ -100,7 +100,6 @@ describe('Internationalization (i18n)', () => {
       expect(screen.getByText('はじめる')).toBeInTheDocument()
       expect(screen.getByText('リセット')).toBeInTheDocument()
       expect(screen.getByText('むずかしいモード')).toBeInTheDocument()
-      expect(screen.getByText('ダークモード')).toBeInTheDocument()
       expect(screen.getByText('あそびかた')).toBeInTheDocument()
     })
 
@@ -114,7 +113,6 @@ describe('Internationalization (i18n)', () => {
       expect(screen.getByText('Start')).toBeInTheDocument()
       expect(screen.getByText('Reset')).toBeInTheDocument()
       expect(screen.getByText('Hard Mode')).toBeInTheDocument()
-      expect(screen.getByText('Dark Mode')).toBeInTheDocument()
       expect(screen.getByText('How to Play')).toBeInTheDocument()
     })
 

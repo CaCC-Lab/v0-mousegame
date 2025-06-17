@@ -24,7 +24,7 @@ describe('useGameLogic', () => {
 
     expect(result.current.gameState).toBe('idle')
     expect(result.current.score).toBe(0)
-    expect(result.current.timeLeft).toBe(180)
+    expect(result.current.timeLeft).toBe(60) // ステージ1のデフォルト時間
     expect(result.current.fruits).toHaveLength(0)
     expect(result.current.harvestedFruits).toEqual({
       apple: 0,
@@ -82,7 +82,7 @@ describe('useGameLogic', () => {
 
     expect(result.current.gameState).toBe('idle')
     expect(result.current.score).toBe(0)
-    expect(result.current.timeLeft).toBe(180)
+    expect(result.current.timeLeft).toBe(60) // ステージ1のデフォルト時間
     expect(result.current.fruits).toHaveLength(0)
   })
 
@@ -207,14 +207,14 @@ describe('useGameLogic', () => {
       const fruit = result.current.fruits.find(f => f.type === type)
       if (fruit) {
         const initialScore = result.current.score
-        const initialCount = result.current.harvestedFruits[type as FruitType['type']]
+        const initialCount = result.current.harvestedFruits[type as FruitType]
 
         act(() => {
           result.current.handleFruitInteraction(fruit, action)
         })
 
         expect(result.current.score).toBeGreaterThan(initialScore)
-        expect(result.current.harvestedFruits[type as FruitType['type']]).toBeGreaterThan(initialCount)
+        expect(result.current.harvestedFruits[type as FruitType]).toBeGreaterThan(initialCount)
       }
     })
   })

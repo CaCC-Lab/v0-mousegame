@@ -186,7 +186,7 @@ describe('AnimationManager', () => {
       expect(manager.getComboMessage()).toBe('コンボ x3!')
     })
 
-    it('maintains combo within time window', () => {
+    it('maintains combo within time window', (done) => {
       // 連続してフルーツを収集
       const initialTime = Date.now()
       
@@ -195,11 +195,14 @@ describe('AnimationManager', () => {
       expect(firstComboInfo.count).toBe(1)
       expect(firstComboInfo.lastCollectTime).toBeGreaterThanOrEqual(initialTime)
       
-      // すぐに次を収集
-      manager.recordFruitCollect()
-      const secondComboInfo = manager.getComboInfo()
-      expect(secondComboInfo.count).toBe(2)
-      expect(secondComboInfo.lastCollectTime).toBeGreaterThan(firstComboInfo.lastCollectTime)
+      // 1ms待ってから次を収集（タイムスタンプが確実に異なるように）
+      setTimeout(() => {
+        manager.recordFruitCollect()
+        const secondComboInfo = manager.getComboInfo()
+        expect(secondComboInfo.count).toBe(2)
+        expect(secondComboInfo.lastCollectTime).toBeGreaterThan(firstComboInfo.lastCollectTime)
+        done()
+      }, 1)
     })
   })
 

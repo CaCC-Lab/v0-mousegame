@@ -69,7 +69,7 @@ describe('useGameLogic with Sound Integration', () => {
     const initialSoundEnabled = localStorage.getItem('soundEnabled') !== 'false'
     
     act(() => {
-      result.current.toggleSound()
+      result.current.soundEffects.toggleSound()
     })
 
     const newSoundEnabled = localStorage.getItem('soundEnabled') !== 'false'
@@ -158,7 +158,7 @@ describe('useGameLogic with Sound Integration', () => {
 
     // ボリュームを変更
     act(() => {
-      result.current.setVolume(0.3)
+      result.current.soundEffects.setVolume(0.3)
     })
 
     const newVolume = localStorage.getItem('soundVolume')

@@ -2,6 +2,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DifficultySelector } from '../DifficultySelector'
+import { DifficultyLevel } from '../../types/difficulty'
 
 /**
  * DifficultySelectorの実装テスト（モックなし）
@@ -10,7 +11,7 @@ import { DifficultySelector } from '../DifficultySelector'
 describe('DifficultySelector', () => {
   const mockProps = {
     currentDifficulty: 'normal' as const,
-    availableDifficulties: ['easy', 'normal', 'hard'] as const,
+    availableDifficulties: [...(['easy', 'normal', 'hard'] as const)],
     difficultyDescriptions: {
       easy: 'フルーツが少なく、時間に余裕があります',
       normal: 'バランスの取れた標準的な難易度です',
@@ -159,7 +160,7 @@ describe('DifficultySelector', () => {
     it('handles empty available difficulties gracefully', () => {
       const emptyProps = {
         ...mockProps,
-        availableDifficulties: [] as const,
+        availableDifficulties: [...([] as const)],
       }
       
       render(<DifficultySelector {...emptyProps} />)
@@ -174,7 +175,7 @@ describe('DifficultySelector', () => {
     it('handles missing difficulty descriptions', () => {
       const propsWithoutDescriptions = {
         ...mockProps,
-        difficultyDescriptions: {},
+        difficultyDescriptions: {} as Record<DifficultyLevel, string>,
       }
       
       render(<DifficultySelector {...propsWithoutDescriptions} />)

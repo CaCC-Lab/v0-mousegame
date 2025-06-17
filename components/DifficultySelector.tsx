@@ -51,7 +51,7 @@ export function DifficultySelector({
       <div className="flex items-center space-x-3">
         <label
           htmlFor="difficulty-select"
-          className="text-sm font-medium text-gray-700 dark:text-gray-300"
+          className="text-sm font-medium text-gray-700"
         >
           {labels.difficultyLabel}:
         </label>
@@ -66,7 +66,6 @@ export function DifficultySelector({
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
             disabled:opacity-50 disabled:cursor-not-allowed
             ${DIFFICULTY_COLORS[currentDifficulty]}
-            dark:bg-gray-700 dark:border-gray-600 dark:text-white
           `}
           aria-label={`${labels.difficultyLabel} selector`}
           role="combobox"
@@ -84,12 +83,12 @@ export function DifficultySelector({
       </div>
 
       {/* Difficulty Description */}
-      <div className="text-sm text-gray-600 dark:text-gray-400 italic">
+      <div className="text-sm text-gray-600 italic">
         {difficultyDescriptions[currentDifficulty]}
       </div>
 
       {/* Difficulty Stats */}
-      <div className="text-xs text-gray-500 dark:text-gray-500">
+      <div className="text-xs text-gray-500">
         {currentDifficulty === 'easy' && (
           <div className="flex space-x-4">
             <span>🍎 フルーツ: 少ない</span>

@@ -28,9 +28,6 @@ test.describe('Accessibility Tests', () => {
     // Check switches have labels
     const hardModeSwitch = page.getByRole('switch', { name: /むずかしいモード|Hard Mode/ })
     await expect(hardModeSwitch).toBeVisible()
-    
-    const darkModeSwitch = page.getByRole('switch', { name: /ダークモード|Dark Mode/ })
-    await expect(darkModeSwitch).toBeVisible()
   })
 
   test('should be keyboard navigable', async ({ page }) => {
@@ -72,14 +69,7 @@ test.describe('Accessibility Tests', () => {
     // Check light mode
     await expect(page.locator('.text-xl.font-bold')).toBeVisible()
     
-    // Switch to dark mode
-    const darkModeSwitch = page.getByRole('switch', { name: /ダークモード|Dark Mode/ })
-    await darkModeSwitch.click()
-    
-    // Check dark mode text visibility
-    await expect(page.locator('.dark\\:text-white')).toBeVisible()
-    
-    // Run accessibility check in dark mode
+    // Run accessibility check
     await checkA11y(page, null, {
       detailedReport: true
     })
@@ -130,7 +120,7 @@ test.describe('Accessibility Tests', () => {
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
     
     // Check if game area is distinguishable
-    const gameArea = page.locator('.bg-green-300, .dark\\:bg-green-800')
+    const gameArea = page.locator('.bg-green-300')
     await expect(gameArea).toBeVisible()
   })
 })

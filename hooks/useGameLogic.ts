@@ -23,7 +23,7 @@ export function useGameLogic() {
   const [gameState, setGameState] = useState<GameState>('idle')
   const [score, setScore] = useState(0)
   const [highScore, setHighScore] = useLocalStorage('fruitHarvestHighScore', 0)
-  const [timeLeft, setTimeLeft] = useState<number>(GAME_CONFIG.gameDuration)
+  const [timeLeft, setTimeLeft] = useState<number>(60)
   const [fruits, setFruits] = useState<Fruit[]>([])
   const [harvestedFruits, setHarvestedFruits] = useState<HarvestedFruits>({
     apple: 0,
@@ -36,10 +36,27 @@ export function useGameLogic() {
   const animationFrameRef = useRef<number>()
   const lastUpdateTimeRef = useRef<number>(0)
   const isTimeFreezed = useRef<boolean>(false)
+  const scoreRef = useRef<number>(0)
+  const harvestedFruitsRef = useRef<HarvestedFruits>({
+    apple: 0,
+    blueberry: 0,
+    lemon: 0,
+    watermelon: 0,
+  })
   
   const soundEffects = useSoundEffects()
   const difficulty = useDifficulty()
   const powerUps = usePowerUps({ width: 800, height: 600 }) // Game area dimensions
+  const { 
+    isEffectActive, 
+    stopSpawning, 
+    startSpawning, 
+    reset: resetPowerUps, 
+    getEffectValue, 
+    collectPowerUp,
+    powerUps: powerUpsList,
+    activeEffects: activePowerUpEffects
+  } = powerUps
   const stage = useStage()
 
   const startGame = useCallback(() => {
@@ -69,10 +86,10 @@ export function useGameLogic() {
     })
     
     // Start power-up spawning
-    powerUps.startSpawning()
+    startSpawning()
     
     soundEffects.playGameStartSound()
-  }, [soundEffects, difficulty, powerUps, stage])
+  }, [soundEffects, difficulty, startSpawning, stage])
 
   const pauseGame = useCallback(() => {
     setGameState(prevState => prevState === 'playing' ? 'paused' : 'playing')
@@ -81,7 +98,7 @@ export function useGameLogic() {
   const resetGame = useCallback(() => {
     setGameState('idle')
     setScore(0)
-    setTimeLeft(GAME_CONFIG.gameDuration)
+    setTimeLeft(60)
     setFruits([])
     setHarvestedFruits({
       apple: 0,
@@ -94,9 +111,18 @@ export function useGameLogic() {
     }
     
     // Reset power-ups
-    powerUps.reset()
+    resetPowerUps()
     isTimeFreezed.current = false
-  }, [powerUps])
+  }, [resetPowerUps])
+
+  // Sync refs with state
+  useEffect(() => {
+    scoreRef.current = score
+  }, [score])
+
+  useEffect(() => {
+    harvestedFruitsRef.current = harvestedFruits
+  }, [harvestedFruits])
 
   const handleFruitInteraction = useCallback((fruit: Fruit, action: InteractionType) => {
     if (gameState !== 'playing') return
@@ -108,7 +134,7 @@ export function useGameLogic() {
       let adjustedPoints = difficulty.getAdjustedScore(basePoints)
       
       // Apply score multiplier power-up
-      const scoreMultiplier = powerUps.getEffectValue('scoreMultiplier')
+      const scoreMultiplier = getEffectValue('scoreMultiplier')
       adjustedPoints = Math.floor(adjustedPoints * scoreMultiplier)
       
       setScore(prevScore => prevScore + adjustedPoints)
@@ -123,7 +149,7 @@ export function useGameLogic() {
       })
       soundEffects.playCollectSound()
     }
-  }, [gameState, soundEffects, difficulty, powerUps])
+  }, [gameState, soundEffects, difficulty, getEffectValue])
 
   const moveFruits = useCallback(() => {
     if (gameState !== 'playing' || !isHardMode) return
@@ -133,7 +159,7 @@ export function useGameLogic() {
     lastUpdateTimeRef.current = now
 
     // Apply speed boost effect (slower fruit movement)
-    const speedBoostMultiplier = powerUps.getEffectValue('speedBoost')
+    const speedBoostMultiplier = getEffectValue('speedBoost')
     deltaTime *= speedBoostMultiplier
 
     setFruits(prevFruits => 
@@ -141,37 +167,64 @@ export function useGameLogic() {
     )
 
     animationFrameRef.current = requestAnimationFrame(moveFruits)
-  }, [gameState, isHardMode, powerUps])
+  }, [gameState, isHardMode, getEffectValue])
 
-  // Timer effect
+
+  // Create refs to access latest values without causing re-renders
+  const isEffectActiveRef = useRef(isEffectActive)
+  const stopSpawningRef = useRef(stopSpawning)
+  const stageRef = useRef(stage)
+  const soundEffectsRef = useRef(soundEffects)
+  const highScoreRef = useRef(highScore)
+
+  // Update refs when values change
   useEffect(() => {
-    let timer: NodeJS.Timeout
-    if (gameState === 'playing' && timeLeft > 0) {
+    isEffectActiveRef.current = isEffectActive
+  }, [isEffectActive])
+  
+  useEffect(() => {
+    stopSpawningRef.current = stopSpawning
+  }, [stopSpawning])
+  
+  useEffect(() => {
+    stageRef.current = stage
+  }, [stage])
+  
+  useEffect(() => {
+    soundEffectsRef.current = soundEffects
+  }, [soundEffects])
+  
+  useEffect(() => {
+    highScoreRef.current = highScore
+  }, [highScore])
+
+  // Timer effect - only depends on gameState
+  useEffect(() => {
+    let timer: NodeJS.Timeout | undefined
+    if (gameState === 'playing') {
       timer = setInterval(() => {
-        // Check if time is frozen
-        const isTimeFrozen = powerUps.isEffectActive('freezeTime')
+        // Check if time is frozen using ref
+        const isTimeFrozen = isEffectActiveRef.current('freezeTime')
         if (!isTimeFrozen) {
           setTimeLeft(prevTime => {
             const newTime = prevTime - 1
             if (newTime <= 0) {
-              // タイマーが0になったらすぐに処理を実行
-              setTimeout(() => {
-                setGameState('idle')
-                powerUps.stopSpawning()
-                
-                // Check stage completion
-                const isStageCompleted = stage.checkStageCompletion(score, harvestedFruits)
-                
-                if (isStageCompleted) {
-                  soundEffects.playHighScoreSound()
-                } else {
-                  soundEffects.playGameOverSound()
-                }
-                
-                if (score > highScore) {
-                  setHighScore(score)
-                }
-              }, 0)
+              // タイマーが0になったら同期的に処理を実行
+              setGameState('idle')
+              stopSpawningRef.current()
+              
+              // Check stage completion
+              const isStageCompleted = stageRef.current.checkStageCompletion(scoreRef.current, harvestedFruitsRef.current)
+              
+              if (isStageCompleted) {
+                soundEffectsRef.current.playHighScoreSound()
+              } else {
+                soundEffectsRef.current.playGameOverSound()
+              }
+              
+              if (scoreRef.current > highScoreRef.current) {
+                setHighScore(scoreRef.current)
+              }
               return 0
             }
             return newTime
@@ -179,8 +232,12 @@ export function useGameLogic() {
         }
       }, 1000)
     }
-    return () => clearInterval(timer)
-  }, [gameState, score, highScore, soundEffects, powerUps, stage, harvestedFruits])
+    return () => {
+      if (timer) {
+        clearInterval(timer)
+      }
+    }
+  }, [gameState, setHighScore])
 
   // Animation effect
   useEffect(() => {
@@ -199,7 +256,7 @@ export function useGameLogic() {
   const handlePowerUpClick = useCallback((powerUpId: string) => {
     if (gameState !== 'playing') return
     
-    const effect = powerUps.collectPowerUp(powerUpId)
+    const effect = collectPowerUp(powerUpId)
     if (effect) {
       soundEffects.playCollectSound()
       
@@ -213,7 +270,7 @@ export function useGameLogic() {
         })
       }
     }
-  }, [gameState, powerUps, soundEffects])
+  }, [gameState, collectPowerUp, soundEffects])
 
   return {
     gameState,
@@ -231,8 +288,8 @@ export function useGameLogic() {
     handlePowerUpClick,
     soundEffects,
     difficulty,
-    powerUps: powerUps.powerUps,
-    activePowerUpEffects: powerUps.activeEffects,
+    powerUps: powerUpsList,
+    activePowerUpEffects: activePowerUpEffects,
     stage,
   }
 }

@@ -5,27 +5,14 @@ import { HarvestedFruits } from '../types/game'
 
 export function useStage() {
   const managerRef = useRef<StageManager | null>(null)
+  const [isHydrated, setIsHydrated] = useState(false)
   
-  // Initialize manager
-  if (!managerRef.current) {
-    managerRef.current = new StageManager()
-  }
-
-  const [currentStage, setCurrentStage] = useState(() => 
-    managerRef.current!.getCurrentStage()
-  )
-  const [currentStageInfo, setCurrentStageInfo] = useState<Stage | null>(() =>
-    managerRef.current!.getStageInfo(managerRef.current!.getCurrentStage())
-  )
-  const [completedStages, setCompletedStages] = useState<number[]>(() =>
-    managerRef.current!.getCompletedStages()
-  )
-  const [totalScore, setTotalScore] = useState(() =>
-    managerRef.current!.getTotalScore()
-  )
-  const [allStages, setAllStages] = useState<Stage[]>(() =>
-    managerRef.current!.getAllStages()
-  )
+  // Use default values to prevent SSR hydration mismatch
+  const [currentStage, setCurrentStage] = useState(1)
+  const [currentStageInfo, setCurrentStageInfo] = useState<Stage | null>(null)
+  const [completedStages, setCompletedStages] = useState<number[]>([])
+  const [totalScore, setTotalScore] = useState(0)
+  const [allStages, setAllStages] = useState<Stage[]>([])
 
   const updateState = useCallback(() => {
     if (!managerRef.current) return
@@ -38,11 +25,20 @@ export function useStage() {
     setAllStages(managerRef.current.getAllStages())
   }, [])
 
+  // Initialize manager and load state after hydration
+  useEffect(() => {
+    if (!managerRef.current) {
+      managerRef.current = new StageManager()
+    }
+    setIsHydrated(true)
+    updateState()
+  }, [updateState])
+
   const checkStageCompletion = useCallback((
     score: number,
     harvestedFruits: HarvestedFruits
   ): boolean => {
-    if (!managerRef.current) return false
+    if (!managerRef.current || !isHydrated) return false
     
     const isCompleted = managerRef.current.isStageCompleted(
       currentStage,
@@ -56,10 +52,10 @@ export function useStage() {
     }
     
     return isCompleted
-  }, [currentStage, updateState])
+  }, [currentStage, updateState, isHydrated])
 
   const nextStage = useCallback((): boolean => {
-    if (!managerRef.current) return false
+    if (!managerRef.current || !isHydrated) return false
     
     const moved = managerRef.current.moveToNextStage()
     if (moved) {
@@ -67,10 +63,10 @@ export function useStage() {
     }
     
     return moved
-  }, [updateState])
+  }, [updateState, isHydrated])
 
   const selectStage = useCallback((stageNumber: number): boolean => {
-    if (!managerRef.current) return false
+    if (!managerRef.current || !isHydrated) return false
     
     const selected = managerRef.current.selectStage(stageNumber)
     if (selected) {
@@ -78,19 +74,14 @@ export function useStage() {
     }
     
     return selected
-  }, [updateState])
+  }, [updateState, isHydrated])
 
   const reset = useCallback(() => {
-    if (!managerRef.current) return
+    if (!managerRef.current || !isHydrated) return
     
     managerRef.current.reset()
     updateState()
-  }, [updateState])
-
-  // Update state when manager changes
-  useEffect(() => {
-    updateState()
-  }, [updateState])
+  }, [updateState, isHydrated])
 
   return {
     currentStage,
@@ -101,6 +92,7 @@ export function useStage() {
     checkStageCompletion,
     nextStage,
     selectStage,
-    reset
+    reset,
+    isHydrated
   }
 }

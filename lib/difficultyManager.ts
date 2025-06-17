@@ -10,16 +10,24 @@ export class DifficultyManager {
 
   private loadDifficultyFromStorage(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const storedDifficulty = localStorage.getItem(this.STORAGE_KEY)
-      if (storedDifficulty && this.isValidDifficulty(storedDifficulty)) {
-        this.currentDifficulty = storedDifficulty as DifficultyLevel
+      try {
+        const storedDifficulty = localStorage.getItem(this.STORAGE_KEY)
+        if (storedDifficulty && this.isValidDifficulty(storedDifficulty)) {
+          this.currentDifficulty = storedDifficulty as DifficultyLevel
+        }
+      } catch (error) {
+        console.warn('難易度設定の読み込みに失敗しました。デフォルト値を使用します。', error)
       }
     }
   }
 
   private saveDifficultyToStorage(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem(this.STORAGE_KEY, this.currentDifficulty)
+      try {
+        localStorage.setItem(this.STORAGE_KEY, this.currentDifficulty)
+      } catch (error) {
+        console.warn('難易度設定の保存に失敗しました。', error)
+      }
     }
   }
 

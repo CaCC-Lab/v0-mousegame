@@ -16,10 +16,6 @@ export async function resetGame(page: Page) {
   await page.getByRole('button', { name: /リセット|Reset/ }).click()
 }
 
-export async function toggleDarkMode(page: Page) {
-  const darkModeSwitch = page.getByRole('switch', { name: /ダークモード|Dark Mode/ })
-  await darkModeSwitch.click()
-}
 
 export async function toggleLanguage(page: Page) {
   const languageButton = page.getByRole('button', { name: /JA|EN/ })
@@ -47,7 +43,7 @@ export async function getHighScore(page: Page): Promise<number> {
 }
 
 export async function clickFruit(page: Page, index: number = 0) {
-  const gameArea = page.locator('.bg-green-300, .dark\\:bg-green-800')
+  const gameArea = page.locator('.bg-green-300')
   const fruit = gameArea.locator('button').nth(index)
   if (await fruit.isVisible()) {
     await fruit.click()

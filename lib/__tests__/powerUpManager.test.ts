@@ -88,7 +88,8 @@ describe('PowerUpManager', () => {
         expect(effect?.type).toBe(powerUp.type)
         expect(effect?.active).toBe(true)
         expect(effect?.value).toBeGreaterThan(0)
-        expect(effect?.duration).toBeGreaterThan(0)
+        // Instant effects have duration 0, others have duration > 0
+        expect(effect?.duration).toBeGreaterThanOrEqual(0)
       }
     })
 

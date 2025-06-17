@@ -1,9 +1,8 @@
 "use client"
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { Timer, Pause, Play, RefreshCw, Info, Moon, Sun, Languages } from 'lucide-react'
+import { Timer, Pause, Play, RefreshCw, Info, Languages } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
 import {
   Dialog,
@@ -16,7 +15,6 @@ import {
 import { AnimatePresence, motion } from 'framer-motion'
 import { useGameLogic } from '@/hooks/useGameLogic'
 import { useKeyboardControls } from '@/hooks/useKeyboardControls'
-import { useDarkMode } from '@/hooks/useDarkMode'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useAnimation } from '@/hooks/useAnimation'
 import { Fruit } from './Fruit'
@@ -53,7 +51,6 @@ export function FruitHarvestGame() {
     stage,
   } = useGameLogic()
 
-  const { isDarkMode, setIsDarkMode } = useDarkMode()
   const { language, toggleLanguage, t } = useLanguage()
   const { 
     particles, 
@@ -62,6 +59,12 @@ export function FruitHarvestGame() {
     onFruitCollected, 
     reset: resetAnimations
   } = useAnimation()
+  
+  // Memoize handlers to prevent unnecessary re-renders
+  const handleHardModeChange = useCallback((checked: boolean) => {
+    setIsHardMode(checked)
+  }, [setIsHardMode])
+  
   
   const handleStageSelect = useCallback((stageNumber: number) => {
     const selected = stage?.selectStage(stageNumber) ?? false
@@ -245,7 +248,7 @@ export function FruitHarvestGame() {
 
   // Check for stage clear when game ends
   useEffect(() => {
-    if (gameState === 'idle' && score > 0 && stage?.currentStageInfo) {
+    if (gameState === 'idle' && score > 0 && stage?.isHydrated && stage?.currentStageInfo) {
       const isStageCompleted = stage?.checkStageCompletion(score, harvestedFruits) ?? false
       if (isStageCompleted) {
         setShowStageClearMessage(true)
@@ -288,38 +291,38 @@ export function FruitHarvestGame() {
   return (
     <div 
       ref={gameContainerRef as React.RefObject<HTMLDivElement>}
-      className="min-h-screen bg-gray-100 dark:bg-gray-900 p-4"
+      className="min-h-screen bg-gray-100 p-4"
       tabIndex={0}
       aria-label="フルーツハーベストゲーム"
       role="application"
     >
-      <div className="max-w-4xl mx-auto bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden">
+      <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Game Information Area */}
-        <div className="bg-gray-200 dark:bg-gray-700 p-4 flex justify-between items-center">
+        <div className="bg-gray-200 p-4 flex justify-between items-center">
           <div className="flex items-center space-x-4">
-            <div className="text-xl font-bold dark:text-white">
+            <div className="text-xl font-bold">
               {t.score} {score}
               {combo.multiplier > 1 && (
-                <span className="ml-2 text-sm text-yellow-600 dark:text-yellow-400">
+                <span className="ml-2 text-sm text-yellow-600">
                   x{combo.multiplier} コンボ!
                 </span>
               )}
             </div>
-            {stage?.currentStageInfo && (
-              <div className="text-sm font-medium dark:text-white">
+            {stage?.isHydrated && stage?.currentStageInfo && stage?.currentStage > 0 && (
+              <div className="text-sm font-medium">
                 ステージ {stage?.currentStage}: {stage?.currentStageInfo?.name}
               </div>
             )}
           </div>
-          <div className="text-xl font-bold flex items-center dark:text-white">
+          <div className="text-xl font-bold flex items-center">
             <Timer className="mr-2" />
             {t.timeFormat(Math.floor(timeLeft / 60), timeLeft % 60)}
           </div>
-          <div className="text-sm dark:text-gray-300">{t.highScore} {highScore}</div>
+          <div className="text-sm">{t.highScore} {highScore}</div>
         </div>
 
         {/* Game Instructions */}
-        <div className="bg-blue-100 dark:bg-blue-900 p-4 text-center">
+        <div className="bg-blue-100 p-4 text-center">
           <Dialog>
             <DialogTrigger asChild>
               <Button 
@@ -330,37 +333,97 @@ export function FruitHarvestGame() {
                 <Info className="mr-2 h-4 w-4" /> {t.howToPlay}
               </Button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="bg-white max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
-                <DialogTitle>{t.helpTitle}</DialogTitle>
-                <DialogDescription className="mt-4 text-left">
-                  <div className="space-y-2">
-                    <div>{t.helpContent.apple}</div>
-                    <div>{t.helpContent.blueberry}</div>
-                    <div>{t.helpContent.lemon}</div>
-                    <div>{t.helpContent.watermelon}</div>
-                    <div>{t.helpContent.hardModeDesc}</div>
-                    <div>{t.helpContent.easyModeDesc}</div>
-                    <div>{t.helpContent.timeLimit}</div>
-                    <div>{t.helpContent.goal}</div>
-                    <div className="mt-4 pt-4 border-t">
-                      <strong>{t.helpContent.keyboardTitle}</strong>
-                      <div>{t.helpContent.keyboardSpace}</div>
-                      <div>{t.helpContent.keyboardArrow}</div>
-                      <div>{t.helpContent.keyboardEnter}</div>
+                <DialogTitle className="text-3xl font-bold text-gray-900 text-center">{t.helpTitle}</DialogTitle>
+                <DialogDescription className="sr-only">ゲームの遊び方の説明</DialogDescription>
+              </DialogHeader>
+              <div className="mt-6 text-left text-gray-700">
+                {/* フルーツの取り方 - 視覚的にわかりやすく配置 */}
+                <h3 className="text-xl font-bold mb-4 text-center">🍓 フルーツのとりかた 🍓</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div className="p-4 bg-red-50 rounded-xl border-2 border-red-200 hover:border-red-400 transition-colors cursor-pointer transform hover:scale-105 transition-transform">
+                      <div className="flex items-center mb-2">
+                        <span className="text-4xl mr-3">🍎</span>
+                        <span className="font-bold text-xl text-red-700">りんご</span>
+                      </div>
+                      <div className="text-lg leading-relaxed">{t.helpContent.apple.replace('🍎 りんご: ', '')}</div>
+                      <div className="mt-2 text-sm text-red-600 font-semibold">10てん</div>
+                    </div>
+                    <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-200 hover:border-blue-400 transition-colors cursor-pointer transform hover:scale-105 transition-transform">
+                      <div className="flex items-center mb-2">
+                        <span className="text-4xl mr-3">🫐</span>
+                        <span className="font-bold text-xl text-blue-700">ブルーベリー</span>
+                      </div>
+                      <div className="text-lg leading-relaxed">{t.helpContent.blueberry.replace('🫐 ブルーベリー: ', '')}</div>
+                      <div className="mt-2 text-sm text-blue-600 font-semibold">20てん</div>
+                    </div>
+                    <div className="p-4 bg-yellow-50 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 transition-colors cursor-pointer transform hover:scale-105 transition-transform">
+                      <div className="flex items-center mb-2">
+                        <span className="text-4xl mr-3">🍋</span>
+                        <span className="font-bold text-xl text-yellow-700">レモン</span>
+                      </div>
+                      <div className="text-lg leading-relaxed">{t.helpContent.lemon.replace('🍋 レモン: ', '')}</div>
+                      <div className="mt-2 text-sm text-yellow-600 font-semibold">30てん</div>
+                    </div>
+                    <div className="p-4 bg-green-50 rounded-xl border-2 border-green-200 hover:border-green-400 transition-colors cursor-pointer transform hover:scale-105 transition-transform">
+                      <div className="flex items-center mb-2">
+                        <span className="text-4xl mr-3">🍉</span>
+                        <span className="font-bold text-xl text-green-700">スイカ</span>
+                      </div>
+                      <div className="text-lg leading-relaxed">{t.helpContent.watermelon.replace('🍉 スイカ: ', '')}</div>
+                      <div className="mt-2 text-sm text-green-600 font-semibold">50てん</div>
                     </div>
                   </div>
-                </DialogDescription>
-              </DialogHeader>
+                  {/* ゲームモード */}
+                  <div className="mb-6 p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
+                    <h4 className="font-bold text-lg text-purple-700 mb-3 text-center">🎮 ゲームモード 🎮</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="font-semibold text-purple-600 mb-1">🐢 とまるモード</div>
+                        <div className="text-sm">{t.helpContent.easyModeDesc.replace('とまるモード: ', '')}</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="font-semibold text-purple-600 mb-1">🏃 うごくモード</div>
+                        <div className="text-sm">{t.helpContent.hardModeDesc.replace('うごくモード: ', '')}</div>
+                      </div>
+                    </div>
+                  </div>
+                  {/* ゲーム情報 */}
+                  <div className="mb-6 p-4 bg-orange-50 rounded-xl border-2 border-orange-200">
+                    <div className="text-center space-y-2">
+                      <div className="text-lg">⏱️ {t.helpContent.timeLimit}</div>
+                      <div className="text-lg font-semibold">🎯 {t.helpContent.goal}</div>
+                    </div>
+                  </div>
+                  {/* キーボード操作 */}
+                  <div className="p-4 bg-gray-50 rounded-xl border-2 border-gray-200">
+                    <h4 className="font-bold text-lg text-gray-700 mb-3 text-center">{t.helpContent.keyboardTitle}</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg">
+                        <kbd className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-base font-mono shadow-sm">Space</kbd>
+                        <span className="text-base">{t.helpContent.keyboardSpace.replace('スペースキー: ', '')}</span>
+                      </div>
+                      <div className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg">
+                        <kbd className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-base font-mono shadow-sm">↑↓←→</kbd>
+                        <span className="text-base">{t.helpContent.keyboardArrow.replace('やじるしキー: ', '')}</span>
+                      </div>
+                      <div className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg">
+                        <kbd className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-base font-mono shadow-sm">Enter</kbd>
+                        <span className="text-base">{t.helpContent.keyboardEnter.replace('エンターキー: ', '')}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
             </DialogContent>
           </Dialog>
         </div>
 
         {/* Harvested Fruits Area */}
-        <div className="bg-green-100 dark:bg-green-900 p-4">
+        <div className="bg-green-100 p-4">
           {/* Stage Goals */}
-          {stage?.currentStageInfo && (
-            <div className="mb-3 text-center text-sm dark:text-gray-200">
+          {stage?.isHydrated && stage?.currentStageInfo && (
+            <div className="mb-3 text-center text-sm">
               <div className="font-medium">ステージ目標:</div>
               <div className="flex justify-center space-x-4 mt-1">
                 <span>スコア: {score} / {stage?.currentStageInfo?.targetScore}</span>
@@ -378,7 +441,7 @@ export function FruitHarvestGame() {
             {Object.entries(harvestedFruits).map(([fruit, count]) => (
               <div key={fruit} className="flex items-center">
                 <span className="text-2xl mr-2">{FRUIT_EMOJI[fruit as FruitType['type']]}</span>
-                <span className="font-bold dark:text-white">{count}</span>
+                <span className="font-bold">{count}</span>
               </div>
             ))}
           </div>
@@ -388,7 +451,7 @@ export function FruitHarvestGame() {
         <div
           ref={gameAreaRef}
           data-testid="game-area"
-          className="relative h-[60vh] bg-green-300 dark:bg-green-800 overflow-hidden select-none"
+          className="relative h-[60vh] bg-green-300 overflow-hidden select-none"
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
           onContextMenu={(e) => e.preventDefault()}
@@ -461,80 +524,84 @@ export function FruitHarvestGame() {
         </div>
 
         {/* Control Area */}
-        <div className="bg-gray-200 dark:bg-gray-700 p-4 flex justify-between items-center">
-          <div className="flex space-x-4">
+        <div className="bg-gray-200 p-6">
+          {/* Game Control Buttons - Top Row */}
+          <div className="flex flex-wrap gap-4 justify-center mb-6">
             <Button
               onClick={startGame}
               disabled={gameState === 'playing'}
-              className="bg-green-500 hover:bg-green-600 text-white"
+              className="bg-green-500 hover:bg-green-600 text-white px-6 py-2"
             >
               <Play className="mr-2 h-4 w-4" /> {t.start}
             </Button>
             <Button
               onClick={pauseGame}
               disabled={gameState === 'idle'}
-              className="bg-yellow-500 hover:bg-yellow-600 text-white"
+              className="bg-yellow-500 hover:bg-yellow-600 text-white px-6 py-2"
             >
               {gameState === 'playing' ? <Pause className="mr-2 h-4 w-4" /> : <Play className="mr-2 h-4 w-4" />}
               {gameState === 'playing' ? t.pause : t.resume}
             </Button>
             <Button
               onClick={resetGame}
-              className="bg-red-500 hover:bg-red-600 text-white"
+              className="bg-red-500 hover:bg-red-600 text-white px-6 py-2"
             >
               <RefreshCw className="mr-2 h-4 w-4" /> {t.reset}
             </Button>
             <Button
               onClick={() => setShowStageSelector(true)}
-              className="bg-purple-500 hover:bg-purple-600 text-white"
+              className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2"
             >
               ステージ選択
             </Button>
           </div>
-          <div className="flex items-center space-x-4">
-            <DifficultySelector
-              currentDifficulty={difficulty.currentDifficulty}
-              availableDifficulties={difficulty.availableDifficulties}
-              difficultyDescriptions={difficulty.difficultyDescriptions}
-              onDifficultyChange={difficulty.setDifficulty}
-              disabled={gameState === 'playing'}
-            />
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="hard-mode"
-                checked={isHardMode}
-                onCheckedChange={setIsHardMode}
+
+          {/* Settings Controls - Bottom Row */}
+          <div className="flex flex-wrap gap-6 justify-center items-center">
+            {/* Difficulty Settings Group */}
+            <div className="flex items-center gap-4 bg-white/50 rounded-lg px-4 py-2">
+              <DifficultySelector
+                currentDifficulty={difficulty.currentDifficulty}
+                availableDifficulties={difficulty.availableDifficulties}
+                difficultyDescriptions={difficulty.difficultyDescriptions}
+                onDifficultyChange={difficulty.setDifficulty}
+                disabled={gameState === 'playing'}
               />
-              <Label htmlFor="hard-mode" className="text-sm dark:text-gray-200">{t.hardMode}</Label>
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  id="hard-mode"
+                  checked={isHardMode}
+                  onChange={(e) => handleHardModeChange(e.target.checked)}
+                  className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                />
+                <Label htmlFor="hard-mode" className="text-sm whitespace-nowrap">{t.hardMode}</Label>
+              </div>
             </div>
-            <div className="flex items-center space-x-2">
-              <Switch
-                id="dark-mode"
-                checked={isDarkMode}
-                onCheckedChange={setIsDarkMode}
-                aria-label="ダークモード"
+
+            {/* Language Settings */}
+            <div className="bg-white/50 rounded-lg px-4 py-2">
+              <Button
+                onClick={toggleLanguage}
+                variant="outline"
+                size="sm"
+                className="flex items-center"
+                aria-label={`Language: ${t.language}`}
+              >
+                <Languages className="w-4 h-4 mr-1" />
+                {language === 'ja' ? 'JA' : 'EN'}
+              </Button>
+            </div>
+
+            {/* Sound Controls Group */}
+            <div className="bg-white/50 rounded-lg px-4 py-2">
+              <SoundControls
+                soundEnabled={soundEffects.soundEnabled}
+                volume={soundEffects.volume}
+                onToggleSound={soundEffects.toggleSound}
+                onVolumeChange={soundEffects.setVolume}
               />
-              <Label htmlFor="dark-mode" className="text-sm flex items-center dark:text-gray-200">
-                {isDarkMode ? <Moon className="w-4 h-4 mr-1" /> : <Sun className="w-4 h-4 mr-1" />}
-                {t.darkMode}
-              </Label>
             </div>
-            <SoundControls
-              soundEnabled={soundEffects.soundEnabled}
-              volume={soundEffects.volume}
-              onToggleSound={soundEffects.toggleSound}
-              onVolumeChange={soundEffects.setVolume}
-            />
-            <Button
-              onClick={toggleLanguage}
-              variant="outline"
-              size="sm"
-              className="flex items-center"
-              aria-label={`Language: ${t.language}`}
-            >
-              <Languages className="w-4 h-4 mr-1" />
-              {language === 'ja' ? 'JA' : 'EN'}
-            </Button>
           </div>
         </div>
       </div>
@@ -543,7 +610,7 @@ export function FruitHarvestGame() {
       {showStageSelector && (
         <StageSelector
           stages={stage?.allStages ?? []}
-          currentStage={stage?.currentStage ?? 1}
+          currentStage={stage?.isHydrated ? (stage?.currentStage ?? 1) : 1}
           onSelectStage={handleStageSelect}
           onClose={() => setShowStageSelector(false)}
         />
@@ -556,10 +623,10 @@ export function FruitHarvestGame() {
             initial={{ scale: 0, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0, opacity: 0 }}
-            className="bg-yellow-400 dark:bg-yellow-600 text-white px-8 py-6 rounded-lg shadow-2xl"
+            className="bg-yellow-400 text-white px-8 py-6 rounded-lg shadow-2xl"
           >
             <h2 className="text-3xl font-bold mb-2">🎉 ステージクリア！ 🎉</h2>
-            <p className="text-lg text-center">ステージ {stage?.currentStage} をクリアしました！</p>
+            <p className="text-lg text-center">ステージ {stage?.isHydrated ? stage?.currentStage : 1} をクリアしました！</p>
             <div className="mt-4 flex justify-center space-x-4">
               <Button
                 onClick={() => {

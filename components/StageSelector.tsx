@@ -45,12 +45,12 @@ export function StageSelector({
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-      <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold dark:text-white">ステージ選択</h2>
+          <h2 className="text-2xl font-bold">ステージ選択</h2>
           <button
             onClick={onClose}
-            className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+            className="p-2 hover:bg-gray-100 rounded-lg"
             aria-label="閉じる"
           >
             <X className="w-5 h-5" />
@@ -75,16 +75,16 @@ export function StageSelector({
                 }
                 ${stage.number === currentStage
                   ? 'border-blue-500 ring-2 ring-blue-500 ring-opacity-50'
-                  : 'border-gray-200 dark:border-gray-600'
+                  : 'border-gray-200'
                 }
                 ${stage.completed
-                  ? 'bg-green-50 dark:bg-green-900/20'
-                  : 'bg-white dark:bg-gray-700'
+                  ? 'bg-green-50'
+                  : 'bg-white'
                 }
               `}
             >
               <div className="flex justify-between items-start mb-2">
-                <h3 className="text-lg font-semibold dark:text-white">
+                <h3 className="text-lg font-semibold">
                   ステージ {stage.number}
                 </h3>
                 {stage.unlocked ? (
@@ -98,35 +98,35 @@ export function StageSelector({
                 )}
               </div>
 
-              <h4 className="font-medium mb-2 dark:text-white">{stage.name}</h4>
-              <p className="text-sm text-gray-600 dark:text-gray-300 mb-3">
+              <h4 className="font-medium mb-2">{stage.name}</h4>
+              <p className="text-sm text-gray-600 mb-3">
                 {stage.description}
               </p>
 
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">目標スコア:</span>
-                  <span className="font-medium dark:text-white">{stage.targetScore}</span>
+                  <span className="text-gray-500">目標スコア:</span>
+                  <span className="font-medium">{stage.targetScore}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">目標フルーツ:</span>
-                  <span className="font-medium dark:text-white">
+                  <span className="text-gray-500">目標フルーツ:</span>
+                  <span className="font-medium">
                     {formatFruitTargets(stage.targetFruits)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500 dark:text-gray-400">制限時間:</span>
-                  <span className="font-medium dark:text-white">{stage.timeLimit}秒</span>
+                  <span className="text-gray-500">制限時間:</span>
+                  <span className="font-medium">{stage.timeLimit}秒</span>
                 </div>
               </div>
 
               {stage.completed && (
-                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
+                <div className="mt-3 pt-3 border-t border-gray-200">
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-green-600 dark:text-green-400 font-medium">
+                    <span className="text-green-600 font-medium">
                       ✅ クリア済み
                     </span>
-                    <span className="text-gray-600 dark:text-gray-300">
+                    <span className="text-gray-600">
                       ハイスコア: {stage.highScore}
                     </span>
                   </div>
@@ -134,8 +134,8 @@ export function StageSelector({
               )}
 
               {!stage.unlocked && (
-                <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-600">
-                  <span className="text-sm text-gray-500 dark:text-gray-400">
+                <div className="mt-3 pt-3 border-t border-gray-200">
+                  <span className="text-sm text-gray-500">
                     🔒 ロック中
                   </span>
                 </div>

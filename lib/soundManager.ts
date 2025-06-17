@@ -21,26 +21,36 @@ export class SoundManager {
 
   private loadSettings(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
-      const savedEnabled = localStorage.getItem(this.STORAGE_KEYS.enabled)
-      const savedVolume = localStorage.getItem(this.STORAGE_KEYS.volume)
+      try {
+        const savedEnabled = localStorage.getItem(this.STORAGE_KEYS.enabled)
+        const savedVolume = localStorage.getItem(this.STORAGE_KEYS.volume)
 
-      if (savedEnabled !== null) {
-        this.enabled = savedEnabled === 'true'
-      }
-
-      if (savedVolume !== null) {
-        const volume = parseFloat(savedVolume)
-        if (!isNaN(volume)) {
-          this.volume = Math.max(0, Math.min(1, volume))
+        if (savedEnabled !== null) {
+          this.enabled = savedEnabled === 'true'
         }
+
+        if (savedVolume !== null) {
+          const volume = parseFloat(savedVolume)
+          if (!isNaN(volume)) {
+            this.volume = Math.max(0, Math.min(1, volume))
+          } else {
+            console.warn('無効な音量設定が保存されていました。デフォルト値を使用します。')
+          }
+        }
+      } catch (error) {
+        console.warn('設定の読み込みに失敗しました。デフォルト値を使用します。', error)
       }
     }
   }
 
   private saveSettings(): void {
     if (typeof window !== 'undefined' && window.localStorage) {
-      localStorage.setItem(this.STORAGE_KEYS.enabled, String(this.enabled))
-      localStorage.setItem(this.STORAGE_KEYS.volume, String(this.volume))
+      try {
+        localStorage.setItem(this.STORAGE_KEYS.enabled, String(this.enabled))
+        localStorage.setItem(this.STORAGE_KEYS.volume, String(this.volume))
+      } catch (error) {
+        console.warn('設定の保存に失敗しました。', error)
+      }
     }
   }
 
@@ -56,10 +66,17 @@ export class SoundManager {
       try {
         const audio = new Audio(config.src)
         audio.volume = this.volume
-        audio.preload = 'auto'
+        // Don't preload to avoid 416 errors with empty placeholder files
+        audio.preload = 'none'
+        
+        // Handle audio errors gracefully
+        audio.addEventListener('error', () => {
+          console.warn(`サウンドファイルの読み込みエラー: ${type}。プレースホルダーファイルの可能性があります。`)
+        })
+        
         this.sounds.set(type as SoundType, audio)
       } catch (error) {
-        console.warn(`Failed to load sound: ${type}`, error)
+        console.warn(`サウンドの初期化に失敗: ${type}`, error)
       }
     })
   }
