@@ -602,6 +602,8 @@ export function FruitHarvestGame() {
                 availableDifficulties={difficulty.availableDifficulties}
                 onDifficultyChange={difficulty.setDifficulty}
                 disabled={gameState === 'playing'}
+                language={language}
+                t={t}
               />
               <div className="flex items-center space-x-2">
                 <input

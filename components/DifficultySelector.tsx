@@ -1,12 +1,14 @@
 import React from 'react'
 import { DifficultyLevel } from '@/types/difficulty'
-import { useLanguage } from '@/hooks/useLanguage'
+import { translations } from '@/lib/i18n/translations'
 
 interface DifficultySelectorProps {
   currentDifficulty: DifficultyLevel
   availableDifficulties: DifficultyLevel[]
   onDifficultyChange: (difficulty: DifficultyLevel) => void
   disabled?: boolean
+  language: 'ja' | 'en'
+  t: typeof translations.ja | typeof translations.en
 }
 
 const DIFFICULTY_COLORS = {
@@ -22,12 +24,12 @@ export function DifficultySelector({
   availableDifficulties,
   onDifficultyChange,
   disabled = false,
+  language,
+  t,
 }: DifficultySelectorProps) {
-  const { t, language } = useLanguage()
-  
   // Debug output to check what's happening
   if (typeof window !== 'undefined') {
-    console.log('DifficultySelector Debug:', {
+    console.log('DifficultySelector Debug (from props):', {
       language,
       difficulty: t?.difficulty,
       difficultyEasy: t?.difficultyEasy,
