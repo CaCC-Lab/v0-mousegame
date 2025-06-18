@@ -34,6 +34,29 @@ export const translations = {
     easyMode: '🐢 とまるモード',
     hardModeTitle: '🏃 うごくモード',
     
+    // Difficulty
+    difficulty: '難易度',
+    difficultyEasy: 'かんたん',
+    difficultyNormal: 'ふつう',
+    difficultyHard: 'むずかしい',
+    difficultyStats: {
+      fruits: '🍎 フルーツ',
+      time: '⏱️ 時間',
+      score: '📊 スコア',
+      few: '少ない',
+      standard: '標準',
+      many: '多い',
+      bonus: '+50%',
+      penalty: '-20%',
+      scoreBonus: '+20%',
+      scorePenalty: '-20%'
+    },
+    difficultyDesc: {
+      easy: 'フルーツが少なく、時間に余裕があります',
+      normal: 'バランスの取れた標準的な難易度です',
+      hard: 'フルーツが多く、時間制限が厳しくなります'
+    },
+    
     // Game Info
     score: '得点:',
     highScore: '最高得点:',
@@ -100,6 +123,29 @@ export const translations = {
     modeSection: '🎮 Game Modes 🎮',
     easyMode: '🐢 Still Mode',
     hardModeTitle: '🏃 Moving Mode',
+    
+    // Difficulty
+    difficulty: 'Difficulty',
+    difficultyEasy: 'Easy',
+    difficultyNormal: 'Normal',
+    difficultyHard: 'Hard',
+    difficultyStats: {
+      fruits: '🍎 Fruits',
+      time: '⏱️ Time',
+      score: '📊 Score',
+      few: 'Few',
+      standard: 'Standard',
+      many: 'Many',
+      bonus: '+50%',
+      penalty: '-20%',
+      scoreBonus: '+20%',
+      scorePenalty: '-20%'
+    },
+    difficultyDesc: {
+      easy: 'Fewer fruits with more time to collect',
+      normal: 'Well-balanced standard difficulty',
+      hard: 'More fruits with stricter time limits'
+    },
     
     // Game Info
     score: 'Score:',

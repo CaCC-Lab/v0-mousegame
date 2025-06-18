@@ -5,7 +5,6 @@ import { useLanguage } from '@/hooks/useLanguage'
 interface DifficultySelectorProps {
   currentDifficulty: DifficultyLevel
   availableDifficulties: DifficultyLevel[]
-  difficultyDescriptions: Record<DifficultyLevel, string>
   onDifficultyChange: (difficulty: DifficultyLevel) => void
   disabled?: boolean
 }
@@ -34,11 +33,10 @@ const DIFFICULTY_LABELS = {
 export function DifficultySelector({
   currentDifficulty,
   availableDifficulties,
-  difficultyDescriptions,
   onDifficultyChange,
   disabled = false,
 }: DifficultySelectorProps) {
-  const { language } = useLanguage()
+  const { language, t } = useLanguage()
   const labels = DIFFICULTY_LABELS[language] || DIFFICULTY_LABELS.en
 
   const handleDifficultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -84,30 +82,30 @@ export function DifficultySelector({
 
       {/* Difficulty Description */}
       <div className="text-sm text-gray-600 italic">
-        {difficultyDescriptions[currentDifficulty]}
+        {t.difficultyDesc[currentDifficulty]}
       </div>
 
       {/* Difficulty Stats */}
       <div className="text-xs text-gray-500">
         {currentDifficulty === 'easy' && (
           <div className="flex space-x-4">
-            <span>🍎 フルーツ: 少ない</span>
-            <span>⏱️ 時間: +50%</span>
-            <span>📊 スコア: -20%</span>
+            <span>{t.difficultyStats.fruits}: {t.difficultyStats.few}</span>
+            <span>{t.difficultyStats.time}: {t.difficultyStats.bonus}</span>
+            <span>{t.difficultyStats.score}: {t.difficultyStats.scorePenalty}</span>
           </div>
         )}
         {currentDifficulty === 'normal' && (
           <div className="flex space-x-4">
-            <span>🍎 フルーツ: 標準</span>
-            <span>⏱️ 時間: 標準</span>
-            <span>📊 スコア: 標準</span>
+            <span>{t.difficultyStats.fruits}: {t.difficultyStats.standard}</span>
+            <span>{t.difficultyStats.time}: {t.difficultyStats.standard}</span>
+            <span>{t.difficultyStats.score}: {t.difficultyStats.standard}</span>
           </div>
         )}
         {currentDifficulty === 'hard' && (
           <div className="flex space-x-4">
-            <span>🍎 フルーツ: 多い</span>
-            <span>⏱️ 時間: -20%</span>
-            <span>📊 スコア: +20%</span>
+            <span>{t.difficultyStats.fruits}: {t.difficultyStats.many}</span>
+            <span>{t.difficultyStats.time}: {t.difficultyStats.penalty}</span>
+            <span>{t.difficultyStats.score}: {t.difficultyStats.scoreBonus}</span>
           </div>
         )}
       </div>

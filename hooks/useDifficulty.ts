@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { DifficultyManager } from '../lib/difficultyManager'
 import { DifficultyLevel, DifficultyConfig } from '../types/difficulty'
+import { useLanguage } from './useLanguage'
 
 export interface UseDifficultyReturn {
   currentDifficulty: DifficultyLevel
@@ -13,6 +14,7 @@ export interface UseDifficultyReturn {
 }
 
 export function useDifficulty(): UseDifficultyReturn {
+  const { t } = useLanguage()
   const difficultyManagerRef = useRef<DifficultyManager | null>(null)
   const [currentDifficulty, setCurrentDifficultyState] = useState<DifficultyLevel>('normal')
   const [currentConfig, setCurrentConfig] = useState<DifficultyConfig>({
@@ -21,14 +23,8 @@ export function useDifficulty(): UseDifficultyReturn {
     timeLimitMultiplier: 1.0,
     fruitSpeedMultiplier: 1.0,
     scoreMultiplier: 1.0,
-    description: 'バランスの取れた標準的な難易度です',
   })
   const [availableDifficulties, setAvailableDifficulties] = useState<DifficultyLevel[]>(['easy', 'normal', 'hard'])
-  const [difficultyDescriptions, setDifficultyDescriptions] = useState<Record<DifficultyLevel, string>>({
-    easy: 'フルーツが少なく、時間に余裕があります',
-    normal: 'バランスの取れた標準的な難易度です',
-    hard: 'フルーツが多く、時間制限が厳しくなります',
-  })
 
   useEffect(() => {
     difficultyManagerRef.current = new DifficultyManager()
@@ -40,7 +36,6 @@ export function useDifficulty(): UseDifficultyReturn {
       setCurrentDifficultyState(difficultyManagerRef.current.getCurrentDifficulty())
       setCurrentConfig(difficultyManagerRef.current.getCurrentConfig())
       setAvailableDifficulties(difficultyManagerRef.current.getAvailableDifficulties())
-      setDifficultyDescriptions(difficultyManagerRef.current.getDifficultyDescriptions())
     }
   }, [])
 
@@ -58,6 +53,13 @@ export function useDifficulty(): UseDifficultyReturn {
   const getAdjustedScore = useCallback((baseScore: number) => {
     return difficultyManagerRef.current?.getAdjustedScore(baseScore) ?? baseScore
   }, [])
+
+  // Use i18n descriptions
+  const difficultyDescriptions: Record<DifficultyLevel, string> = {
+    easy: t.difficultyDesc.easy,
+    normal: t.difficultyDesc.normal,
+    hard: t.difficultyDesc.hard,
+  }
 
   return {
     currentDifficulty,

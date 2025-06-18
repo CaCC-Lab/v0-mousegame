@@ -16,7 +16,7 @@ export class DifficultyManager {
           this.currentDifficulty = storedDifficulty as DifficultyLevel
         }
       } catch (error) {
-        console.warn('難易度設定の読み込みに失敗しました。デフォルト値を使用します。', error)
+        console.warn('Failed to load difficulty settings. Using default values.', error)
       }
     }
   }
@@ -26,7 +26,7 @@ export class DifficultyManager {
       try {
         localStorage.setItem(this.STORAGE_KEY, this.currentDifficulty)
       } catch (error) {
-        console.warn('難易度設定の保存に失敗しました。', error)
+        console.warn('Failed to save difficulty settings.', error)
       }
     }
   }
@@ -64,13 +64,13 @@ export class DifficultyManager {
     return Object.keys(DIFFICULTY_CONFIGS) as DifficultyLevel[]
   }
 
+  // Descriptions are now handled by i18n
   getDifficultyDescriptions(): Record<DifficultyLevel, string> {
-    const descriptions: Record<DifficultyLevel, string> = {} as Record<DifficultyLevel, string>
-    
-    for (const [level, config] of Object.entries(DIFFICULTY_CONFIGS)) {
-      descriptions[level as DifficultyLevel] = config.description
+    // Return empty descriptions as they're now handled by the useLanguage hook
+    return {
+      easy: '',
+      normal: '',
+      hard: ''
     }
-    
-    return descriptions
   }
 }

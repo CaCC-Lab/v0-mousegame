@@ -6,7 +6,6 @@ export interface DifficultyConfig {
   timeLimitMultiplier: number
   fruitSpeedMultiplier: number
   scoreMultiplier: number
-  description: string
 }
 
 export const DIFFICULTY_CONFIGS: Record<DifficultyLevel, DifficultyConfig> = {
@@ -16,7 +15,6 @@ export const DIFFICULTY_CONFIGS: Record<DifficultyLevel, DifficultyConfig> = {
     timeLimitMultiplier: 1.5,
     fruitSpeedMultiplier: 0.5,
     scoreMultiplier: 0.8,
-    description: 'フルーツが少なく、時間に余裕があります',
   },
   normal: {
     fruitCount: 10,
@@ -24,7 +22,6 @@ export const DIFFICULTY_CONFIGS: Record<DifficultyLevel, DifficultyConfig> = {
     timeLimitMultiplier: 1.0,
     fruitSpeedMultiplier: 1.0,
     scoreMultiplier: 1.0,
-    description: 'バランスの取れた標準的な難易度です',
   },
   hard: {
     fruitCount: 12,
@@ -32,6 +29,5 @@ export const DIFFICULTY_CONFIGS: Record<DifficultyLevel, DifficultyConfig> = {
     timeLimitMultiplier: 0.8,
     fruitSpeedMultiplier: 1.5,
     scoreMultiplier: 1.2,
-    description: 'フルーツが多く、時間制限が厳しくなります',
   },
 }

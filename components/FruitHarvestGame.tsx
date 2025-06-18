@@ -81,6 +81,7 @@ export function FruitHarvestGame() {
   const [selectedFruitIndex, setSelectedFruitIndex] = useState<number>(-1)
   const [showStageSelector, setShowStageSelector] = useState(false)
   const [showStageClearMessage, setShowStageClearMessage] = useState(false)
+  const [stageClearProcessed, setStageClearProcessed] = useState(false)
   const gameAreaRef = useRef<HTMLDivElement>(null)
   
   // Wrapped fruit interaction handler that triggers animations
@@ -248,9 +249,10 @@ export function FruitHarvestGame() {
 
   // Check for stage clear when game ends
   useEffect(() => {
-    if (gameState === 'idle' && score > 0 && stage?.isHydrated && stage?.currentStageInfo) {
+    if (gameState === 'idle' && score > 0 && stage?.isHydrated && stage?.currentStageInfo && !stageClearProcessed) {
       const isStageCompleted = stage?.checkStageCompletion(score, harvestedFruits) ?? false
       if (isStageCompleted) {
+        setStageClearProcessed(true)
         setShowStageClearMessage(true)
         // Trigger stage complete animation at center of game area
         const gameArea = gameAreaRef.current
@@ -258,12 +260,16 @@ export function FruitHarvestGame() {
           const rect = gameArea.getBoundingClientRect()
           triggerAnimation('stageComplete', rect.width / 2, rect.height / 2)
         }
-        setTimeout(() => {
-          setShowStageClearMessage(false)
-        }, 3000)
       }
     }
-  }, [gameState, score, harvestedFruits, stage, triggerAnimation])
+  }, [gameState, score, harvestedFruits, stage, triggerAnimation, stageClearProcessed])
+  
+  // Reset stage clear flag when starting a new game
+  useEffect(() => {
+    if (gameState === 'playing') {
+      setStageClearProcessed(false)
+    }
+  }, [gameState])
 
   // Listen for Electron menu events
   useEffect(() => {
@@ -594,7 +600,6 @@ export function FruitHarvestGame() {
               <DifficultySelector
                 currentDifficulty={difficulty.currentDifficulty}
                 availableDifficulties={difficulty.availableDifficulties}
-                difficultyDescriptions={difficulty.difficultyDescriptions}
                 onDifficultyChange={difficulty.setDifficulty}
                 disabled={gameState === 'playing'}
               />
@@ -648,37 +653,48 @@ export function FruitHarvestGame() {
       )}
       
       {/* Stage Clear Message */}
-      {showStageClearMessage && (
-        <div className="fixed inset-0 flex items-center justify-center pointer-events-none z-50">
-          <motion.div
-            initial={{ scale: 0, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            exit={{ scale: 0, opacity: 0 }}
-            className="bg-yellow-400 text-white px-8 py-6 rounded-lg shadow-2xl"
+      <AnimatePresence>
+        {showStageClearMessage && (
+          <motion.div 
+            className="fixed inset-0 flex items-center justify-center pointer-events-none z-50"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            key="stage-clear-backdrop"
           >
-            <h2 className="text-3xl font-bold mb-2">{t.stageClear}</h2>
-            <p className="text-lg text-center">{t.stage} {stage?.isHydrated ? stage?.currentStage : 1} {t.stageCleared}</p>
-            <div className="mt-4 flex justify-center space-x-4">
-              <Button
-                onClick={() => {
-                  setShowStageClearMessage(false)
-                  stage?.nextStage()
-                  resetGame()
-                }}
-                className="pointer-events-auto bg-green-500 hover:bg-green-600 text-white"
-              >
-                {t.nextStage}
-              </Button>
-              <Button
-                onClick={() => setShowStageClearMessage(false)}
-                className="pointer-events-auto bg-gray-500 hover:bg-gray-600 text-white"
-              >
-                {t.close}
-              </Button>
-            </div>
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0, opacity: 0 }}
+              transition={{ type: "spring", duration: 0.5 }}
+              className="bg-yellow-400 text-white px-8 py-6 rounded-lg shadow-2xl pointer-events-auto"
+              key="stage-clear-message"
+            >
+              <h2 className="text-3xl font-bold mb-2">{t.stageClear}</h2>
+              <p className="text-lg text-center">{t.stage} {stage?.isHydrated ? stage?.currentStage : 1} {t.stageCleared}</p>
+              <div className="mt-4 flex justify-center space-x-4">
+                <Button
+                  onClick={() => {
+                    setShowStageClearMessage(false)
+                    stage?.nextStage()
+                    resetGame()
+                    setStageClearProcessed(false)
+                  }}
+                  className="bg-green-500 hover:bg-green-600 text-white"
+                >
+                  {t.nextStage}
+                </Button>
+                <Button
+                  onClick={() => setShowStageClearMessage(false)}
+                  className="bg-gray-500 hover:bg-gray-600 text-white"
+                >
+                  {t.close}
+                </Button>
+              </div>
+            </motion.div>
           </motion.div>
-        </div>
-      )}
+        )}
+      </AnimatePresence>
     </div>
   )
 }
