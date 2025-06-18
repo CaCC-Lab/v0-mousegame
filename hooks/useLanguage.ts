@@ -23,15 +23,19 @@ export function useLanguage() {
 
   // Get translations for current language
   // Ensure we always have valid translations
-  const t = translations[language] || translations.ja
+  const currentLanguage: Language = language === 'en' || language === 'ja' ? language : 'ja'
+  const t = translations[currentLanguage]
 
   // Toggle between languages
   const toggleLanguage = () => {
-    setLanguage(language === 'ja' ? 'en' : 'ja')
+    const newLang = currentLanguage === 'ja' ? 'en' : 'ja'
+    setLanguage(newLang)
+    // Force update by logging
+    console.log('Language changed to:', newLang)
   }
 
   return {
-    language,
+    language: currentLanguage,
     setLanguage,
     toggleLanguage,
     t,

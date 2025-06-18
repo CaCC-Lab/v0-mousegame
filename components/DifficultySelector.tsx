@@ -27,15 +27,10 @@ export function DifficultySelector({
   language,
   t,
 }: DifficultySelectorProps) {
-  // Debug output to check what's happening
-  if (typeof window !== 'undefined') {
-    console.log('DifficultySelector Debug (from props):', {
-      language,
-      difficulty: t?.difficulty,
-      difficultyEasy: t?.difficultyEasy,
-      difficultyStats: t?.difficultyStats,
-      hasTranslations: !!t
-    })
+  // Ensure we have translations
+  if (!t || !t.difficulty) {
+    console.error('DifficultySelector: Missing translations', { language, t })
+    return null
   }
 
   const handleDifficultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -50,7 +45,7 @@ export function DifficultySelector({
           htmlFor="difficulty-select"
           className="text-sm font-medium text-gray-700"
         >
-          {t?.difficulty || '難易度'}:
+          {t.difficulty}:
         </label>
         
         <select
@@ -64,7 +59,7 @@ export function DifficultySelector({
             disabled:opacity-50 disabled:cursor-not-allowed
             ${DIFFICULTY_COLORS[currentDifficulty]}
           `}
-          aria-label={`${t?.difficulty || 'Difficulty'} selector`}
+          aria-label={`${t.difficulty} selector`}
           role="combobox"
         >
           {availableDifficulties.map((difficulty) => (
@@ -73,7 +68,7 @@ export function DifficultySelector({
               value={difficulty}
               className={`${DIFFICULTY_COLORS[difficulty]}`}
             >
-              {difficulty === 'easy' ? (t?.difficultyEasy || 'Easy') : difficulty === 'normal' ? (t?.difficultyNormal || 'Normal') : (t?.difficultyHard || 'Hard')}
+              {difficulty === 'easy' ? t.difficultyEasy : difficulty === 'normal' ? t.difficultyNormal : t.difficultyHard}
             </option>
           ))}
         </select>
@@ -81,30 +76,30 @@ export function DifficultySelector({
 
       {/* Difficulty Description */}
       <div className="text-sm text-gray-600 italic">
-        {t?.difficultyDesc?.[currentDifficulty] || ''}
+        {t.difficultyDesc[currentDifficulty]}
       </div>
 
       {/* Difficulty Stats */}
       <div className="text-xs text-gray-500">
         {currentDifficulty === 'easy' && (
           <div className="flex space-x-4">
-            <span>{t?.difficultyStats?.fruits || '🍎 Fruits'}: {t?.difficultyStats?.few || 'Few'}</span>
-            <span>{t?.difficultyStats?.time || '⏱️ Time'}: {t?.difficultyStats?.bonus || '+50%'}</span>
-            <span>{t?.difficultyStats?.score || '📊 Score'}: {t?.difficultyStats?.scorePenalty || '-20%'}</span>
+            <span>{t.difficultyStats.fruits}: {t.difficultyStats.few}</span>
+            <span>{t.difficultyStats.time}: {t.difficultyStats.bonus}</span>
+            <span>{t.difficultyStats.score}: {t.difficultyStats.scorePenalty}</span>
           </div>
         )}
         {currentDifficulty === 'normal' && (
           <div className="flex space-x-4">
-            <span>{t?.difficultyStats?.fruits || '🍎 Fruits'}: {t?.difficultyStats?.standard || 'Standard'}</span>
-            <span>{t?.difficultyStats?.time || '⏱️ Time'}: {t?.difficultyStats?.standard || 'Standard'}</span>
-            <span>{t?.difficultyStats?.score || '📊 Score'}: {t?.difficultyStats?.standard || 'Standard'}</span>
+            <span>{t.difficultyStats.fruits}: {t.difficultyStats.standard}</span>
+            <span>{t.difficultyStats.time}: {t.difficultyStats.standard}</span>
+            <span>{t.difficultyStats.score}: {t.difficultyStats.standard}</span>
           </div>
         )}
         {currentDifficulty === 'hard' && (
           <div className="flex space-x-4">
-            <span>{t?.difficultyStats?.fruits || '🍎 Fruits'}: {t?.difficultyStats?.many || 'Many'}</span>
-            <span>{t?.difficultyStats?.time || '⏱️ Time'}: {t?.difficultyStats?.penalty || '-20%'}</span>
-            <span>{t?.difficultyStats?.score || '📊 Score'}: {t?.difficultyStats?.scoreBonus || '+20%'}</span>
+            <span>{t.difficultyStats.fruits}: {t.difficultyStats.many}</span>
+            <span>{t.difficultyStats.time}: {t.difficultyStats.penalty}</span>
+            <span>{t.difficultyStats.score}: {t.difficultyStats.scoreBonus}</span>
           </div>
         )}
       </div>
