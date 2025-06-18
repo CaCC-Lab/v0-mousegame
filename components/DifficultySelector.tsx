@@ -15,20 +15,7 @@ const DIFFICULTY_COLORS = {
   hard: 'text-red-600 bg-red-50 border-red-200',
 } as const
 
-const DIFFICULTY_LABELS = {
-  ja: {
-    easy: 'かんたん',
-    normal: 'ふつう',
-    hard: 'むずかしい',
-    difficultyLabel: '難易度',
-  },
-  en: {
-    easy: 'Easy',
-    normal: 'Normal',
-    hard: 'Hard',
-    difficultyLabel: 'Difficulty',
-  },
-} as const
+// Difficulty labels are now handled by translations
 
 export function DifficultySelector({
   currentDifficulty,
@@ -36,8 +23,7 @@ export function DifficultySelector({
   onDifficultyChange,
   disabled = false,
 }: DifficultySelectorProps) {
-  const { language, t } = useLanguage()
-  const labels = DIFFICULTY_LABELS[language] || DIFFICULTY_LABELS.en
+  const { t } = useLanguage()
 
   const handleDifficultyChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
     const newDifficulty = event.target.value as DifficultyLevel
@@ -51,7 +37,7 @@ export function DifficultySelector({
           htmlFor="difficulty-select"
           className="text-sm font-medium text-gray-700"
         >
-          {labels.difficultyLabel}:
+          {t.difficulty}:
         </label>
         
         <select
@@ -65,7 +51,7 @@ export function DifficultySelector({
             disabled:opacity-50 disabled:cursor-not-allowed
             ${DIFFICULTY_COLORS[currentDifficulty]}
           `}
-          aria-label={`${labels.difficultyLabel} selector`}
+          aria-label={`${t.difficulty} selector`}
           role="combobox"
         >
           {availableDifficulties.map((difficulty) => (
@@ -74,7 +60,7 @@ export function DifficultySelector({
               value={difficulty}
               className={`${DIFFICULTY_COLORS[difficulty]}`}
             >
-              {labels[difficulty]}
+              {difficulty === 'easy' ? t.difficultyEasy : difficulty === 'normal' ? t.difficultyNormal : t.difficultyHard}
             </option>
           ))}
         </select>

@@ -36,7 +36,7 @@ export class StageManager {
       
       return JSON.parse(saved)
     } catch (error) {
-      console.warn('ステージ進行状況の読み込みに失敗しました。新規ゲームとして開始します。', error)
+      console.warn('Failed to load stage progress. Starting as new game.', error)
       return null
     }
   }
@@ -47,7 +47,7 @@ export class StageManager {
     try {
       localStorage.setItem('stageProgress', JSON.stringify(this.progress))
     } catch (error) {
-      console.warn('ステージ進行状況の保存に失敗しました。', error)
+      console.warn('Failed to save stage progress.', error)
     }
   }
 

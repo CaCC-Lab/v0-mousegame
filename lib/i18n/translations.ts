@@ -21,6 +21,44 @@ export const translations = {
     stageCleared: 'をクリアしました！',
     nextStage: '次のステージへ',
     close: '閉じる',
+    
+    // Stage Selector
+    targetScore: '目標スコア',
+    targetFruits: '目標フルーツ',
+    timeLimit: '制限時間',
+    seconds: '秒',
+    pieces: '個',
+    cleared: '✅ クリア済み',
+    locked: '🔒 ロック中',
+    
+    // Stage Names and Descriptions
+    stages: {
+      stage1: {
+        name: 'フルーツ畑',
+        description: 'フルーツ収穫の基本を学びましょう'
+      },
+      stage2: {
+        name: 'ベリーの森',
+        description: 'ブルーベリーのダブルクリックをマスターしよう'
+      },
+      stage3: {
+        name: 'レモン園',
+        description: '右クリックでレモンを収穫しましょう'
+      },
+      stage4: {
+        name: 'スイカファーム',
+        description: '大きなスイカをドラッグ&ドロップで運びましょう'
+      },
+      stage5: {
+        name: 'フルーツミックス',
+        description: 'すべてのフルーツを使いこなそう'
+      },
+      stage6: {
+        name: 'フルーツマスター',
+        description: '最終チャレンジ！すべての技術を駆使しよう'
+      }
+    },
+    
     apple: 'りんご',
     blueberry: 'ブルーベリー',
     lemon: 'レモン',
@@ -111,6 +149,44 @@ export const translations = {
     stageCleared: 'cleared!',
     nextStage: 'Next Stage',
     close: 'Close',
+    
+    // Stage Selector
+    targetScore: 'Target Score',
+    targetFruits: 'Target Fruits',
+    timeLimit: 'Time Limit',
+    seconds: 'seconds',
+    pieces: 'pieces',
+    cleared: '✅ Cleared',
+    locked: '🔒 Locked',
+    
+    // Stage Names and Descriptions
+    stages: {
+      stage1: {
+        name: 'Fruit Farm',
+        description: 'Learn the basics of fruit harvesting'
+      },
+      stage2: {
+        name: 'Berry Forest',
+        description: 'Master the double-click for blueberries'
+      },
+      stage3: {
+        name: 'Lemon Garden',
+        description: 'Harvest lemons with right-click'
+      },
+      stage4: {
+        name: 'Watermelon Farm',
+        description: 'Drag & drop the big watermelons'
+      },
+      stage5: {
+        name: 'Fruit Mix',
+        description: 'Master all types of fruits'
+      },
+      stage6: {
+        name: 'Fruit Master',
+        description: 'Final challenge! Use all your skills'
+      }
+    },
+    
     apple: 'Apple',
     blueberry: 'Blueberry',
     lemon: 'Lemon',

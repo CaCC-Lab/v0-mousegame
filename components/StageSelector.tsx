@@ -2,6 +2,7 @@ import React from 'react'
 import { Stage } from '../types/stage'
 import { Button } from './ui/button'
 import { X, Lock, CheckCircle, Star } from 'lucide-react'
+import { useLanguage } from '../hooks/useLanguage'
 
 interface StageSelectorProps {
   stages: Stage[]
@@ -16,6 +17,13 @@ export function StageSelector({
   onSelectStage,
   onClose
 }: StageSelectorProps) {
+  const { t } = useLanguage()
+  
+  // Get translated stage name and description
+  const getStageTranslation = (stageNumber: number) => {
+    const stageKey = `stage${stageNumber}` as keyof typeof t.stages
+    return t.stages[stageKey] || { name: '', description: '' }
+  }
   const handleStageClick = (stage: Stage) => {
     if (stage.unlocked) {
       onSelectStage(stage.number)
@@ -31,7 +39,7 @@ export function StageSelector({
 
   const formatFruitTargets = (targetFruits: Stage['targetFruits']) => {
     if (targetFruits.total) {
-      return `${targetFruits.total}個`
+      return `${targetFruits.total} ${t.pieces}`
     }
     
     const targets = []
@@ -47,11 +55,11 @@ export function StageSelector({
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold">ステージ選択</h2>
+          <h2 className="text-2xl font-bold">{t.stageSelect}</h2>
           <button
             onClick={onClose}
             className="p-2 hover:bg-gray-100 rounded-lg"
-            aria-label="閉じる"
+            aria-label={t.close}
           >
             <X className="w-5 h-5" />
           </button>
@@ -65,7 +73,7 @@ export function StageSelector({
               tabIndex={0}
               onClick={() => handleStageClick(stage)}
               onKeyDown={(e) => handleKeyDown(e, stage)}
-              aria-label={`ステージ ${stage.number}: ${stage.name}`}
+              aria-label={`${t.stage} ${stage.number}: ${getStageTranslation(stage.number).name}`}
               aria-disabled={!stage.unlocked}
               className={`
                 p-4 rounded-lg border-2 transition-all cursor-pointer
@@ -85,7 +93,7 @@ export function StageSelector({
             >
               <div className="flex justify-between items-start mb-2">
                 <h3 className="text-lg font-semibold">
-                  ステージ {stage.number}
+                  {t.stage} {stage.number}
                 </h3>
                 {stage.unlocked ? (
                   stage.completed ? (
@@ -98,25 +106,25 @@ export function StageSelector({
                 )}
               </div>
 
-              <h4 className="font-medium mb-2">{stage.name}</h4>
+              <h4 className="font-medium mb-2">{getStageTranslation(stage.number).name}</h4>
               <p className="text-sm text-gray-600 mb-3">
-                {stage.description}
+                {getStageTranslation(stage.number).description}
               </p>
 
               <div className="space-y-1 text-sm">
                 <div className="flex justify-between">
-                  <span className="text-gray-500">目標スコア:</span>
+                  <span className="text-gray-500">{t.targetScore}:</span>
                   <span className="font-medium">{stage.targetScore}</span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">目標フルーツ:</span>
+                  <span className="text-gray-500">{t.targetFruits}:</span>
                   <span className="font-medium">
                     {formatFruitTargets(stage.targetFruits)}
                   </span>
                 </div>
                 <div className="flex justify-between">
-                  <span className="text-gray-500">制限時間:</span>
-                  <span className="font-medium">{stage.timeLimit}秒</span>
+                  <span className="text-gray-500">{t.timeLimit}:</span>
+                  <span className="font-medium">{stage.timeLimit} {t.seconds}</span>
                 </div>
               </div>
 
@@ -124,10 +132,10 @@ export function StageSelector({
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <div className="flex items-center justify-between text-sm">
                     <span className="text-green-600 font-medium">
-                      ✅ クリア済み
+                      {t.cleared}
                     </span>
                     <span className="text-gray-600">
-                      ハイスコア: {stage.highScore}
+                      {t.highScore} {stage.highScore}
                     </span>
                   </div>
                 </div>
@@ -136,7 +144,7 @@ export function StageSelector({
               {!stage.unlocked && (
                 <div className="mt-3 pt-3 border-t border-gray-200">
                   <span className="text-sm text-gray-500">
-                    🔒 ロック中
+                    {t.locked}
                   </span>
                 </div>
               )}
@@ -146,7 +154,7 @@ export function StageSelector({
 
         <div className="mt-6 flex justify-end">
           <Button onClick={onClose} variant="outline">
-            閉じる
+            {t.close}
           </Button>
         </div>
       </div>

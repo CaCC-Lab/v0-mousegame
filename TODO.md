@@ -55,6 +55,16 @@
   - ✅ stageClearProcessedフラグを追加して一度だけ検出
   - ✅ AnimatePresenceでアニメーションを適切に管理
   - ✅ ゲーム開始時にフラグをリセット
+- [x] **難易度ラベルの英語翻訳対応**
+  - ✅ DifficultySelectorのDIFFICULTY_LABELSを削除
+  - ✅ translations.tsから直接翻訶を取得
+  - ✅ 「かんたん」「ふつう」「むずかしい」の動的翻訶
+- [x] **ステージ選択画面の英語翻訳対応**
+  - ✅ StageSelectorにuseLanguageフックを追加
+  - ✅ ハードコードされた日本語をすべて翻訳キーに置換
+  - ✅ ステージ名と説明文の動的翻訳対応
+  - ✅ translations.tsに各ステージの翻訶を追加
+  - ✅ StageManagerのコンソールメッセージも英語化
 
 ## 現在の問題と修正タスク 🚨
 
