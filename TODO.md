@@ -104,6 +104,10 @@
 - [x] **LICENSEファイルの作成**
   - ✅ MITライセンスファイルを作成
   - ✅ Copyright (c) 2025 CaCC-Lab
+- [x] **ブラウザタブタイトルの修正**
+  - ✅ "Create Next App"から"フルーツハーベスト - Fruit Harvest Game"に変更
+  - ✅ metaタグのdescriptionも適切な内容に更新
+  - ✅ HTMLのlang属性を"ja"に設定
 
 ## 現在の問題と修正タスク 🚨
 
