@@ -596,16 +596,18 @@ export function FruitHarvestGame() {
           {/* Settings Controls - Bottom Row */}
           <div className="flex flex-wrap gap-6 justify-center items-center">
             {/* Difficulty Settings Group */}
-            <div className="flex items-center gap-4 bg-white/50 rounded-lg px-4 py-2">
-              <DifficultySelector
-                currentDifficulty={difficulty.currentDifficulty}
-                availableDifficulties={difficulty.availableDifficulties}
-                onDifficultyChange={difficulty.setDifficulty}
-                disabled={gameState === 'playing'}
-                language={language}
-                t={t}
-              />
-              <div className="flex items-center space-x-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 bg-white/50 rounded-lg px-4 py-3 min-w-[320px]">
+              <div className="flex-1">
+                <DifficultySelector
+                  currentDifficulty={difficulty.currentDifficulty}
+                  availableDifficulties={difficulty.availableDifficulties}
+                  onDifficultyChange={difficulty.setDifficulty}
+                  disabled={gameState === 'playing'}
+                  language={language}
+                  t={t}
+                />
+              </div>
+              <div className="flex items-center justify-center sm:justify-start space-x-2 border-t sm:border-t-0 sm:border-l border-gray-300 pt-3 sm:pt-0 sm:pl-4">
                 <input
                   type="checkbox"
                   id="hard-mode"

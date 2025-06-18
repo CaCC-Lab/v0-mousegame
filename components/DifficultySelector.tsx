@@ -39,11 +39,12 @@ export function DifficultySelector({
   }
 
   return (
-    <div className="flex flex-col space-y-3">
-      <div className="flex items-center space-x-3">
+    <div className="flex flex-col space-y-3 w-full">
+      <div className="flex items-center gap-3">
         <label
           htmlFor="difficulty-select"
-          className="text-sm font-medium text-gray-700"
+          className="text-sm font-medium text-gray-700 flex-shrink-0"
+          style={{ minWidth: language === 'en' ? '90px' : '70px' }}
         >
           {t.difficulty}:
         </label>
@@ -54,11 +55,12 @@ export function DifficultySelector({
           onChange={handleDifficultyChange}
           disabled={disabled}
           className={`
-            px-3 py-2 border rounded-md text-sm font-medium
+            flex-1 px-3 py-2 border rounded-md text-sm font-medium
             focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent
             disabled:opacity-50 disabled:cursor-not-allowed
             ${DIFFICULTY_COLORS[currentDifficulty]}
           `}
+          style={{ minWidth: '120px' }}
           aria-label={`${t.difficulty} selector`}
           role="combobox"
         >
@@ -75,31 +77,31 @@ export function DifficultySelector({
       </div>
 
       {/* Difficulty Description */}
-      <div className="text-sm text-gray-600 italic">
+      <div className="text-sm text-gray-600 italic min-h-[1.5rem]">
         {t.difficultyDesc[currentDifficulty]}
       </div>
 
       {/* Difficulty Stats */}
       <div className="text-xs text-gray-500">
         {currentDifficulty === 'easy' && (
-          <div className="flex space-x-4">
-            <span>{t.difficultyStats.fruits}: {t.difficultyStats.few}</span>
-            <span>{t.difficultyStats.time}: {t.difficultyStats.bonus}</span>
-            <span>{t.difficultyStats.score}: {t.difficultyStats.scorePenalty}</span>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <span className="whitespace-nowrap">{t.difficultyStats.fruits}: {t.difficultyStats.few}</span>
+            <span className="whitespace-nowrap">{t.difficultyStats.time}: {t.difficultyStats.bonus}</span>
+            <span className="whitespace-nowrap">{t.difficultyStats.score}: {t.difficultyStats.scorePenalty}</span>
           </div>
         )}
         {currentDifficulty === 'normal' && (
-          <div className="flex space-x-4">
-            <span>{t.difficultyStats.fruits}: {t.difficultyStats.standard}</span>
-            <span>{t.difficultyStats.time}: {t.difficultyStats.standard}</span>
-            <span>{t.difficultyStats.score}: {t.difficultyStats.standard}</span>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <span className="whitespace-nowrap">{t.difficultyStats.fruits}: {t.difficultyStats.standard}</span>
+            <span className="whitespace-nowrap">{t.difficultyStats.time}: {t.difficultyStats.standard}</span>
+            <span className="whitespace-nowrap">{t.difficultyStats.score}: {t.difficultyStats.standard}</span>
           </div>
         )}
         {currentDifficulty === 'hard' && (
-          <div className="flex space-x-4">
-            <span>{t.difficultyStats.fruits}: {t.difficultyStats.many}</span>
-            <span>{t.difficultyStats.time}: {t.difficultyStats.penalty}</span>
-            <span>{t.difficultyStats.score}: {t.difficultyStats.scoreBonus}</span>
+          <div className="flex flex-wrap gap-x-4 gap-y-1">
+            <span className="whitespace-nowrap">{t.difficultyStats.fruits}: {t.difficultyStats.many}</span>
+            <span className="whitespace-nowrap">{t.difficultyStats.time}: {t.difficultyStats.penalty}</span>
+            <span className="whitespace-nowrap">{t.difficultyStats.score}: {t.difficultyStats.scoreBonus}</span>
           </div>
         )}
       </div>
