@@ -22,7 +22,8 @@ export function useLanguage() {
   )
 
   // Get translations for current language
-  const t = translations[language]
+  // Ensure we always have valid translations
+  const t = translations[language] || translations.ja
 
   // Toggle between languages
   const toggleLanguage = () => {
