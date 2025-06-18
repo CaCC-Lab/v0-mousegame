@@ -1,163 +1,254 @@
-# フルーツあつめゲーム (Fruit Harvest Game) 🍓
+# Fruit Harvest Game
 
-## どんなゲーム？
+A multi-platform action game built with Next.js, React, TypeScript, and Electron. Players collect falling fruits using various interaction methods to achieve high scores.
 
-がめんに出てくるフルーツをマウスでクリックして、たくさんあつめるゲームだよ！  
-フルーツによって、とりかたがちがうから、いろんなほうほうでチャレンジしてね。
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Next.js](https://img.shields.io/badge/Next.js-14.2.8-blue)](https://nextjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)](https://www.typescriptlang.org/)
+[![Electron](https://img.shields.io/badge/Electron-32.0-47848F)](https://www.electronjs.org/)
 
-## このゲームのとくちょう 
+## Features
 
-- 🍎 **４しゅるいのフルーツ**: りんご、ブルーベリー、レモン、スイカ
-- 🎮 **かんたんそうさ**: マウスをつかってフルーツをとろう
-- 🏆 **ハイスコアきろく**: いちばんたかいてんすうがきろくされるよ
-- 📚 **６つのステージ**: だんだんむずかしくなっていくよ
-- 🎯 **２つのモード**: とまるモード（かんたん）、うごくモード（むずかしい）
-- ⚡ **パワーアップアイテム**: ゲームをゆうりにすすめるアイテムがでるよ
+- **Cross-platform Support**: Runs in web browsers and as a desktop application (Windows, macOS, Linux)
+- **Multiple Interaction Methods**: Click, double-click, right-click, and drag-and-drop mechanics
+- **Progressive Difficulty**: 6 stages with increasing complexity
+- **Power-up System**: 8 different power-ups with various effects
+- **Internationalization**: Full support for Japanese and English
+- **Test-Driven Development**: Comprehensive test coverage with Jest and React Testing Library
+- **Responsive Design**: Optimized for various screen sizes and devices
+- **Performance Optimized**: 60fps gameplay with efficient rendering
 
-## インストール
+## Tech Stack
 
-### 必要な環境
+- **Frontend Framework**: Next.js 14.2.8 with App Router
+- **UI Library**: React 18 with TypeScript
+- **Styling**: Tailwind CSS 3.4 + shadcn/ui components
+- **Animation**: Framer Motion
+- **Desktop Framework**: Electron 32.0
+- **Testing**: Jest + React Testing Library + Playwright
+- **Build Tools**: Turbopack, electron-builder
+- **State Management**: React Hooks + Context API
 
-- Node.js 18.0以降
-- npm または yarn
+## Getting Started
 
-### セットアップ
+### Prerequisites
+
+- Node.js 18.0 or higher
+- npm or yarn
+- Git
+
+### Installation
 
 ```bash
-# リポジトリをクローン
+# Clone the repository
 git clone https://github.com/CaCC-Lab/v0-mousegame.git
 
-# ディレクトリに移動
+# Navigate to project directory
 cd v0-mousegame
 
-# 依存関係をインストール
+# Install dependencies
 npm install
 ```
 
-## 実行方法
-
-### ウェブブラウザで実行
+### Development
 
 ```bash
-# 開発サーバーを起動
+# Start Next.js development server
 npm run dev
 
-# ブラウザで http://localhost:3000 を開く
-```
-
-### デスクトップアプリとして実行
-
-```bash
-# Electronアプリを起動
+# Start Electron development mode
 npm run electron:dev
-```
 
-### プロダクションビルド
-
-```bash
-# ウェブ版をビルド
-npm run build
-
-# デスクトップアプリをビルド
-npm run build:win   # Windows版
-npm run build:mac   # macOS版
-npm run build:linux # Linux版
-```
-
-## あそびかた 🎮
-
-### フルーツのとりかた
-
-それぞれのフルーツは、とりかたがちがうよ！
-
-| フルーツ | とりかた | てんすう |
-|---------|---------|---------|
-| 🍎 りんご | マウスでカチッとクリック | 10てん |
-| 🫐 ブルーベリー | すばやく２かいクリック（ダブルクリック） | 20てん |
-| 🍋 レモン | マウスのみぎボタンをクリック | 30てん |
-| 🍉 スイカ | マウスでつかんで、みぎのきいろいエリアまでひっぱる | 50てん |
-
-### ゲームのはじめかた
-
-1. 「はじめる」ボタンをおしてゲームスタート！
-2. がめんにでてくるフルーツをマウスでとろう
-3. じかんがなくなるまでに、たくさんフルーツをあつめよう
-4. ステージをクリアしたら、つぎのステージにチャレンジ！
-
-### モードのちがい
-
-- **とまるモード** 🍎: フルーツはうごかないから、ゆっくりあそべるよ
-- **うごくモード** 🏃: フルーツがにげまわるから、おいかけてつかまえよう！
-
-### パワーアップアイテム ⚡
-
-ときどきでてくるパワーアップをとると、いいことがおこるよ！
-
-- 🚀 **スピードアップ**: フルーツのうごきがゆっくりになる
-- ✨ **スコアアップ**: てんすうが２ばいになる
-- ⏱️ **じかんストップ**: じかんがとまる
-- 🧲 **じしゃく**: ちかくのフルーツがよってくる
-- 🛡️ **シールド**: フルーツをのがしてもだいじょうぶ
-
-### キーボードでもあそべるよ
-
-| キー | なにができる？ |
-|------|-------------|
-| スペースキー | ゲームをはじめる / とめる |
-| やじるしキー（↑↓←→） | フルーツをえらぶ |
-| エンターキー | えらんだフルーツをとる |
-
-## 開発
-
-### 開発環境のセットアップ
-
-```bash
-# 開発サーバーを起動
-npm run dev
-
-# テストを実行
-npm test
-
-# テストをウォッチモードで実行
+# Run tests in watch mode
 npm run test:watch
 
-# カバレッジレポートを生成
-npm run test:coverage
-
-# E2Eテストを実行
+# Run E2E tests
 npm run test:e2e
 
-# E2EテストをUIモードで実行
-npm run test:e2e:ui
-
-# E2Eテストをデバッグモードで実行
-npm run test:e2e:debug
-
-# リントを実行
+# Lint code
 npm run lint
 ```
 
-### プロジェクト構造
+### Building for Production
+
+```bash
+# Build Next.js application
+npm run build
+
+# Build Electron applications
+npm run build:win     # Windows (.exe)
+npm run build:mac     # macOS (.dmg)
+npm run build:linux   # Linux (.AppImage)
+```
+
+## Architecture
+
+### Project Structure
 
 ```
 v0-mousegame/
-├── app/                 # Next.js アプリケーションファイル
-├── components/          # Reactコンポーネント
-├── electron/           # Electronメインプロセス
-├── hooks/              # カスタムReactフック
-├── lib/                # ユーティリティ関数
-├── types/              # TypeScript型定義
-└── __tests__/          # テストファイル
+├── app/                    # Next.js App Router pages
+│   ├── layout.tsx         # Root layout
+│   ├── page.tsx           # Home page
+│   └── globals.css        # Global styles
+├── components/            # React components
+│   ├── FruitHarvestGame.tsx   # Main game component
+│   ├── Fruit.tsx              # Fruit entity component
+│   ├── PowerUp.tsx            # Power-up component
+│   ├── DifficultySelector.tsx # Difficulty selection
+│   └── ui/                    # Reusable UI components
+├── hooks/                 # Custom React hooks
+│   ├── useGameLogic.ts       # Core game logic
+│   ├── usePowerUps.ts        # Power-up system
+│   ├── useStage.ts           # Stage management
+│   └── useLanguage.ts        # i18n hook
+├── lib/                   # Business logic
+│   ├── gameLogic.ts          # Game mechanics
+│   ├── stageManager.ts       # Stage progression
+│   ├── soundManager.ts       # Audio management
+│   └── i18n/                 # Translations
+├── types/                 # TypeScript definitions
+│   ├── game.ts              # Game entities
+│   ├── stage.ts             # Stage types
+│   └── powerup.ts           # Power-up types
+├── electron/              # Electron-specific code
+│   ├── main.ts              # Main process
+│   └── preload.ts           # Preload script
+└── __tests__/            # Test files
 ```
 
-### 技術スタック
+### Key Design Patterns
 
-- **フロントエンド**: Next.js 14, React 18, TypeScript
-- **スタイリング**: Tailwind CSS
-- **デスクトップ**: Electron
-- **テスト**: Jest, React Testing Library
-- **ビルドツール**: electron-builder
+1. **Custom Hook Architecture**: Core game logic is encapsulated in custom hooks for reusability and testability
+2. **Manager Pattern**: Dedicated manager classes for stages, sound, and difficulty
+3. **Component Composition**: UI components are composed of smaller, reusable parts
+4. **Test-Driven Development**: All features are developed with tests first
 
-## ライセンス
+### Game Mechanics
 
-このプロジェクトはMITライセンスの下で公開されています。
+#### Fruit Collection Methods
+
+| Fruit | Interaction | Points | Implementation |
+|-------|------------|--------|----------------|
+| Apple | Single Click | 10 | Standard click event |
+| Blueberry | Double Click | 20 | Click event with timing |
+| Lemon | Right Click | 30 | Context menu prevention |
+| Watermelon | Drag & Drop | 50 | Mouse tracking + drop zone |
+
+#### Power-Up System
+
+The game features 8 different power-ups that spawn randomly every 10 seconds:
+
+- **Speed Boost**: Slows fruit movement (15s)
+- **Score Multiplier**: Doubles points (20s)
+- **Slow Motion**: Freezes time (10s)
+- **Magnet**: Attracts nearby fruits
+- **Shield**: No penalty for missed fruits (30s)
+- **Time Extension**: Adds 15 seconds
+- **Extra Fruits**: Spawns 5 new fruits
+- **Freeze Time**: Stops the timer (10s)
+
+## Testing
+
+The project follows Test-Driven Development (TDD) principles with comprehensive test coverage:
+
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run E2E tests
+npm run test:e2e
+
+# Run E2E tests in UI mode
+npm run test:e2e:ui
+```
+
+### Test Structure
+
+- **Unit Tests**: Components, hooks, and utilities
+- **Integration Tests**: Game flow and state management
+- **E2E Tests**: Full user scenarios with Playwright
+
+## Deployment
+
+### Web Deployment
+
+The application can be deployed to any static hosting service:
+
+```bash
+# Build for production
+npm run build
+
+# Output will be in .next/ directory
+```
+
+### Desktop Distribution
+
+Electron builds are configured for auto-update support:
+
+```bash
+# Build and package for all platforms
+npm run build:all
+```
+
+## Configuration
+
+### Environment Variables
+
+Create a `.env.local` file for local development:
+
+```env
+# Add any environment-specific variables here
+```
+
+### Game Configuration
+
+Game parameters can be adjusted in `types/difficulty.ts` and `types/stage.ts`:
+
+- Fruit spawn rates
+- Movement speeds
+- Time limits
+- Score multipliers
+
+## Contributing
+
+1. Fork the repository
+2. Create a feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'feat: add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+### Code Style
+
+- Follow the existing code style
+- Use TypeScript strict mode
+- Write tests for new features
+- Update documentation as needed
+
+## Performance Considerations
+
+- **Rendering**: Uses React.memo and useCallback for optimization
+- **Animation**: RequestAnimationFrame for smooth 60fps gameplay
+- **State Management**: Optimized re-renders with proper dependency arrays
+- **Asset Loading**: Lazy loading for audio and images
+
+## Browser Support
+
+- Chrome/Edge (latest)
+- Firefox (latest)
+- Safari (latest)
+- Electron (Windows, macOS, Linux)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Acknowledgments
+
+- Built with [Next.js](https://nextjs.org/)
+- UI components from [shadcn/ui](https://ui.shadcn.com/)
+- Icons from [Lucide](https://lucide.dev/)
+- Animations powered by [Framer Motion](https://www.framer.com/motion/)
