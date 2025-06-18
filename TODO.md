@@ -76,6 +76,12 @@
   - ✅ FruitHarvestGameからlanguageとtを明示的に渡す
   - ✅ useLanguageフックの安全性を向上
   - ✅ テストページ（/test-translations）を追加してデバッグを容易に
+- [x] **英語モードでのレイアウト崩れを修正（Chrome対応）**
+  - ✅ ChromeとFirefoxの表示差異を確認
+  - ✅ DifficultySelectorのレイアウトを柔軟な設計に変更
+  - ✅ 難易度設定グループのレスポンシブ対応
+  - ✅ Chrome専用のCSS修正をglobals.cssに追加
+  - ✅ select要素のappearanceリセットとカスタム矢印
 
 ## 現在の問題と修正タスク 🚨
 
