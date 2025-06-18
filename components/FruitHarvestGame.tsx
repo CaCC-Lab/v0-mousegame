@@ -293,7 +293,7 @@ export function FruitHarvestGame() {
       ref={gameContainerRef as React.RefObject<HTMLDivElement>}
       className="min-h-screen bg-gray-100 p-4"
       tabIndex={0}
-      aria-label="フルーツハーベストゲーム"
+      aria-label={t.gameTitle}
       role="application"
     >
       <div className="max-w-4xl mx-auto bg-white rounded-lg shadow-lg overflow-hidden">
@@ -304,13 +304,13 @@ export function FruitHarvestGame() {
               {t.score} {score}
               {combo.multiplier > 1 && (
                 <span className="ml-2 text-sm text-yellow-600">
-                  x{combo.multiplier} コンボ!
+                  x{combo.multiplier} {t.combo}!
                 </span>
               )}
             </div>
             {stage?.isHydrated && stage?.currentStageInfo && stage?.currentStage > 0 && (
               <div className="text-sm font-medium">
-                ステージ {stage?.currentStage}: {stage?.currentStageInfo?.name}
+                {t.stage} {stage?.currentStage}: {stage?.currentStageInfo?.name}
               </div>
             )}
           </div>
@@ -336,55 +336,55 @@ export function FruitHarvestGame() {
             <DialogContent className="bg-white max-w-3xl max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="text-3xl font-bold text-gray-900 text-center">{t.helpTitle}</DialogTitle>
-                <DialogDescription className="sr-only">ゲームの遊び方の説明</DialogDescription>
+                <DialogDescription className="sr-only">{t.helpDescription}</DialogDescription>
               </DialogHeader>
               <div className="mt-6 text-left text-gray-700">
                 {/* フルーツの取り方 - 視覚的にわかりやすく配置 */}
-                <h3 className="text-xl font-bold mb-4 text-center">🍓 フルーツのとりかた 🍓</h3>
+                <h3 className="text-xl font-bold mb-4 text-center">{t.fruitSection}</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div className="p-4 bg-red-50 rounded-xl border-2 border-red-200 hover:border-red-400 transition-colors cursor-pointer transform hover:scale-105 transition-transform">
                       <div className="flex items-center mb-2">
                         <span className="text-4xl mr-3">🍎</span>
-                        <span className="font-bold text-xl text-red-700">りんご</span>
+                        <span className="font-bold text-xl text-red-700">{t.apple}</span>
                       </div>
-                      <div className="text-lg leading-relaxed">{t.helpContent.apple.replace('🍎 りんご: ', '')}</div>
-                      <div className="mt-2 text-sm text-red-600 font-semibold">10てん</div>
+                      <div className="text-lg leading-relaxed">{t.helpContent.apple.replace(/^[^:]+: /, '')}</div>
+                      <div className="mt-2 text-sm text-red-600 font-semibold">10 {t.points}</div>
                     </div>
                     <div className="p-4 bg-blue-50 rounded-xl border-2 border-blue-200 hover:border-blue-400 transition-colors cursor-pointer transform hover:scale-105 transition-transform">
                       <div className="flex items-center mb-2">
                         <span className="text-4xl mr-3">🫐</span>
-                        <span className="font-bold text-xl text-blue-700">ブルーベリー</span>
+                        <span className="font-bold text-xl text-blue-700">{t.blueberry}</span>
                       </div>
                       <div className="text-lg leading-relaxed">{t.helpContent.blueberry.replace('🫐 ブルーベリー: ', '')}</div>
-                      <div className="mt-2 text-sm text-blue-600 font-semibold">20てん</div>
+                      <div className="mt-2 text-sm text-blue-600 font-semibold">20 {t.points}</div>
                     </div>
                     <div className="p-4 bg-yellow-50 rounded-xl border-2 border-yellow-200 hover:border-yellow-400 transition-colors cursor-pointer transform hover:scale-105 transition-transform">
                       <div className="flex items-center mb-2">
                         <span className="text-4xl mr-3">🍋</span>
-                        <span className="font-bold text-xl text-yellow-700">レモン</span>
+                        <span className="font-bold text-xl text-yellow-700">{t.lemon}</span>
                       </div>
                       <div className="text-lg leading-relaxed">{t.helpContent.lemon.replace('🍋 レモン: ', '')}</div>
-                      <div className="mt-2 text-sm text-yellow-600 font-semibold">30てん</div>
+                      <div className="mt-2 text-sm text-yellow-600 font-semibold">30 {t.points}</div>
                     </div>
                     <div className="p-4 bg-green-50 rounded-xl border-2 border-green-200 hover:border-green-400 transition-colors cursor-pointer transform hover:scale-105 transition-transform">
                       <div className="flex items-center mb-2">
                         <span className="text-4xl mr-3">🍉</span>
-                        <span className="font-bold text-xl text-green-700">スイカ</span>
+                        <span className="font-bold text-xl text-green-700">{t.watermelon}</span>
                       </div>
                       <div className="text-lg leading-relaxed">{t.helpContent.watermelon.replace('🍉 スイカ: ', '')}</div>
-                      <div className="mt-2 text-sm text-green-600 font-semibold">50てん</div>
+                      <div className="mt-2 text-sm text-green-600 font-semibold">50 {t.points}</div>
                     </div>
                   </div>
                   {/* ゲームモード */}
                   <div className="mb-6 p-4 bg-purple-50 rounded-xl border-2 border-purple-200">
-                    <h4 className="font-bold text-lg text-purple-700 mb-3 text-center">🎮 ゲームモード 🎮</h4>
+                    <h4 className="font-bold text-lg text-purple-700 mb-3 text-center">{t.modeSection}</h4>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                       <div className="p-3 bg-white rounded-lg">
-                        <div className="font-semibold text-purple-600 mb-1">🐢 とまるモード</div>
+                        <div className="font-semibold text-purple-600 mb-1">{t.easyMode}</div>
                         <div className="text-sm">{t.helpContent.easyModeDesc.replace('とまるモード: ', '')}</div>
                       </div>
                       <div className="p-3 bg-white rounded-lg">
-                        <div className="font-semibold text-purple-600 mb-1">🏃 うごくモード</div>
+                        <div className="font-semibold text-purple-600 mb-1">{t.hardModeTitle}</div>
                         <div className="text-sm">{t.helpContent.hardModeDesc.replace('うごくモード: ', '')}</div>
                       </div>
                     </div>
@@ -402,15 +402,46 @@ export function FruitHarvestGame() {
                     <div className="space-y-3">
                       <div className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg">
                         <kbd className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-base font-mono shadow-sm">Space</kbd>
-                        <span className="text-base">{t.helpContent.keyboardSpace.replace('スペースキー: ', '')}</span>
+                        <span className="text-base">{t.helpContent.keyboardSpace.replace(/^[^:]+: /, '')}</span>
                       </div>
                       <div className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg">
                         <kbd className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-base font-mono shadow-sm">↑↓←→</kbd>
-                        <span className="text-base">{t.helpContent.keyboardArrow.replace('やじるしキー: ', '')}</span>
+                        <span className="text-base">{t.helpContent.keyboardArrow.replace(/^[^:]+: /, '')}</span>
                       </div>
                       <div className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-lg">
                         <kbd className="px-4 py-2 bg-white border-2 border-gray-300 rounded-lg text-base font-mono shadow-sm">Enter</kbd>
-                        <span className="text-base">{t.helpContent.keyboardEnter.replace('エンターキー: ', '')}</span>
+                        <span className="text-base">{t.helpContent.keyboardEnter.replace(/^[^:]+: /, '')}</span>
+                      </div>
+                    </div>
+                  </div>
+                  {/* パワーアップアイテム */}
+                  <div className="mt-6 p-4 bg-pink-50 rounded-xl border-2 border-pink-200">
+                    <h4 className="font-bold text-lg text-pink-700 mb-3 text-center">{t.helpContent.powerUpTitle}</h4>
+                    <p className="text-sm text-gray-600 mb-4 text-center">{t.helpContent.powerUpDesc}</p>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="text-base">{t.helpContent.powerUpSpeedBoost}</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="text-base">{t.helpContent.powerUpScoreMultiplier}</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="text-base">{t.helpContent.powerUpSlowMotion}</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="text-base">{t.helpContent.powerUpMagnet}</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="text-base">{t.helpContent.powerUpShield}</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="text-base">{t.helpContent.powerUpTimeExtension}</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="text-base">{t.helpContent.powerUpExtraFruits}</div>
+                      </div>
+                      <div className="p-3 bg-white rounded-lg">
+                        <div className="text-base">{t.helpContent.powerUpFreezeTime}</div>
                       </div>
                     </div>
                   </div>
@@ -424,12 +455,12 @@ export function FruitHarvestGame() {
           {/* Stage Goals */}
           {stage?.isHydrated && stage?.currentStageInfo && (
             <div className="mb-3 text-center text-sm">
-              <div className="font-medium">ステージ目標:</div>
+              <div className="font-medium">{t.stageGoals}</div>
               <div className="flex justify-center space-x-4 mt-1">
-                <span>スコア: {score} / {stage?.currentStageInfo?.targetScore}</span>
+                <span>{t.scoreText} {score} / {stage?.currentStageInfo?.targetScore}</span>
                 {stage?.currentStageInfo?.targetFruits?.total && (
                   <span>
-                    フルーツ: {Object.values(harvestedFruits).reduce((sum, count) => sum + count, 0)} / {stage?.currentStageInfo?.targetFruits?.total}
+                    {t.fruitsText} {Object.values(harvestedFruits).reduce((sum, count) => sum + count, 0)} / {stage?.currentStageInfo?.targetFruits?.total}
                   </span>
                 )}
               </div>
@@ -499,7 +530,7 @@ export function FruitHarvestGame() {
           
           <div className="drop-area absolute right-0 top-0 bottom-0 w-16 bg-yellow-200 border-l-2 border-yellow-400 flex justify-center items-center">
             <div className="writing-vertical text-yellow-800 font-bold text-lg">
-              ドロップエリア
+              {t.dropArea}
             </div>
           </div>
           
@@ -552,7 +583,7 @@ export function FruitHarvestGame() {
               onClick={() => setShowStageSelector(true)}
               className="bg-purple-500 hover:bg-purple-600 text-white px-6 py-2"
             >
-              ステージ選択
+              {t.stageSelect}
             </Button>
           </div>
 
@@ -625,8 +656,8 @@ export function FruitHarvestGame() {
             exit={{ scale: 0, opacity: 0 }}
             className="bg-yellow-400 text-white px-8 py-6 rounded-lg shadow-2xl"
           >
-            <h2 className="text-3xl font-bold mb-2">🎉 ステージクリア！ 🎉</h2>
-            <p className="text-lg text-center">ステージ {stage?.isHydrated ? stage?.currentStage : 1} をクリアしました！</p>
+            <h2 className="text-3xl font-bold mb-2">{t.stageClear}</h2>
+            <p className="text-lg text-center">{t.stage} {stage?.isHydrated ? stage?.currentStage : 1} {t.stageCleared}</p>
             <div className="mt-4 flex justify-center space-x-4">
               <Button
                 onClick={() => {
@@ -636,13 +667,13 @@ export function FruitHarvestGame() {
                 }}
                 className="pointer-events-auto bg-green-500 hover:bg-green-600 text-white"
               >
-                次のステージへ
+                {t.nextStage}
               </Button>
               <Button
                 onClick={() => setShowStageClearMessage(false)}
                 className="pointer-events-auto bg-gray-500 hover:bg-gray-600 text-white"
               >
-                閉じる
+                {t.close}
               </Button>
             </div>
           </motion.div>

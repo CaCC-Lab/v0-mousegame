@@ -19,6 +19,9 @@
 !/build/icon.*
 !/build/*.svg
 
+# Electron dist
+/dist
+
 # misc
 .DS_Store
 *.pem
