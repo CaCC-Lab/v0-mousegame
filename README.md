@@ -362,8 +362,7 @@ v0-mousegame/
 
 ### 🎮 [今すぐプレイ！](https://v0-mousegame.vercel.app/)
 
-**開発者**: [あなたの名前]  
-**GitHub**: [@your-github](https://github.com/your-github)  
-**ポートフォリオ**: [your-portfolio.com](https://your-portfolio.com)
+**開発者**: CaCC-Lab
+**問い合わせ先**: https://cacc-lab.net/otoiawase/
 
 </div>
