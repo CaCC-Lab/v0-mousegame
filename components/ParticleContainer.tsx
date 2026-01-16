@@ -6,7 +6,7 @@ interface ParticleContainerProps {
   particles: ParticleEffect[]
 }
 
-export const ParticleContainer: React.FC<ParticleContainerProps> = ({ particles }) => {
+function ParticleContainerComponent({ particles }: ParticleContainerProps): React.ReactElement {
   return (
     <div
       data-testid="particle-container"
@@ -18,3 +18,5 @@ export const ParticleContainer: React.FC<ParticleContainerProps> = ({ particles 
     </div>
   )
 }
+
+export const ParticleContainer = React.memo(ParticleContainerComponent)

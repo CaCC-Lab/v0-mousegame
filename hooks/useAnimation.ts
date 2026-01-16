@@ -2,9 +2,13 @@ import { useState, useCallback, useRef, useEffect } from 'react'
 import { AnimationManager } from '../lib/animationManager'
 import { AnimationType, ParticleEffect, ComboInfo } from '../types/animation'
 
+interface ComboState extends ComboInfo {
+  isActive: boolean
+}
+
 interface UseAnimationReturn {
   particles: ParticleEffect[]
-  combo: ComboInfo & { isActive: boolean }
+  combo: ComboState
   triggerAnimation: (type: AnimationType, x: number, y: number) => void
   onFruitCollected: () => void
   update: (deltaTime: number) => void
@@ -13,26 +17,33 @@ interface UseAnimationReturn {
   isAnimating: boolean
 }
 
+const INITIAL_COMBO_STATE: ComboState = {
+  count: 0,
+  multiplier: 1,
+  lastCollectTime: 0,
+  timeWindow: 2000,
+  isActive: false
+}
+
+const COMBO_THRESHOLDS = [5, 10, 15, 20, 25, 30]
+
+function createComboState(comboInfo: ComboInfo, isActive: boolean): ComboState {
+  return { ...comboInfo, isActive }
+}
+
 export function useAnimation(): UseAnimationReturn {
   const animationManagerRef = useRef(new AnimationManager())
   const [particles, setParticles] = useState<ParticleEffect[]>([])
-  const [combo, setCombo] = useState<ComboInfo & { isActive: boolean }>({
-    count: 0,
-    multiplier: 1,
-    lastCollectTime: 0,
-    timeWindow: 2000,
-    isActive: false
-  })
+  const [combo, setCombo] = useState<ComboState>(INITIAL_COMBO_STATE)
   const lastUpdateRef = useRef(Date.now())
 
   const triggerAnimation = useCallback((type: AnimationType, x: number, y: number) => {
     const newParticles = animationManagerRef.current.createParticleEffect(x, y, type)
     setParticles(prev => [...prev, ...newParticles])
-    
-    // If combo effect was triggered, update combo state
+
     if (type === 'comboEffect') {
       const comboInfo = animationManagerRef.current.getComboInfo()
-      setCombo({ ...comboInfo, isActive: comboInfo.count > 0 })
+      setCombo(createComboState(comboInfo, comboInfo.count > 0))
     }
   }, [])
 
@@ -40,61 +51,41 @@ export function useAnimation(): UseAnimationReturn {
     const manager = animationManagerRef.current
     manager.recordFruitCollect()
     const comboInfo = manager.getComboInfo()
-    setCombo({ ...comboInfo, isActive: comboInfo.count > 0 })
-    
-    // Check if we just reached a new multiplier threshold
-    const thresholds = [5, 10, 15, 20, 25, 30]
-    if (thresholds.includes(comboInfo.count)) {
-      // Trigger combo effect animation at a default position (center of screen)
+    setCombo(createComboState(comboInfo, comboInfo.count > 0))
+
+    if (COMBO_THRESHOLDS.includes(comboInfo.count)) {
       triggerAnimation('comboEffect', window.innerWidth / 2, window.innerHeight / 2)
     }
   }, [triggerAnimation])
 
   const update = useCallback((deltaTime: number) => {
     const manager = animationManagerRef.current
-    
-    // Update particles
+
     manager.updateParticles(deltaTime)
     setParticles(manager.getActiveParticles())
-    
-    // Update combo
+
     const comboInfo = manager.getComboInfo()
     const now = Date.now()
     const isActive = comboInfo.count > 0 && (now - comboInfo.lastCollectTime <= comboInfo.timeWindow)
-    
-    // Reset combo if it's expired
+
     if (comboInfo.count > 0 && !isActive) {
       manager.reset()
-      setCombo({
-        count: 0,
-        multiplier: 1,
-        lastCollectTime: 0,
-        timeWindow: 2000,
-        isActive: false
-      })
+      setCombo(INITIAL_COMBO_STATE)
     } else {
-      setCombo({ ...comboInfo, isActive })
+      setCombo(createComboState(comboInfo, isActive))
     }
   }, [])
 
   const reset = useCallback(() => {
-    const manager = animationManagerRef.current
-    manager.reset()
+    animationManagerRef.current.reset()
     setParticles([])
-    setCombo({
-      count: 0,
-      multiplier: 1,
-      lastCollectTime: 0,
-      timeWindow: 2000,
-      isActive: false
-    })
+    setCombo(INITIAL_COMBO_STATE)
   }, [])
 
   const calculateScore = useCallback((baseScore: number): number => {
     return baseScore * combo.multiplier
   }, [combo.multiplier])
 
-  // Animation loop
   useEffect(() => {
     let animationFrameId: number
 
@@ -102,19 +93,15 @@ export function useAnimation(): UseAnimationReturn {
       const now = Date.now()
       const deltaTime = now - lastUpdateRef.current
       lastUpdateRef.current = now
-      
+
       update(deltaTime)
       animationFrameId = requestAnimationFrame(animate)
     }
 
     animationFrameId = requestAnimationFrame(animate)
 
-    return () => {
-      cancelAnimationFrame(animationFrameId)
-    }
+    return () => cancelAnimationFrame(animationFrameId)
   }, [update])
-
-  const isAnimating = particles.length > 0
 
   return {
     particles,
@@ -124,6 +111,6 @@ export function useAnimation(): UseAnimationReturn {
     update,
     reset,
     calculateScore,
-    isAnimating
+    isAnimating: particles.length > 0
   }
 }

@@ -172,20 +172,31 @@ describe('Internationalization (i18n)', () => {
 
     test('should translate help dialog content in English', async () => {
       const user = userEvent.setup()
-      // Set to English (JSON stringified)
+
+      // Set English system language before rendering
+      Object.defineProperty(window.navigator, 'language', {
+        value: 'en-US',
+        configurable: true,
+      })
+
+      // Set to English in localStorage (JSON stringified)
       window.localStorage.setItem('fruitHarvestLanguage', '"en"')
-      
+
       render(<FruitHarvestGame />)
-      
-      // Open help dialog
+
+      // Open help dialog - wait for English button
+      await waitFor(() => {
+        expect(screen.getByText('How to Play')).toBeInTheDocument()
+      })
+
       const helpButton = screen.getByText('How to Play')
       await user.click(helpButton)
-      
+
       // Check English content
       await waitFor(() => {
-        expect(screen.getByText('How to Play Fruit Harvest Game')).toBeInTheDocument()
-        expect(screen.getByText(/🍎 Apple: Click to harvest/)).toBeInTheDocument()
-        expect(screen.getByText(/Time limit is 3 minutes/)).toBeInTheDocument()
+        expect(screen.getByText('How to Play Fruit Collecting Game')).toBeInTheDocument()
+        expect(screen.getByText(/🍎 Apple: Click once to catch it!/)).toBeInTheDocument()
+        expect(screen.getByText(/You have 3 minutes!/)).toBeInTheDocument()
       })
     })
   })

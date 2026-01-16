@@ -28,13 +28,13 @@ describe('useGameLogic with Sound Integration', () => {
 
     expect(result.current.gameState).toBe('playing')
 
-    // フルーツを収穫（playCollectSound が呼ばれる）
-    const fruit = result.current.fruits[0]
-    if (fruit) {
+    // フルーツを収穫（playCollectSound が呼ばれる） - appleを探す
+    const appleFruit = result.current.fruits.find(f => f.type === 'apple')
+    if (appleFruit) {
       const initialScore = result.current.score
-      
+
       act(() => {
-        result.current.handleFruitInteraction(fruit, 'click')
+        result.current.handleFruitInteraction(appleFruit, 'click')
       })
 
       // スコアが増加していることを確認（サウンド再生の間接的な確認）
@@ -84,12 +84,19 @@ describe('useGameLogic with Sound Integration', () => {
       result.current.startGame()
     })
 
-    // 複数のフルーツを収穫
+    // 複数のフルーツを収穫 - 正しいインタラクションタイプを使用
     let collectedCount = 0
-    result.current.fruits.forEach((fruit, index) => {
-      if (index < 3) {
+    const fruitInteractions = [
+      { type: 'apple' as const, action: 'click' as const },
+      { type: 'blueberry' as const, action: 'doubleClick' as const },
+      { type: 'lemon' as const, action: 'rightClick' as const },
+    ]
+
+    fruitInteractions.forEach(({ type, action }) => {
+      const fruit = result.current.fruits.find(f => f.type === type)
+      if (fruit) {
         act(() => {
-          result.current.handleFruitInteraction(fruit, 'click')
+          result.current.handleFruitInteraction(fruit, action)
         })
         collectedCount++
       }
@@ -97,9 +104,9 @@ describe('useGameLogic with Sound Integration', () => {
 
     // フルーツが収穫されたことを確認
     expect(result.current.score).toBeGreaterThan(0)
-    expect(result.current.harvestedFruits.apple + 
-           result.current.harvestedFruits.blueberry + 
-           result.current.harvestedFruits.lemon + 
+    expect(result.current.harvestedFruits.apple +
+           result.current.harvestedFruits.blueberry +
+           result.current.harvestedFruits.lemon +
            result.current.harvestedFruits.watermelon).toBe(collectedCount)
   })
 
@@ -175,11 +182,11 @@ describe('useGameLogic with Sound Integration', () => {
 
     expect(result.current.gameState).toBe('playing')
 
-    // フルーツ収穫も正常に動作
-    const fruit = result.current.fruits[0]
-    if (fruit) {
+    // フルーツ収穫も正常に動作 - appleを探す
+    const appleFruit = result.current.fruits.find(f => f.type === 'apple')
+    if (appleFruit) {
       act(() => {
-        result.current.handleFruitInteraction(fruit, 'click')
+        result.current.handleFruitInteraction(appleFruit, 'click')
       })
 
       expect(result.current.score).toBeGreaterThan(0)
@@ -193,15 +200,21 @@ describe('useGameLogic with Sound Integration', () => {
       result.current.startGame()
     })
 
-    const fruitTypes = ['apple', 'blueberry', 'lemon', 'watermelon'] as const
-    
-    fruitTypes.forEach(type => {
+    // 各フルーツタイプと対応するインタラクションタイプ
+    const fruitInteractions = [
+      { type: 'apple' as const, action: 'click' as const },
+      { type: 'blueberry' as const, action: 'doubleClick' as const },
+      { type: 'lemon' as const, action: 'rightClick' as const },
+      { type: 'watermelon' as const, action: 'drop' as const },
+    ]
+
+    fruitInteractions.forEach(({ type, action }) => {
       const fruit = result.current.fruits.find(f => f.type === type)
       if (fruit) {
         const initialCount = result.current.harvestedFruits[type]
-        
+
         act(() => {
-          result.current.handleFruitInteraction(fruit, 'click')
+          result.current.handleFruitInteraction(fruit, action)
         })
 
         // フルーツタイプごとに収穫されたことを確認

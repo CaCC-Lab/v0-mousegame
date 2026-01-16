@@ -1,0 +1,231 @@
+"use client"
+
+import React, { useCallback, useState } from 'react'
+import { AnimatePresence, motion } from 'framer-motion'
+import { Fruit as FruitComponent } from '../Fruit'
+import { PowerUp } from '../PowerUp'
+import { ParticleContainer } from '../ParticleContainer'
+import { Fruit as FruitType, HarvestAnimation, InteractionType, FRUIT_EMOJI } from '@/types/game'
+import { PowerUp as PowerUpType } from '@/types/powerup'
+import { ParticleEffect } from '@/types/animation'
+
+interface GamePlayAreaProps {
+  fruits: FruitType[]
+  powerUps: PowerUpType[]
+  particles: ParticleEffect[]
+  isHardMode: boolean
+  selectedFruitIndex: number
+  dropAreaText: string
+  onFruitClick: (fruit: FruitType, action: InteractionType) => void
+  onPowerUpCollect: (powerUpId: string) => void
+  onTriggerAnimation: (type: 'fruitCollect' | 'powerUpCollect', x: number, y: number) => void
+  onFruitCollected: () => void
+  gameAreaRef: React.RefObject<HTMLDivElement>
+}
+
+function DraggedFruitOverlay({
+  draggedFruit,
+  mousePosition,
+  gameAreaRect
+}: {
+  draggedFruit: FruitType | null
+  mousePosition: { x: number; y: number }
+  gameAreaRect: DOMRect | null
+}): React.ReactElement | null {
+  if (!draggedFruit || !gameAreaRect) {
+    return null
+  }
+
+  const sizeClass = draggedFruit.size === 'small' ? 'text-2xl'
+    : draggedFruit.size === 'medium' ? 'text-3xl'
+    : 'text-4xl'
+
+  return (
+    <div
+      className={`absolute pointer-events-none select-none animate-wiggle ${sizeClass}`}
+      style={{
+        left: `${mousePosition.x - gameAreaRect.left}px`,
+        top: `${mousePosition.y - gameAreaRect.top}px`,
+        zIndex: 20,
+        opacity: 0.8,
+        filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))',
+      }}
+    >
+      {FRUIT_EMOJI[draggedFruit.type]}
+    </div>
+  )
+}
+
+function DropArea({ text }: { text: string }): React.ReactElement {
+  return (
+    <div
+      className="drop-area absolute right-0 top-0 bottom-0 w-20 flex justify-center items-center border-l-4 border-dashed border-white/50"
+      style={{ background: 'var(--gradient-berry)' }}
+    >
+      <div className="writing-vertical text-white font-bold text-xl drop-shadow-lg">
+        {text}
+      </div>
+    </div>
+  )
+}
+
+function HarvestAnimations({
+  animations,
+  onAnimationComplete
+}: {
+  animations: HarvestAnimation[]
+  onAnimationComplete: (id: number) => void
+}): React.ReactElement {
+  return (
+    <AnimatePresence>
+      {animations.map((animation) => (
+        <motion.div
+          key={animation.id}
+          className="absolute text-5xl pointer-events-none select-none"
+          style={{ left: `${animation.x}%`, top: `${animation.y}%` }}
+          initial={{ scale: 1, opacity: 1, rotate: 0 }}
+          animate={{ scale: 2, opacity: 0, y: -50, rotate: 360 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.8, ease: 'easeOut' }}
+          onAnimationComplete={() => onAnimationComplete(animation.id)}
+        >
+          {FRUIT_EMOJI[animation.type]}
+        </motion.div>
+      ))}
+    </AnimatePresence>
+  )
+}
+
+export function GamePlayArea({
+  fruits,
+  powerUps,
+  particles,
+  isHardMode,
+  selectedFruitIndex,
+  dropAreaText,
+  onFruitClick,
+  onPowerUpCollect,
+  onTriggerAnimation,
+  onFruitCollected,
+  gameAreaRef
+}: GamePlayAreaProps): React.ReactElement {
+  const [draggedFruit, setDraggedFruit] = useState<FruitType | null>(null)
+  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
+  const [harvestAnimations, setHarvestAnimations] = useState<HarvestAnimation[]>([])
+
+  const handleFruitClickWithAnimation = useCallback((fruit: FruitType, action: InteractionType) => {
+    const gameArea = gameAreaRef.current
+    if (gameArea) {
+      const fruitElement = gameArea.querySelector(`[data-fruit-id="${fruit.id}"]`)
+      if (fruitElement) {
+        const rect = fruitElement.getBoundingClientRect()
+        const gameRect = gameArea.getBoundingClientRect()
+        const x = rect.left + rect.width / 2 - gameRect.left
+        const y = rect.top + rect.height / 2 - gameRect.top
+        onTriggerAnimation('fruitCollect', x, y)
+        onFruitCollected()
+      }
+    }
+    onFruitClick(fruit, action)
+  }, [onFruitClick, onTriggerAnimation, onFruitCollected, gameAreaRef])
+
+  const handlePowerUpCollectWithAnimation = useCallback((powerUpId: string) => {
+    const gameArea = gameAreaRef.current
+    if (gameArea) {
+      const powerUpElement = gameArea.querySelector(`[data-powerup-id="${powerUpId}"]`)
+      if (powerUpElement) {
+        const rect = powerUpElement.getBoundingClientRect()
+        const gameRect = gameArea.getBoundingClientRect()
+        const x = rect.left + rect.width / 2 - gameRect.left
+        const y = rect.top + rect.height / 2 - gameRect.top
+        onTriggerAnimation('powerUpCollect', x, y)
+      }
+    }
+    onPowerUpCollect(powerUpId)
+  }, [onPowerUpCollect, onTriggerAnimation, gameAreaRef])
+
+  const handleMouseDown = useCallback((e: React.MouseEvent, fruit: FruitType) => {
+    if (e.button === 2 && fruit.type === 'lemon') {
+      e.preventDefault()
+      handleFruitClickWithAnimation(fruit, 'rightClick')
+    } else if (fruit.type === 'watermelon') {
+      setDraggedFruit(fruit)
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
+  }, [handleFruitClickWithAnimation])
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (draggedFruit) {
+      setMousePosition({ x: e.clientX, y: e.clientY })
+    }
+  }, [draggedFruit])
+
+  const handleMouseUp = useCallback((e: React.MouseEvent) => {
+    if (draggedFruit) {
+      const dropArea = gameAreaRef.current?.querySelector('.drop-area')
+      if (dropArea) {
+        const rect = dropArea.getBoundingClientRect()
+        const isInDropArea = e.clientX >= rect.left
+          && e.clientX <= rect.right
+          && e.clientY >= rect.top
+          && e.clientY <= rect.bottom
+
+        if (isInDropArea) {
+          handleFruitClickWithAnimation(draggedFruit, 'drop')
+        }
+      }
+      setDraggedFruit(null)
+    }
+  }, [draggedFruit, handleFruitClickWithAnimation, gameAreaRef])
+
+  const handleAnimationComplete = useCallback((id: number) => {
+    setHarvestAnimations(prev => prev.filter(a => a.id !== id))
+  }, [])
+
+  return (
+    <div
+      ref={gameAreaRef}
+      data-testid="game-area"
+      className="relative h-[60vh] overflow-hidden select-none bg-pattern-dots"
+      style={{ background: 'linear-gradient(180deg, #A8DADC 0%, #4ECDC4 100%)' }}
+      onMouseMove={handleMouseMove}
+      onMouseUp={handleMouseUp}
+      onContextMenu={(e) => e.preventDefault()}
+    >
+      {fruits.map((fruit, index) => (
+        <FruitComponent
+          key={fruit.id}
+          fruit={fruit}
+          isHardMode={isHardMode}
+          isSelected={index === selectedFruitIndex}
+          onClick={() => handleFruitClickWithAnimation(fruit, 'click')}
+          onDoubleClick={() => handleFruitClickWithAnimation(fruit, 'doubleClick')}
+          onMouseDown={(e) => handleMouseDown(e, fruit)}
+        />
+      ))}
+
+      {powerUps.map((powerUp) => (
+        <PowerUp
+          key={powerUp.id}
+          powerUp={powerUp}
+          onClick={handlePowerUpCollectWithAnimation}
+        />
+      ))}
+
+      <ParticleContainer particles={particles} />
+
+      <DraggedFruitOverlay
+        draggedFruit={draggedFruit}
+        mousePosition={mousePosition}
+        gameAreaRect={gameAreaRef.current?.getBoundingClientRect() ?? null}
+      />
+
+      <DropArea text={dropAreaText} />
+
+      <HarvestAnimations
+        animations={harvestAnimations}
+        onAnimationComplete={handleAnimationComplete}
+      />
+    </div>
+  )
+}

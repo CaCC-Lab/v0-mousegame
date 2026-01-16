@@ -225,7 +225,7 @@ describe('High Score Persistence', () => {
     
     // Verify warning was called
     expect(console.warn).toHaveBeenCalledWith(
-      expect.stringContaining('Error parsing localStorage key'),
+      expect.stringContaining('Error reading localStorage key'),
       expect.any(Error)
     )
     

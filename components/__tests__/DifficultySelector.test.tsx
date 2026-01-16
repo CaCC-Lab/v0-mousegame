@@ -2,7 +2,7 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DifficultySelector } from '../DifficultySelector'
-import { DifficultyLevel } from '../../types/difficulty'
+import { translations } from '@/lib/i18n/translations'
 
 /**
  * DifficultySelectorの実装テスト（モックなし）
@@ -12,13 +12,10 @@ describe('DifficultySelector', () => {
   const mockProps = {
     currentDifficulty: 'normal' as const,
     availableDifficulties: [...(['easy', 'normal', 'hard'] as const)],
-    difficultyDescriptions: {
-      easy: 'フルーツが少なく、時間に余裕があります',
-      normal: 'バランスの取れた標準的な難易度です',
-      hard: 'フルーツが多く、時間制限が厳しくなります',
-    },
     onDifficultyChange: jest.fn(),
     disabled: false,
+    language: 'ja' as const,
+    t: translations.ja,
   }
 
   beforeEach(() => {
@@ -28,10 +25,9 @@ describe('DifficultySelector', () => {
   describe('Rendering', () => {
     it('renders difficulty selector', () => {
       render(<DifficultySelector {...mockProps} />)
-      
-      // 難易度ラベルの確認（英語または日本語）
-      const difficultyLabel = screen.queryByText('Difficulty:') || screen.queryByText('難易度:')
-      expect(difficultyLabel).toBeInTheDocument()
+
+      // 難易度ラベルの確認
+      expect(screen.getByText('難易度:')).toBeInTheDocument()
       expect(screen.getByRole('combobox')).toBeInTheDocument()
     })
 
@@ -101,17 +97,17 @@ describe('DifficultySelector', () => {
   describe('Difficulty Descriptions', () => {
     it('displays description for current difficulty', () => {
       render(<DifficultySelector {...mockProps} />)
-      
-      expect(screen.getByText('バランスの取れた標準的な難易度です')).toBeInTheDocument()
+
+      expect(screen.getByText(translations.ja.difficultyDesc.normal)).toBeInTheDocument()
     })
 
     it('updates description when difficulty changes', () => {
       const { rerender } = render(<DifficultySelector {...mockProps} />)
-      
-      expect(screen.getByText('バランスの取れた標準的な難易度です')).toBeInTheDocument()
-      
+
+      expect(screen.getByText(translations.ja.difficultyDesc.normal)).toBeInTheDocument()
+
       rerender(<DifficultySelector {...mockProps} currentDifficulty="hard" />)
-      expect(screen.getByText('フルーツが多く、時間制限が厳しくなります')).toBeInTheDocument()
+      expect(screen.getByText(translations.ja.difficultyDesc.hard)).toBeInTheDocument()
     })
   })
 
@@ -162,26 +158,14 @@ describe('DifficultySelector', () => {
         ...mockProps,
         availableDifficulties: [...([] as const)],
       }
-      
+
       render(<DifficultySelector {...emptyProps} />)
-      
+
       const select = screen.getByRole('combobox')
       expect(select).toBeInTheDocument()
-      
+
       const options = screen.queryAllByRole('option')
       expect(options).toHaveLength(0)
-    })
-
-    it('handles missing difficulty descriptions', () => {
-      const propsWithoutDescriptions = {
-        ...mockProps,
-        difficultyDescriptions: {} as Record<DifficultyLevel, string>,
-      }
-      
-      render(<DifficultySelector {...propsWithoutDescriptions} />)
-      
-      // コンポーネントがクラッシュしないことを確認
-      expect(screen.getByRole('combobox')).toBeInTheDocument()
     })
   })
 })

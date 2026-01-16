@@ -1,42 +1,75 @@
 import { PowerUp, PowerUpEffect, PowerUpType, POWERUP_CONFIGS, POWERUP_LIFETIME } from '../types/powerup'
 
+interface GameArea {
+  width: number
+  height: number
+}
+
+/**
+ * Generates a unique ID for a power-up.
+ */
+function generatePowerUpId(): string {
+  return `powerup_${Date.now()}_${Math.random()}`
+}
+
+/**
+ * Selects a random power-up type based on spawn chances.
+ */
+function selectRandomPowerUpType(): PowerUpType | null {
+  const random = Math.random()
+  let cumulativeChance = 0
+
+  for (const [type, config] of Object.entries(POWERUP_CONFIGS)) {
+    cumulativeChance += config.spawnChance
+    if (random <= cumulativeChance) {
+      return type as PowerUpType
+    }
+  }
+
+  return null
+}
+
+/**
+ * Generates a random position within the game area.
+ */
+function generateRandomPosition(gameArea: GameArea, width: number, height: number): { x: number; y: number } {
+  return {
+    x: Math.random() * (gameArea.width - width),
+    y: Math.random() * (gameArea.height - height)
+  }
+}
+
+/**
+ * Checks if an effect has expired.
+ */
+function isEffectExpired(effect: PowerUpEffect, currentTime: number): boolean {
+  if (effect.duration === 0) return true
+  return currentTime - effect.startTime >= effect.duration
+}
+
+/**
+ * Checks if a power-up has expired based on its age.
+ */
+function isPowerUpExpired(powerUp: PowerUp, currentTime: number): boolean {
+  return currentTime - powerUp.createdAt >= POWERUP_LIFETIME
+}
+
 export class PowerUpManager {
   private powerUps: PowerUp[] = []
   private activeEffects: PowerUpEffect[] = []
 
-  constructor() {
-    // Initialize empty state
-  }
-
-  spawnPowerUp(gameArea: { width: number; height: number }): PowerUp | null {
-    // Determine which powerup to spawn based on spawn chances
-    const random = Math.random()
-    let cumulativeChance = 0
-    let selectedType: PowerUpType | null = null
-
-    for (const [type, config] of Object.entries(POWERUP_CONFIGS)) {
-      cumulativeChance += config.spawnChance
-      if (random <= cumulativeChance) {
-        selectedType = type as PowerUpType
-        break
-      }
-    }
-
-    if (!selectedType) {
-      return null
-    }
+  spawnPowerUp(gameArea: GameArea): PowerUp | null {
+    const selectedType = selectRandomPowerUpType()
+    if (!selectedType) return null
 
     const config = POWERUP_CONFIGS[selectedType]
-    
-    // Generate random position within game area
-    const x = Math.random() * (gameArea.width - config.size.width)
-    const y = Math.random() * (gameArea.height - config.size.height)
+    const position = generateRandomPosition(gameArea, config.size.width, config.size.height)
 
     const powerUp: PowerUp = {
-      id: `powerup_${Date.now()}_${Math.random()}`,
+      id: generatePowerUpId(),
       type: selectedType,
-      x,
-      y,
+      x: position.x,
+      y: position.y,
       width: config.size.width,
       height: config.size.height,
       active: true,
@@ -49,14 +82,10 @@ export class PowerUpManager {
 
   collectPowerUp(powerUpId: string): PowerUpEffect | null {
     const powerUp = this.powerUps.find(p => p.id === powerUpId && p.active)
-    if (!powerUp) {
-      return null
-    }
+    if (!powerUp) return null
 
-    // Mark powerup as inactive
     powerUp.active = false
 
-    // Create effect
     const config = POWERUP_CONFIGS[powerUp.type]
     const effect: PowerUpEffect = {
       type: powerUp.type,
@@ -72,28 +101,12 @@ export class PowerUpManager {
 
   updateEffects(): void {
     const currentTime = Date.now()
-    this.activeEffects = this.activeEffects.filter(effect => {
-      if (effect.duration === 0) {
-        // Instant effects are already applied, remove them
-        return false
-      }
-      
-      const elapsed = currentTime - effect.startTime
-      if (elapsed >= effect.duration) {
-        // Effect has expired
-        return false
-      }
-      
-      return true
-    })
+    this.activeEffects = this.activeEffects.filter(effect => !isEffectExpired(effect, currentTime))
   }
 
   cleanupExpiredPowerUps(): void {
     const currentTime = Date.now()
-    this.powerUps = this.powerUps.filter(powerUp => {
-      const age = currentTime - powerUp.createdAt
-      return age < POWERUP_LIFETIME
-    })
+    this.powerUps = this.powerUps.filter(powerUp => !isPowerUpExpired(powerUp, currentTime))
   }
 
   isEffectActive(type: PowerUpType): boolean {
@@ -101,7 +114,7 @@ export class PowerUpManager {
   }
 
   getEffectValue(type: PowerUpType): number {
-    const effect = this.activeEffects.find(effect => effect.type === type && effect.active)
+    const effect = this.activeEffects.find(e => e.type === type && e.active)
     return effect ? effect.value : 1
   }
 

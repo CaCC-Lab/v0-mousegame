@@ -108,29 +108,31 @@ describe('PowerUp', () => {
   })
 
   describe('visual effects', () => {
-    it('should have hover effect classes', () => {
+    it('should have rounded full appearance', () => {
       render(<PowerUp powerUp={mockPowerUp} onClick={mockOnClick} />)
-      
+
       const powerUpElement = screen.getByRole('button')
-      
-      expect(powerUpElement).toHaveClass('hover:scale-110')
-      expect(powerUpElement).toHaveClass('transition-transform')
+
+      expect(powerUpElement).toHaveClass('rounded-full')
+      expect(powerUpElement).toHaveClass('shadow-playful')
     })
 
-    it('should have pulse animation', () => {
+    it('should have flex centered layout', () => {
       render(<PowerUp powerUp={mockPowerUp} onClick={mockOnClick} />)
-      
+
       const powerUpElement = screen.getByRole('button')
-      
-      expect(powerUpElement).toHaveClass('animate-pulse')
+
+      expect(powerUpElement).toHaveClass('flex')
+      expect(powerUpElement).toHaveClass('items-center')
+      expect(powerUpElement).toHaveClass('justify-center')
     })
 
-    it('should have proper cursor style', () => {
+    it('should have overflow visible for effects', () => {
       render(<PowerUp powerUp={mockPowerUp} onClick={mockOnClick} />)
-      
+
       const powerUpElement = screen.getByRole('button')
-      
-      expect(powerUpElement).toHaveClass('cursor-pointer')
+
+      expect(powerUpElement).toHaveClass('overflow-visible')
     })
   })
 

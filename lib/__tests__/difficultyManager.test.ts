@@ -117,11 +117,13 @@ describe('DifficultyManager', () => {
       expect(difficulties).toEqual(['easy', 'normal', 'hard'])
     })
 
-    it('should return difficulty descriptions', () => {
+    it('should return difficulty descriptions object', () => {
       const descriptions = difficultyManager.getDifficultyDescriptions()
-      expect(descriptions.easy).toContain('フルーツが少なく')
-      expect(descriptions.normal).toContain('バランス')
-      expect(descriptions.hard).toContain('時間制限が厳しく')
+      // Descriptions are now handled by the translation system (useLanguage hook)
+      // This method returns an empty object structure for type safety
+      expect(descriptions).toHaveProperty('easy')
+      expect(descriptions).toHaveProperty('normal')
+      expect(descriptions).toHaveProperty('hard')
     })
   })
 })

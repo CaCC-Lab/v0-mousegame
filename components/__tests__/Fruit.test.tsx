@@ -40,20 +40,20 @@ describe('Fruit', () => {
     )
     
     const element = container.firstChild as HTMLElement
-    expect(element.className).toContain('text-3xl')
+    expect(element.className).toContain('text-4xl') // medium size
 
     // IDを変更して再レンダリングを強制
     rerender(
       <Fruit fruit={{ ...mockFruit, id: 2, size: 'small' }} {...mockHandlers} />
     )
     const newElement = container.firstChild as HTMLElement
-    expect(newElement.className).toContain('text-2xl')
+    expect(newElement.className).toContain('text-3xl') // small size
 
     rerender(
       <Fruit fruit={{ ...mockFruit, id: 3, size: 'large' }} {...mockHandlers} />
     )
     const largeElement = container.firstChild as HTMLElement
-    expect(largeElement.className).toContain('text-4xl')
+    expect(largeElement.className).toContain('text-5xl') // large size
   })
 
   it('positions fruit correctly', () => {
@@ -174,12 +174,16 @@ describe('Fruit', () => {
   })
 
   it('has correct accessibility attributes', () => {
-    render(<Fruit fruit={mockFruit} {...mockHandlers} />)
-    
+    const { container } = render(<Fruit fruit={mockFruit} {...mockHandlers} />)
+
+    // The root element (motion.div) should have absolute positioning
+    const rootElement = container.firstChild as HTMLElement
+    expect(rootElement.className).toContain('absolute')
+
+    // The emoji should be inside a nested div
     const fruitElement = screen.getByText('🍎')
     expect(fruitElement.tagName).toBe('DIV')
-    // absoluteクラスが適用されていることを確認
-    expect(fruitElement).toHaveClass('absolute')
+    expect(fruitElement).toHaveClass('animate-float')
   })
 
   it('updates position when fruit moves', () => {

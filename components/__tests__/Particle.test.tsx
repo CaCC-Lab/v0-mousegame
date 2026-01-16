@@ -28,13 +28,13 @@ describe('Particle', () => {
     })
   })
 
-  it('should apply correct size', () => {
+  it('should apply correct size via fontSize', () => {
     render(<Particle particle={mockParticle} />)
-    
+
     const particle = screen.getByTestId('particle-test-particle')
+    // Particle uses fontSize for sizing instead of width/height
     expect(particle).toHaveStyle({
-      width: '20px',
-      height: '20px'
+      fontSize: '20px'
     })
   })
 
@@ -86,19 +86,22 @@ describe('Particle', () => {
     expect(particle).toHaveTextContent('🎊')
   })
 
-  it('should apply fade animation when fadeOut is true', () => {
+  it('should render with Framer Motion animation', () => {
     render(<Particle particle={mockParticle} />)
-    
+
     const particle = screen.getByTestId('particle-test-particle')
-    expect(particle).toHaveClass('animate-fadeOut')
+    // Framer Motion handles animations via style prop, not CSS classes
+    expect(particle).toBeInTheDocument()
+    expect(particle).toHaveClass('absolute')
   })
 
-  it('should not apply fade animation when fadeOut is false', () => {
-    const noFadeParticle = { ...mockParticle, fadeOut: false }
-    render(<Particle particle={noFadeParticle} />)
-    
+  it('should have z-index for proper layering', () => {
+    render(<Particle particle={mockParticle} />)
+
     const particle = screen.getByTestId('particle-test-particle')
-    expect(particle).not.toHaveClass('animate-fadeOut')
+    expect(particle).toHaveStyle({
+      zIndex: '100'
+    })
   })
 
   it('should have absolute positioning', () => {

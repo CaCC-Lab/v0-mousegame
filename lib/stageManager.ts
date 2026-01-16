@@ -1,16 +1,59 @@
 import { Stage, StageProgress, STAGES } from '../types/stage'
 import { HarvestedFruits } from '../types/game'
 
+const STORAGE_KEYS = {
+  progress: 'stageProgress',
+  highScore: (stageNumber: number) => `stage${stageNumber}HighScore`
+} as const
+
+function createInitialProgress(): StageProgress {
+  return {
+    currentStage: 1,
+    completedStages: [],
+    totalScore: 0,
+    unlockedStages: [1]
+  }
+}
+
+function isClient(): boolean {
+  return typeof window !== 'undefined'
+}
+
+function safeLocalStorageGet(key: string): string | null {
+  if (!isClient()) return null
+  try {
+    return localStorage.getItem(key)
+  } catch {
+    return null
+  }
+}
+
+function safeLocalStorageSet(key: string, value: string): void {
+  if (!isClient()) return
+  try {
+    localStorage.setItem(key, value)
+  } catch {
+    // Silent fail for localStorage errors
+  }
+}
+
+function safeLocalStorageRemove(key: string): void {
+  if (!isClient()) return
+  try {
+    localStorage.removeItem(key)
+  } catch {
+    // Silent fail for localStorage errors
+  }
+}
+
 export class StageManager {
   private stages: Stage[]
   private currentStage: number
   private progress: StageProgress
 
   constructor() {
-    // Deep clone the stages to avoid modifying the original
     this.stages = STAGES.map(stage => ({ ...stage }))
-    
-    // Load saved progress or initialize new
+
     const savedProgress = this.loadProgress()
     if (savedProgress) {
       this.progress = savedProgress
@@ -18,70 +61,53 @@ export class StageManager {
       this.applyProgress(savedProgress)
     } else {
       this.currentStage = 1
-      this.progress = {
-        currentStage: 1,
-        completedStages: [],
-        totalScore: 0,
-        unlockedStages: [1]
-      }
+      this.progress = createInitialProgress()
     }
   }
 
   private loadProgress(): StageProgress | null {
-    if (typeof window === 'undefined') return null
-    
+    const saved = safeLocalStorageGet(STORAGE_KEYS.progress)
+    if (!saved) return null
+
     try {
-      const saved = localStorage.getItem('stageProgress')
-      if (!saved) return null
-      
       return JSON.parse(saved)
-    } catch (error) {
-      console.warn('Failed to load stage progress. Starting as new game.', error)
+    } catch {
       return null
     }
   }
 
   private saveProgress(): void {
-    if (typeof window === 'undefined') return
-    
-    try {
-      localStorage.setItem('stageProgress', JSON.stringify(this.progress))
-    } catch (error) {
-      console.warn('Failed to save stage progress.', error)
-    }
+    safeLocalStorageSet(STORAGE_KEYS.progress, JSON.stringify(this.progress))
   }
 
   private applyProgress(progress: StageProgress): void {
-    // Apply completed stages
     progress.completedStages.forEach(stageNum => {
-      const stage = this.stages.find(s => s.number === stageNum)
-      if (stage) {
-        stage.completed = true
-      }
+      const stage = this.findStage(stageNum)
+      if (stage) stage.completed = true
     })
 
-    // Apply unlocked stages
     progress.unlockedStages.forEach(stageNum => {
-      const stage = this.stages.find(s => s.number === stageNum)
-      if (stage) {
-        stage.unlocked = true
-      }
+      const stage = this.findStage(stageNum)
+      if (stage) stage.unlocked = true
     })
 
-    // Load high scores from localStorage
+    this.loadHighScores()
+  }
+
+  private loadHighScores(): void {
     this.stages.forEach(stage => {
-      try {
-        const highScore = localStorage.getItem(`stage${stage.number}HighScore`)
-        if (highScore) {
-          const score = parseInt(highScore, 10)
-          if (!isNaN(score) && score >= 0) {
-            stage.highScore = score
-          }
+      const highScoreStr = safeLocalStorageGet(STORAGE_KEYS.highScore(stage.number))
+      if (highScoreStr) {
+        const score = parseInt(highScoreStr, 10)
+        if (!isNaN(score) && score >= 0) {
+          stage.highScore = score
         }
-      } catch (error) {
-        console.warn(`ステージ${stage.number}のハイスコア読み込みに失敗しました。`, error)
       }
     })
+  }
+
+  private findStage(stageNumber: number): Stage | undefined {
+    return this.stages.find(s => s.number === stageNumber)
   }
 
   getCurrentStage(): number {
@@ -89,7 +115,7 @@ export class StageManager {
   }
 
   getStageInfo(stageNumber: number): Stage | null {
-    const stage = this.stages.find(s => s.number === stageNumber)
+    const stage = this.findStage(stageNumber)
     return stage ? { ...stage } : null
   }
 
@@ -105,21 +131,17 @@ export class StageManager {
     const stage = this.getStageInfo(stageNumber)
     if (!stage) return false
 
-    // Check score requirement
     if (score < stage.targetScore) return false
 
-    // Check fruit requirements
     const totalHarvested = Object.values(harvestedFruits).reduce((sum, count) => sum + count, 0)
-    
-    // Check total fruits requirement
+
     if (stage.targetFruits.total && totalHarvested < stage.targetFruits.total) {
       return false
     }
 
-    // Check specific fruit requirements
     for (const [fruitType, required] of Object.entries(stage.targetFruits)) {
       if (fruitType === 'total') continue
-      
+
       const harvested = harvestedFruits[fruitType as keyof HarvestedFruits]
       if (required && harvested < required) {
         return false
@@ -130,35 +152,32 @@ export class StageManager {
   }
 
   completeStage(stageNumber: number, score: number): void {
-    const stage = this.stages.find(s => s.number === stageNumber)
+    const stage = this.findStage(stageNumber)
     if (!stage) return
 
-    // Mark as completed
     stage.completed = true
     if (!this.progress.completedStages.includes(stageNumber)) {
       this.progress.completedStages.push(stageNumber)
     }
 
-    // Update high score
     if (score > stage.highScore) {
       stage.highScore = score
-      localStorage.setItem(`stage${stageNumber}HighScore`, score.toString())
+      safeLocalStorageSet(STORAGE_KEYS.highScore(stageNumber), score.toString())
     }
 
-    // Unlock next stage
-    const nextStage = this.stages.find(s => s.number === stageNumber + 1)
+    this.unlockNextStage(stageNumber)
+    this.updateTotalScore()
+    this.saveProgress()
+  }
+
+  private unlockNextStage(currentStageNumber: number): void {
+    const nextStage = this.findStage(currentStageNumber + 1)
     if (nextStage && !nextStage.unlocked) {
       nextStage.unlocked = true
       if (!this.progress.unlockedStages.includes(nextStage.number)) {
         this.progress.unlockedStages.push(nextStage.number)
       }
     }
-
-    // Update total score
-    this.updateTotalScore()
-
-    // Save progress
-    this.saveProgress()
   }
 
   private updateTotalScore(): void {
@@ -169,8 +188,8 @@ export class StageManager {
 
   moveToNextStage(): boolean {
     const nextStageNumber = this.currentStage + 1
-    const nextStage = this.stages.find(s => s.number === nextStageNumber)
-    
+    const nextStage = this.findStage(nextStageNumber)
+
     if (!nextStage || !nextStage.unlocked) {
       return false
     }
@@ -182,8 +201,8 @@ export class StageManager {
   }
 
   selectStage(stageNumber: number): boolean {
-    const stage = this.stages.find(s => s.number === stageNumber)
-    
+    const stage = this.findStage(stageNumber)
+
     if (!stage || !stage.unlocked) {
       return false
     }
@@ -203,24 +222,13 @@ export class StageManager {
   }
 
   reset(): void {
-    // Reset all stages
     this.stages = STAGES.map(stage => ({ ...stage }))
-    
-    // Reset progress
     this.currentStage = 1
-    this.progress = {
-      currentStage: 1,
-      completedStages: [],
-      totalScore: 0,
-      unlockedStages: [1]
-    }
+    this.progress = createInitialProgress()
 
-    // Clear localStorage
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem('stageProgress')
-      this.stages.forEach(stage => {
-        localStorage.removeItem(`stage${stage.number}HighScore`)
-      })
-    }
+    safeLocalStorageRemove(STORAGE_KEYS.progress)
+    this.stages.forEach(stage => {
+      safeLocalStorageRemove(STORAGE_KEYS.highScore(stage.number))
+    })
   }
 }
