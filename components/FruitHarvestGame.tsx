@@ -16,6 +16,10 @@ import {
   StageClearModal,
   GamePlayArea
 } from './game'
+import { ResultModal } from './game/ResultModal'
+import { BadgeNotification } from './game/BadgeNotification'
+import { BadgeDisplay } from './game/BadgeDisplay'
+import { StreakIndicator } from './game/StreakIndicator'
 import { Fruit, InteractionType } from '@/types/game'
 
 const GAME_CONTAINER_ANIMATION = {
@@ -61,6 +65,8 @@ export function FruitHarvestGame(): React.ReactElement {
     difficulty,
     powerUps,
     stage,
+    operationStats,
+    gamification,
   } = useGameLogic()
 
   const { language, toggleLanguage, t } = useLanguage()
@@ -76,6 +82,9 @@ export function FruitHarvestGame(): React.ReactElement {
   const [showStageSelector, setShowStageSelector] = useState(false)
   const [showStageClearMessage, setShowStageClearMessage] = useState(false)
   const [stageClearProcessed, setStageClearProcessed] = useState(false)
+  const [showResultModal, setShowResultModal] = useState(false)
+  const [resultModalDismissed, setResultModalDismissed] = useState(false)
+  const [resultStarRating, setResultStarRating] = useState<0 | 1 | 2 | 3>(0)
   const gameAreaRef = useRef<HTMLDivElement>(null)
 
   const handleHardModeChange = useCallback((checked: boolean) => {
@@ -181,10 +190,24 @@ export function FruitHarvestGame(): React.ReactElement {
     }
   }, [gameState, score, harvestedFruits, stage, triggerAnimation, stageClearProcessed])
 
+  // Show ResultModal when game ends
+  useEffect(() => {
+    if (gameState === 'idle' && score > 0 && !stageClearProcessed) {
+      const stageNum = stage?.currentStage ?? 1
+      const stageInfo = stage?.currentStageInfo
+      const timeLimit = stageInfo?.timeLimit ?? 60
+      const isCleared = stage?.completedStages?.includes(stageNum) ?? false
+      const star = gamification.calculateStarRating(stageNum, isCleared, 0, timeLimit, operationStats.sessionStats)
+      setResultStarRating(star)
+      setShowResultModal(true)
+    }
+  }, [gameState, score, stageClearProcessed, stage, gamification, operationStats])
+
   // Reset stage clear processed when game starts
   useEffect(() => {
     if (gameState === 'playing') {
       setStageClearProcessed(false)
+      setShowResultModal(false)
     }
   }, [gameState])
 
@@ -249,6 +272,7 @@ export function FruitHarvestGame(): React.ReactElement {
             score={score}
             highScore={highScore}
             timeLeft={timeLeft}
+            streak={operationStats.streak}
             gameState={gameState}
             combo={combo}
             stage={stage}
@@ -276,6 +300,8 @@ export function FruitHarvestGame(): React.ReactElement {
             onTriggerAnimation={triggerAnimation}
             onFruitCollected={onFruitCollected}
             gameAreaRef={gameAreaRef}
+            streak={operationStats.streak}
+            lastStreakBonus={operationStats.lastStreakBonus}
           />
 
           <GameControls
@@ -299,14 +325,38 @@ export function FruitHarvestGame(): React.ReactElement {
         <StageSelector
           stages={stage?.allStages ?? []}
           currentStage={stage?.isHydrated ? (stage?.currentStage ?? 1) : 1}
+          stageStars={gamification.stageStars}
           onSelectStage={handleStageSelect}
           onClose={() => setShowStageSelector(false)}
         />
       )}
 
+      <ResultModal
+        open={showResultModal}
+        sessionStats={operationStats.sessionStats}
+        starRating={resultStarRating}
+        lastSessionStats={gamification.previousSessionStats}
+        onClose={() => setShowResultModal(false)}
+      />
+
+      <BadgeNotification
+        badge={gamification.newlyEarnedBadge}
+        show={gamification.newlyEarnedBadge !== null}
+      />
+
+      {gameState === 'idle' && (
+        <div className="max-w-6xl mx-auto mt-4">
+          <BadgeDisplay
+            earnedBadges={gamification.earnedBadges}
+            cumulativeStats={gamification.cumulativeStats}
+          />
+        </div>
+      )}
+
       <StageClearModal
         show={showStageClearMessage}
         currentStage={stage?.isHydrated ? stage?.currentStage : 1}
+        starRating={resultStarRating}
         onNextStage={handleNextStage}
         onClose={handleCloseStageClear}
         t={t}

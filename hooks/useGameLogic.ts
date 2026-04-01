@@ -17,6 +17,8 @@ import { useSoundEffects } from './useSoundEffects'
 import { useDifficulty } from './useDifficulty'
 import { usePowerUps } from './usePowerUps'
 import { useStage } from './useStage'
+import { useOperationStats } from './useOperationStats'
+import { useGamification } from './useGamification'
 
 const INITIAL_HARVESTED_FRUITS: HarvestedFruits = {
   apple: 0,
@@ -59,6 +61,8 @@ export function useGameLogic() {
     activeEffects: activePowerUpEffects
   } = powerUps
   const stage = useStage()
+  const operationStats = useOperationStats()
+  const gamification = useGamification()
 
   // Refs for accessing latest values in effects without causing re-renders
   const isEffectActiveRef = useRef(isEffectActive)
@@ -66,6 +70,9 @@ export function useGameLogic() {
   const stageRef = useRef(stage)
   const soundEffectsRef = useRef(soundEffects)
   const highScoreRef = useRef(highScore)
+  const successStreakRef = useRef(0)
+  const operationStatsRef = useRef(operationStats)
+  const gamificationRef = useRef(gamification)
 
   // Sync refs with state
   useEffect(() => { scoreRef.current = score }, [score])
@@ -75,6 +82,8 @@ export function useGameLogic() {
   useEffect(() => { stageRef.current = stage }, [stage])
   useEffect(() => { soundEffectsRef.current = soundEffects }, [soundEffects])
   useEffect(() => { highScoreRef.current = highScore }, [highScore])
+  useEffect(() => { operationStatsRef.current = operationStats }, [operationStats])
+  useEffect(() => { gamificationRef.current = gamification }, [gamification])
 
   const startGame = useCallback(() => {
     setGameState('playing')
@@ -91,9 +100,11 @@ export function useGameLogic() {
     }
 
     setHarvestedFruits(createInitialHarvestedFruits())
+    operationStats.resetSession()
+    successStreakRef.current = 0
     startSpawning()
     soundEffects.playGameStartSound()
-  }, [soundEffects, difficulty, startSpawning, stage])
+  }, [soundEffects, difficulty, startSpawning, stage, operationStats])
 
   const pauseGame = useCallback(() => {
     setGameState(prevState => prevState === 'playing' ? 'paused' : 'playing')
@@ -117,7 +128,15 @@ export function useGameLogic() {
     if (gameState !== 'playing') return
 
     const basePoints = calculateScore(fruit.type, action)
-    if (basePoints <= 0) return
+
+    if (basePoints <= 0) {
+      operationStats.recordFailure(action)
+      successStreakRef.current = 0
+      return
+    }
+
+    operationStats.recordSuccess(action)
+    successStreakRef.current += 1
 
     let adjustedPoints = difficulty.getAdjustedScore(basePoints)
     const scoreMultiplier = getEffectValue('scoreMultiplier')
@@ -130,10 +149,15 @@ export function useGameLogic() {
     }))
     setFruits(prevFruits => {
       const updatedFruits = prevFruits.filter(f => f.id !== fruit.id)
-      return [...updatedFruits, generateFruit()]
+      const newFruits = [...updatedFruits, generateFruit()]
+      // Task 7.3: 5回連続成功時にボーナスフルーツ追加
+      if (successStreakRef.current === 5) {
+        newFruits.push(generateFruit())
+      }
+      return newFruits
     })
     soundEffects.playCollectSound()
-  }, [gameState, soundEffects, difficulty, getEffectValue])
+  }, [gameState, soundEffects, difficulty, getEffectValue, operationStats])
 
   const moveFruits = useCallback(() => {
     if (gameState !== 'playing' || !isHardMode) return
@@ -174,6 +198,15 @@ export function useGameLogic() {
           } else {
             soundEffectsRef.current.playGameOverSound()
           }
+
+          // Task 7.2: 星評価算出・commitSession
+          const gam = gamificationRef.current
+          const ops = operationStatsRef.current
+          const stageNum = stageRef.current.currentStage
+          const stageInfo = stageRef.current.currentStageInfo
+          const timeLimit = stageInfo?.timeLimit ?? 60
+          const starRating = gam.calculateStarRating(stageNum, isStageCompleted, 0, timeLimit, ops.sessionStats)
+          gam.commitSession(stageNum, starRating, ops.sessionStats)
 
           if (scoreRef.current > highScoreRef.current) {
             setHighScore(scoreRef.current)
@@ -238,5 +271,7 @@ export function useGameLogic() {
     powerUps: powerUpsList,
     activePowerUpEffects,
     stage,
+    operationStats,
+    gamification,
   }
 }
