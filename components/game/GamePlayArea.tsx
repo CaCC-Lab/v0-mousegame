@@ -8,6 +8,8 @@ import { ParticleContainer } from '../ParticleContainer'
 import { Fruit as FruitType, HarvestAnimation, InteractionType, FRUIT_EMOJI } from '@/types/game'
 import { PowerUp as PowerUpType } from '@/types/powerup'
 import { ParticleEffect } from '@/types/animation'
+import type { StreakBonus } from '@/types/gamification'
+import { StreakIndicator } from './StreakIndicator'
 
 interface GamePlayAreaProps {
   fruits: FruitType[]
@@ -21,6 +23,8 @@ interface GamePlayAreaProps {
   onTriggerAnimation: (type: 'fruitCollect' | 'powerUpCollect', x: number, y: number) => void
   onFruitCollected: () => void
   gameAreaRef: React.RefObject<HTMLDivElement>
+  streak?: number
+  lastStreakBonus?: StreakBonus | null
 }
 
 function DraggedFruitOverlay({
@@ -107,7 +111,9 @@ export function GamePlayArea({
   onPowerUpCollect,
   onTriggerAnimation,
   onFruitCollected,
-  gameAreaRef
+  gameAreaRef,
+  streak,
+  lastStreakBonus
 }: GamePlayAreaProps): React.ReactElement {
   const [draggedFruit, setDraggedFruit] = useState<FruitType | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -219,6 +225,12 @@ export function GamePlayArea({
         mousePosition={mousePosition}
         gameAreaRect={gameAreaRef.current?.getBoundingClientRect() ?? null}
       />
+
+      {typeof streak === 'number' && (
+        <div className="absolute top-2 right-2 z-10">
+          <StreakIndicator streak={streak} lastBonus={lastStreakBonus ?? null} />
+        </div>
+      )}
 
       <DropArea text={dropAreaText} />
 

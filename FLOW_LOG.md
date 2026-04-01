@@ -130,6 +130,40 @@
 3. tasks.mdのチェックボックス更新タイミングの明確化
 
 ### 次のアクション
-- [ ] Task 7-8（useGameLogic拡張・FruitHarvestGame統合）を後続PRで実施
+- [x] Task 7-8（useGameLogic拡張・FruitHarvestGame統合）を後続PRで実施 → PR#2
 - [ ] steering/tech.mdにReact state更新ルールを追記
 - [ ] Cursorへの指示テンプレートを標準化
+
+---
+
+## PR#2: Task 7-8 ゲーミフィケーション統合
+
+### 実施フェーズ
+- [x] Phase 1: Spec確認（変更不要）
+- [x] Phase 2: featureブランチ作成（feature/gamification-integration）
+- [x] Phase 2.5: Spec Sync Gate — PASS
+- [x] Phase 3: テスト作成（Cursor）— 10テスト、Canon TDD制約OK
+- [x] Canon TDD例外手順: Task 8.2テストバグ修正（Cursor）
+- [ ] Phase 4: 実装（Claude Code）
+- [ ] Phase 4.5〜10: 以降
+
+### Canon TDD 例外記録
+| 項目 | 値 |
+|------|-----|
+| トリガー種別 | テスト自体のバグ |
+| 対象テスト | components/__tests__/FruitHarvestGameGamification.test.tsx Task 8.2 |
+| 問題 | マウント直後にResultModal(dialog)を期待するが、ゲーム終了フロー未シミュレートのためopen=falseでnull返却 |
+| 影響範囲 | Task 8.2テスト1件のみ |
+| 判断者 | Claude Code（Phase 4実装中に発見） |
+| requirements.md 変更 | 不要（AC-3.1〜3.4は正確） |
+| design.md 変更 | 不要（§7.2は正確） |
+| tasks.md 変更 | 不要（Task 8.2は正確） |
+| テスト修正 | Cursorがゲーム開始→収穫→タイマー終了フローを追加 |
+| tests/変更禁止復帰 | 復帰済み |
+
+### 発見・詰まり
+| フェーズ | 内容 | 対処 | 時間 | 再発防止 |
+|----------|------|------|-----:|---------|
+| Phase 3 | Cursorへの「実装コード作成禁止」明記が奏功 — Canon TDD違反なし | - | 0m | 前回の学びが機能 |
+| Phase 4 | successStreakRefが必要（React stateの非同期更新でstreak値が古い） | useRefで同期的にカウント管理 | 10m | 非同期state依存のゲームロジックにはref必須 |
+| Phase 4 | Task 8.2テストがゲーム終了フロー未シミュレート | Canon TDD例外手順でCursorがテスト修正 | 10m | 統合テストにはフロー全体のシミュレーションを含める |
