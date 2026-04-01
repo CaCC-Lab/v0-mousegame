@@ -41,6 +41,7 @@ export function useGameLogic() {
   const [fruits, setFruits] = useState<Fruit[]>([])
   const [harvestedFruits, setHarvestedFruits] = useState<HarvestedFruits>(createInitialHarvestedFruits())
   const [isHardMode, setIsHardMode] = useLocalStorage('fruitHarvestHardMode', false)
+  const [lastStarRating, setLastStarRating] = useState<0 | 1 | 2 | 3>(0)
 
   const animationFrameRef = useRef<number>()
   const lastUpdateTimeRef = useRef<number>(0)
@@ -207,6 +208,7 @@ export function useGameLogic() {
           const timeLimit = stageInfo?.timeLimit ?? 60
           const starRating = gam.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, ops.sessionStats)
           gam.commitSession(stageNum, starRating, ops.sessionStats)
+          setLastStarRating(starRating)
 
           if (scoreRef.current > highScoreRef.current) {
             setHighScore(scoreRef.current)
@@ -273,5 +275,6 @@ export function useGameLogic() {
     stage,
     operationStats,
     gamification,
+    lastStarRating,
   }
 }

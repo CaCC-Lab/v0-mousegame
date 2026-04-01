@@ -66,6 +66,7 @@ export function FruitHarvestGame(): React.ReactElement {
     stage,
     operationStats,
     gamification,
+    lastStarRating,
   } = useGameLogic()
 
   const { language, toggleLanguage, t } = useLanguage()
@@ -83,7 +84,6 @@ export function FruitHarvestGame(): React.ReactElement {
   const [stageClearProcessed, setStageClearProcessed] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
   const [showBadgeNotification, setShowBadgeNotification] = useState(false)
-  const [resultStarRating, setResultStarRating] = useState<0 | 1 | 2 | 3>(0)
   const gameAreaRef = useRef<HTMLDivElement>(null)
 
   const handleHardModeChange = useCallback((checked: boolean) => {
@@ -189,21 +189,14 @@ export function FruitHarvestGame(): React.ReactElement {
     }
   }, [gameState, score, harvestedFruits, stage, triggerAnimation, stageClearProcessed])
 
-  // Show ResultModal when game ends (gameState idle → score > 0 means a game just finished)
+  // Show ResultModal when game ends (playing → idle transition with score > 0)
   const prevGameStateRef = useRef(gameState)
   useEffect(() => {
     if (prevGameStateRef.current === 'playing' && gameState === 'idle' && score > 0) {
-      const stageNum = stage?.currentStage ?? 1
-      const stageInfo = stage?.currentStageInfo
-      const timeLimit = stageInfo?.timeLimit ?? 60
-      const isCleared = stage?.completedStages?.includes(stageNum) ?? false
-      const star = gamification.calculateStarRating(stageNum, isCleared, 0, timeLimit, operationStats.sessionStats)
-      setResultStarRating(star)
       setShowResultModal(true)
     }
     prevGameStateRef.current = gameState
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState])
+  }, [gameState, score])
 
   // Auto-dismiss badge notification after 3 seconds
   useEffect(() => {
@@ -349,7 +342,7 @@ export function FruitHarvestGame(): React.ReactElement {
       <ResultModal
         open={showResultModal}
         sessionStats={operationStats.sessionStats}
-        starRating={resultStarRating}
+        starRating={lastStarRating}
         lastSessionStats={gamification.previousSessionStats}
         onClose={() => setShowResultModal(false)}
       />
@@ -371,7 +364,7 @@ export function FruitHarvestGame(): React.ReactElement {
       <StageClearModal
         show={showStageClearMessage}
         currentStage={stage?.isHydrated ? stage?.currentStage : 1}
-        starRating={resultStarRating}
+        starRating={lastStarRating}
         onNextStage={handleNextStage}
         onClose={handleCloseStageClear}
         t={t}
