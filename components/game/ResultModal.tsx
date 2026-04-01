@@ -4,6 +4,9 @@ import React from 'react'
 import { SessionOperationStats, StarRating } from '@/types/gamification'
 import { compareSessionSuccess, getEncouragementMessage } from '@/lib/gamificationManager'
 
+const STAT_KEYS = ['click', 'doubleClick', 'rightClick', 'drop'] as const
+const DELTA_SYMBOL = { up: '↑', down: '↓', same: '→' } as const
+
 export interface ResultModalProps {
   open: boolean
   sessionStats: SessionOperationStats
@@ -58,26 +61,18 @@ export function ResultModal({
         </div>
         <div data-testid="session-success-counts" aria-label={labels.successCounts}>
           <ul className="space-y-1 text-sm">
-            <li data-testid="success-click">click: {sessionStats.click.success}</li>
-            <li data-testid="success-doubleClick">doubleClick: {sessionStats.doubleClick.success}</li>
-            <li data-testid="success-rightClick">rightClick: {sessionStats.rightClick.success}</li>
-            <li data-testid="success-drop">drop: {sessionStats.drop.success}</li>
+            {STAT_KEYS.map(key => (
+              <li key={key} data-testid={`success-${key}`}>{key}: {sessionStats[key].success}</li>
+            ))}
           </ul>
         </div>
         <div className="mt-4" data-testid="comparison-deltas" aria-label={labels.comparison}>
           <ul className="space-y-1 text-sm">
-            <li data-testid="delta-click">
-              click: {deltas.click === 'up' ? '↑' : deltas.click === 'down' ? '↓' : '→'}
-            </li>
-            <li data-testid="delta-doubleClick">
-              doubleClick: {deltas.doubleClick === 'up' ? '↑' : deltas.doubleClick === 'down' ? '↓' : '→'}
-            </li>
-            <li data-testid="delta-rightClick">
-              rightClick: {deltas.rightClick === 'up' ? '↑' : deltas.rightClick === 'down' ? '↓' : '→'}
-            </li>
-            <li data-testid="delta-drop">
-              drop: {deltas.drop === 'up' ? '↑' : deltas.drop === 'down' ? '↓' : '→'}
-            </li>
+            {STAT_KEYS.map(key => (
+              <li key={key} data-testid={`delta-${key}`}>
+                {key}: {DELTA_SYMBOL[deltas[key]]}
+              </li>
+            ))}
           </ul>
         </div>
         <button
