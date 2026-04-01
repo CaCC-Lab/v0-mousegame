@@ -15,10 +15,10 @@
 
 ### 実施フェーズ
 - [x] Phase 1: Kiro Spec作成・同期（既存Spec確認）
-- [ ] Phase 2: featureブランチ作成（Spec commit）
-- [ ] Phase 2.5: Spec Sync Gate
-- [ ] Phase 3: テスト作成
-- [ ] Phase 4: 実装
+- [x] Phase 2: featureブランチ作成（Spec commit）
+- [x] Phase 2.5: Spec Sync Gate — PASS
+- [x] Phase 3: テスト作成（Canon TDD違反あり→是正済み）
+- [ ] Phase 4: 実装（Claude Code）
 - [ ] Phase 4.5: /simplify
 - [ ] Phase 5: pre-commit
 - [ ] Phase 6: PR作成 → GitHub CI
@@ -37,6 +37,7 @@
 | フェーズ | 内容 | 対処 | 時間 | 再発防止 |
 |----------|------|------|-----:|---------|
 | セットアップ | v7.8.4a必須ファイル不足 | AGENTS.md等を新規作成 | 10m | テンプレートリポジトリ化 |
+| Phase 3 | Canon TDD違反: Cursorがテストだけでなく実装コード(lib/gamificationManager.ts, hooks/useOperationStats.ts, hooks/useGamification.ts)も作成。Phase 3 Exit Criteria #3(全テストFAIL)未達 | 実装ファイル3つを退避し、Claude CodeがPhase 4で再実装。types/gamification.tsはdesign仕様として保持 | 15m | Cursorへの指示に「実装コードは作成禁止」を明記する |
 
 ### 良かった点
 - 既存Specが充実しており、すぐに実装に入れる状態

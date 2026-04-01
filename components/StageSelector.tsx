@@ -3,10 +3,13 @@ import { Stage } from '../types/stage'
 import { Button } from './ui/button'
 import { X, Lock, CheckCircle, Star } from 'lucide-react'
 import { useLanguage } from '../hooks/useLanguage'
+import { StageStarData } from '@/types/gamification'
 
 interface StageSelectorProps {
   stages: Stage[]
   currentStage: number
+  /** ステージごとの獲得済み星（ゲーミフィケーション） */
+  stageStars?: StageStarData
   onSelectStage: (stageNumber: number) => void
   onClose: () => void
 }
@@ -14,6 +17,7 @@ interface StageSelectorProps {
 export function StageSelector({
   stages,
   currentStage,
+  stageStars,
   onSelectStage,
   onClose
 }: StageSelectorProps) {
@@ -91,19 +95,30 @@ export function StageSelector({
                 }
               `}
             >
-              <div className="flex justify-between items-start mb-2">
+              <div className="flex justify-between items-start mb-2 gap-2">
                 <h3 className="text-lg font-semibold">
                   {t.stage} {stage.number}
                 </h3>
-                {stage.unlocked ? (
-                  stage.completed ? (
-                    <CheckCircle className="w-5 h-5 text-green-500" />
+                <div className="flex items-center gap-2 shrink-0">
+                  {stageStars && typeof stageStars[stage.number] === 'number' && stageStars[stage.number]! > 0 && (
+                    <span
+                      data-testid={`stage-stars-${stage.number}`}
+                      className="text-yellow-500 text-sm font-medium"
+                      aria-label={`stage ${stage.number} stars ${stageStars[stage.number]}`}
+                    >
+                      {'★'.repeat(stageStars[stage.number]!)}
+                    </span>
+                  )}
+                  {stage.unlocked ? (
+                    stage.completed ? (
+                      <CheckCircle className="w-5 h-5 text-green-500" />
+                    ) : (
+                      <Star className="w-5 h-5 text-yellow-500" />
+                    )
                   ) : (
-                    <Star className="w-5 h-5 text-yellow-500" />
-                  )
-                ) : (
-                  <Lock className="w-5 h-5 text-gray-400" />
-                )}
+                    <Lock className="w-5 h-5 text-gray-400" />
+                  )}
+                </div>
               </div>
 
               <h4 className="font-medium mb-2">{getStageTranslation(stage.number).name}</h4>
