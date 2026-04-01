@@ -3,10 +3,13 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from "@/components/ui/button"
+import { StarRating } from '@/types/gamification'
 
 interface StageClearModalProps {
   show: boolean
   currentStage: number
+  /** クリア時の星評価（0のときは非表示扱い） */
+  starRating?: StarRating
   onNextStage: () => void
   onClose: () => void
   t: {
@@ -35,6 +38,7 @@ const MODAL_ANIMATION = {
 export function StageClearModal({
   show,
   currentStage,
+  starRating = 0,
   onNextStage,
   onClose,
   t
@@ -62,6 +66,15 @@ export function StageClearModal({
             <p className="text-xl text-center text-white mb-4">
               {t.stage} {currentStage} {t.stageCleared}
             </p>
+            {starRating > 0 && (
+              <p
+                data-testid="stage-clear-star-rating"
+                className="text-center text-3xl text-yellow-200 mb-4"
+                aria-label={`star rating ${starRating}`}
+              >
+                {'★'.repeat(starRating)}
+              </p>
+            )}
             <div className="flex justify-center space-x-4">
               <Button
                 onClick={onNextStage}

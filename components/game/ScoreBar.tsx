@@ -10,6 +10,8 @@ interface ScoreBarProps {
   score: number
   highScore: number
   timeLeft: number
+  /** 連続成功（ゲーミフィケーション） */
+  streak?: number
   gameState: GameState
   combo: { multiplier: number }
   stage: {
@@ -105,6 +107,7 @@ export function ScoreBar({
   score,
   highScore,
   timeLeft,
+  streak,
   gameState,
   combo,
   stage,
@@ -114,6 +117,11 @@ export function ScoreBar({
     <div className="bg-gradient-ocean p-4 md:p-6">
       <div className="flex flex-wrap justify-between items-center gap-4">
         <ScoreSection score={score} combo={combo} t={t} />
+        {typeof streak === 'number' && (
+          <div data-testid="scorebar-streak" className="text-white text-sm font-semibold">
+            連続成功: {streak}
+          </div>
+        )}
         <StageSection stage={stage} t={t} />
         <TimerSection timeLeft={timeLeft} gameState={gameState} t={t} />
         <HighScoreSection highScore={highScore} t={t} />
