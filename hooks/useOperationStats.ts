@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useState } from 'react'
+import { useCallback, useRef, useState } from 'react'
 import type { InteractionType } from '@/types/game'
 import type { SessionOperationStats, StreakBonus } from '@/types/gamification'
 import { STREAK_BONUSES } from '@/types/gamification'
@@ -27,6 +27,14 @@ export function useOperationStats(): UseOperationStatsReturn {
   const [sessionStats, setSessionStats] = useState<SessionOperationStats>(createEmptySessionStats)
   const [streak, setStreak] = useState(0)
   const [lastStreakBonus, setLastStreakBonus] = useState<StreakBonus | null>(null)
+  const bonusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clearBonusTimer = useCallback(() => {
+    if (bonusTimerRef.current !== null) {
+      clearTimeout(bonusTimerRef.current)
+      bonusTimerRef.current = null
+    }
+  }, [])
 
   const recordSuccess = useCallback((action: InteractionType) => {
     setSessionStats(prev => ({
@@ -35,25 +43,28 @@ export function useOperationStats(): UseOperationStatsReturn {
     }))
     setStreak(prev => {
       const next = prev + 1
-      setTimeout(() => setLastStreakBonus(highestTriggeredBonus(next)), 0)
+      clearBonusTimer()
+      bonusTimerRef.current = setTimeout(() => setLastStreakBonus(highestTriggeredBonus(next)), 0)
       return next
     })
-  }, [])
+  }, [clearBonusTimer])
 
   const recordFailure = useCallback((action: InteractionType) => {
     setSessionStats(prev => ({
       ...prev,
       [action]: { ...prev[action], fail: prev[action].fail + 1 },
     }))
+    clearBonusTimer()
     setStreak(0)
     setLastStreakBonus(null)
-  }, [])
+  }, [clearBonusTimer])
 
   const resetSession = useCallback(() => {
     setSessionStats(createEmptySessionStats())
+    clearBonusTimer()
     setStreak(0)
     setLastStreakBonus(null)
-  }, [])
+  }, [clearBonusTimer])
 
   return { sessionStats, streak, lastStreakBonus, recordSuccess, recordFailure, resetSession }
 }

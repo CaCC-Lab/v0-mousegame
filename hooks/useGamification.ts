@@ -27,6 +27,8 @@ export interface UseGamificationReturn {
   badgeProgress: { [key in BadgeType]: { current: number; target: number } }
   cumulativeStats: CumulativeOperationStats
   lastSessionStats: SessionOperationStats | null
+  /** commitSession前のセッション統計（ResultModalの前回比較用, AC-3.2） */
+  previousSessionStats: SessionOperationStats | null
   newlyEarnedBadge: BadgeDefinition | null
   calculateStarRating: (
     stageNumber: number,
@@ -89,6 +91,7 @@ function applyCommitSession(
 
 export function useGamification(): UseGamificationReturn {
   const [data, setData] = useState<GamificationSaveData>(createDefaultGamificationData)
+  const [previousSessionStats, setPreviousSessionStats] = useState<SessionOperationStats | null>(null)
   const [newlyEarnedBadge, setNewlyEarnedBadge] = useState<BadgeDefinition | null>(null)
   const [isHydrated, setIsHydrated] = useState(false)
 
@@ -111,6 +114,8 @@ export function useGamification(): UseGamificationReturn {
   const commitSession = useCallback(
     (stageNumber: number, starRating: StarRating, sessionStats: SessionOperationStats) => {
       setData(prev => {
+        // AC-3.2: commitSession前のlastSessionStatsを退避（前回比較用）
+        setPreviousSessionStats(prev.lastSessionStats)
         const { next, firstNewBadge } = applyCommitSession(prev, stageNumber, starRating, sessionStats)
         saveGamificationData(next)
         if (firstNewBadge) {
@@ -132,6 +137,7 @@ export function useGamification(): UseGamificationReturn {
     badgeProgress,
     cumulativeStats: data.cumulativeStats,
     lastSessionStats: data.lastSessionStats,
+    previousSessionStats,
     newlyEarnedBadge,
     calculateStarRating: calculateStarRatingCb,
     commitSession,
