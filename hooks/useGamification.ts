@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type {
   BadgeDefinition,
   BadgeType,
@@ -91,6 +91,8 @@ function applyCommitSession(
 
 export function useGamification(): UseGamificationReturn {
   const [data, setData] = useState<GamificationSaveData>(createDefaultGamificationData)
+  const dataRef = useRef(data)
+  dataRef.current = data
   const [previousSessionStats, setPreviousSessionStats] = useState<SessionOperationStats | null>(null)
   const [newlyEarnedBadge, setNewlyEarnedBadge] = useState<BadgeDefinition | null>(null)
   const [isHydrated, setIsHydrated] = useState(false)
@@ -113,9 +115,9 @@ export function useGamification(): UseGamificationReturn {
 
   const commitSession = useCallback(
     (stageNumber: number, starRating: StarRating, sessionStats: SessionOperationStats) => {
+      // AC-3.2: refから前回セッションを退避（setDataコールバック外で安全に実行）
+      setPreviousSessionStats(dataRef.current.lastSessionStats)
       setData(prev => {
-        // AC-3.2: commitSession前のlastSessionStatsを退避（前回比較用）
-        setPreviousSessionStats(prev.lastSessionStats)
         const { next, firstNewBadge } = applyCommitSession(prev, stageNumber, starRating, sessionStats)
         saveGamificationData(next)
         if (firstNewBadge) {
