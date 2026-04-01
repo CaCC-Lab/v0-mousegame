@@ -23,7 +23,8 @@
  */
 
 import React from 'react'
-import { render, screen, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within } from '@testing-library/react'
+import userEvent from '@testing-library/user-event'
 import { FruitHarvestGame } from '../FruitHarvestGame'
 
 jest.mock('@/hooks/useGamification', () => {
@@ -90,14 +91,60 @@ describe('FruitHarvestGame gamification (Task 8)', () => {
   })
 
   describe('Task 8.2: ゲーム終了時に ResultModal', () => {
-    it('結果画面のダイアログが表示される（統合後・ゲーム終了時）', () => {
-      // Given: ゲーム終了フロー完了後（実装後） / When: レンダー
+    beforeEach(() => {
+      jest.useFakeTimers()
+    })
+
+    afterEach(() => {
+      act(() => {
+        jest.runOnlyPendingTimers()
+      })
+      jest.useRealTimers()
+    })
+
+    it('結果画面のダイアログが表示される（統合後・ゲーム終了時）', async () => {
+      // Given: マウント済み
+      // When: startGame → フルーツ収穫で score>0 → 残り時間ぶんタイマー進行でゲーム終了（idle）
+      // Then: ResultModal が open になり dialog（れんしゅうけっか）が見える
+      // （FruitHarvestGame: showResultModal は gameState==='idle' && score>0 && !stageClearProcessed のとき）
+      const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
       render(<FruitHarvestGame />)
 
-      // Then: ResultModal — aria-labelledby="result-modal-title" の見出しテキスト
+      const startButton = screen.getAllByRole('button').find(btn =>
+        btn.textContent?.match(/Start|はじめる/i)
+      )
+      expect(startButton).toBeTruthy()
+      await user.click(startButton!)
+
+      await waitFor(() => {
+        expect(screen.getByTestId('game-area').querySelector('[data-fruit-id]')).toBeInTheDocument()
+      })
+
+      const gameArea = screen.getByTestId('game-area')
+      const apples = within(gameArea).queryAllByText('🍎')
+      if (apples.length > 0) {
+        await user.click(apples[0])
+      } else {
+        const blueberries = within(gameArea).queryAllByText('🫐')
+        expect(blueberries.length).toBeGreaterThan(0)
+        await user.dblClick(blueberries[0])
+      }
+
+      const timeText = screen.getByText(/\d+:\d{2}/).textContent ?? ''
+      const [minStr, secStr] = timeText.split(':')
+      const timeLeftSeconds = Number.parseInt(minStr ?? '0', 10) * 60 + Number.parseInt(secStr ?? '0', 10)
+
+      await act(async () => {
+        jest.advanceTimersByTime(timeLeftSeconds * 1000)
+      })
+      await act(() => {
+        jest.runOnlyPendingTimers()
+      })
+
+      // Then: ResultModal — タイトル「れんしゅうけっか」（open 時のみ dialog が存在）
       expect(
-        screen.queryByRole('dialog', { name: /れんしゅうけっか/ })
-      ).toBeTruthy()
+        screen.getByRole('dialog', { name: /れんしゅうけっか/ })
+      ).toBeInTheDocument()
     })
   })
 
