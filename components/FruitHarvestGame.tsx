@@ -208,14 +208,17 @@ export function FruitHarvestGame(): React.ReactElement {
       }, 3000)
       return () => clearTimeout(timer)
     }
+  // gamification.clearNewBadge は useCallback([]) で安定参照のためdepsから除外
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gamification.newlyEarnedBadge])
 
-  // Reset stage clear processed when game starts
+  // Reset state when game starts
   useEffect(() => {
     if (gameState === 'playing') {
       setStageClearProcessed(false)
       setShowResultModal(false)
+      setShowBadgeNotification(false)
+      gamification.clearNewBadge()
     }
   }, [gameState])
 

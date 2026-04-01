@@ -131,12 +131,12 @@ export function useGameLogic() {
     const basePoints = calculateScore(fruit.type, action)
 
     if (basePoints <= 0) {
-      operationStats.recordFailure(action)
+      operationStatsRef.current.recordFailure(action)
       successStreakRef.current = 0
       return
     }
 
-    operationStats.recordSuccess(action)
+    operationStatsRef.current.recordSuccess(action)
     successStreakRef.current += 1
 
     let adjustedPoints = difficulty.getAdjustedScore(basePoints)
@@ -158,7 +158,7 @@ export function useGameLogic() {
       return newFruits
     })
     soundEffects.playCollectSound()
-  }, [gameState, soundEffects, difficulty, getEffectValue, operationStats])
+  }, [gameState, soundEffects, difficulty, getEffectValue])
 
   const moveFruits = useCallback(() => {
     if (gameState !== 'playing' || !isHardMode) return
@@ -201,13 +201,13 @@ export function useGameLogic() {
           }
 
           // Task 7.2: 星評価算出・commitSession
-          const gam = gamificationRef.current
-          const ops = operationStatsRef.current
+          const gamification = gamificationRef.current
+          const stats = operationStatsRef.current
           const stageNum = stageRef.current.currentStage
           const stageInfo = stageRef.current.currentStageInfo
           const timeLimit = stageInfo?.timeLimit ?? 60
-          const starRating = gam.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, ops.sessionStats)
-          gam.commitSession(stageNum, starRating, ops.sessionStats)
+          const starRating = gamification.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, stats.sessionStats)
+          gamification.commitSession(stageNum, starRating, stats.sessionStats)
           setLastStarRating(starRating)
 
           if (scoreRef.current > highScoreRef.current) {
