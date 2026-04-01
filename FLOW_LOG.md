@@ -7,7 +7,7 @@
 - リポジトリ: origin/master
 - 主要 feature spec: `.kiro/specs/gamification/`
 - 基盤 steering: `product.md / tech.md / structure.md`
-- 使用MCP: なし（ローカル完結）
+- 使用MCP: Playwright（Runtime Verification、CLI経由）
 
 ---
 
@@ -18,9 +18,10 @@
 - [x] Phase 2: featureブランチ作成（Spec commit）
 - [x] Phase 2.5: Spec Sync Gate — PASS
 - [x] Phase 3: テスト作成（Canon TDD違反あり→是正済み）
-- [ ] Phase 4: 実装（Claude Code）
-- [ ] Phase 4.5: /simplify
-- [ ] Phase 5: pre-commit
+- [x] Phase 4: 実装（Claude Code）— 全70テストPASS
+- [x] Phase 4.5: /simplify — ResultModal重複コード統一
+- [x] Phase 4.6: Runtime Verification — E2E 3/8 PASS（失敗5件は既存問題、ゲーミフィケーション起因なし）
+- [x] Phase 5: pre-commit — ゲーミフィケーション関連70テスト全PASS
 - [ ] Phase 6: PR作成 → GitHub CI
 - [ ] Phase 7-10: レビュー → マージ
 
