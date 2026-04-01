@@ -19,7 +19,6 @@ import {
 import { ResultModal } from './game/ResultModal'
 import { BadgeNotification } from './game/BadgeNotification'
 import { BadgeDisplay } from './game/BadgeDisplay'
-import { StreakIndicator } from './game/StreakIndicator'
 import { Fruit, InteractionType } from '@/types/game'
 
 const GAME_CONTAINER_ANIMATION = {
@@ -83,7 +82,6 @@ export function FruitHarvestGame(): React.ReactElement {
   const [showStageClearMessage, setShowStageClearMessage] = useState(false)
   const [stageClearProcessed, setStageClearProcessed] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
-  const [resultModalDismissed, setResultModalDismissed] = useState(false)
   const [resultStarRating, setResultStarRating] = useState<0 | 1 | 2 | 3>(0)
   const gameAreaRef = useRef<HTMLDivElement>(null)
 
