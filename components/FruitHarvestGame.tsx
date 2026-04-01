@@ -82,6 +82,7 @@ export function FruitHarvestGame(): React.ReactElement {
   const [showStageClearMessage, setShowStageClearMessage] = useState(false)
   const [stageClearProcessed, setStageClearProcessed] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
+  const [showBadgeNotification, setShowBadgeNotification] = useState(false)
   const [resultStarRating, setResultStarRating] = useState<0 | 1 | 2 | 3>(0)
   const gameAreaRef = useRef<HTMLDivElement>(null)
 
@@ -188,9 +189,10 @@ export function FruitHarvestGame(): React.ReactElement {
     }
   }, [gameState, score, harvestedFruits, stage, triggerAnimation, stageClearProcessed])
 
-  // Show ResultModal when game ends
+  // Show ResultModal when game ends (gameState idle → score > 0 means a game just finished)
+  const prevGameStateRef = useRef(gameState)
   useEffect(() => {
-    if (gameState === 'idle' && score > 0 && !stageClearProcessed) {
+    if (prevGameStateRef.current === 'playing' && gameState === 'idle' && score > 0) {
       const stageNum = stage?.currentStage ?? 1
       const stageInfo = stage?.currentStageInfo
       const timeLimit = stageInfo?.timeLimit ?? 60
@@ -199,7 +201,22 @@ export function FruitHarvestGame(): React.ReactElement {
       setResultStarRating(star)
       setShowResultModal(true)
     }
-  }, [gameState, score, stageClearProcessed, stage, gamification, operationStats])
+    prevGameStateRef.current = gameState
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState])
+
+  // Auto-dismiss badge notification after 3 seconds
+  useEffect(() => {
+    if (gamification.newlyEarnedBadge) {
+      setShowBadgeNotification(true)
+      const timer = setTimeout(() => {
+        setShowBadgeNotification(false)
+        gamification.clearNewBadge()
+      }, 3000)
+      return () => clearTimeout(timer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gamification.newlyEarnedBadge])
 
   // Reset stage clear processed when game starts
   useEffect(() => {
@@ -339,7 +356,7 @@ export function FruitHarvestGame(): React.ReactElement {
 
       <BadgeNotification
         badge={gamification.newlyEarnedBadge}
-        show={gamification.newlyEarnedBadge !== null}
+        show={showBadgeNotification}
       />
 
       {gameState === 'idle' && (

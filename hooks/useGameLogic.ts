@@ -205,7 +205,7 @@ export function useGameLogic() {
           const stageNum = stageRef.current.currentStage
           const stageInfo = stageRef.current.currentStageInfo
           const timeLimit = stageInfo?.timeLimit ?? 60
-          const starRating = gam.calculateStarRating(stageNum, isStageCompleted, 0, timeLimit, ops.sessionStats)
+          const starRating = gam.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, ops.sessionStats)
           gam.commitSession(stageNum, starRating, ops.sessionStats)
 
           if (scoreRef.current > highScoreRef.current) {
