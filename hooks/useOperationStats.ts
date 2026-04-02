@@ -14,6 +14,8 @@ export interface UseOperationStatsReturn {
   recordSuccess: (action: InteractionType) => number
   recordFailure: (action: InteractionType) => void
   resetSession: () => void
+  /** React state更新前の最新sessionStatsを同期的に取得 */
+  getLatestSessionStats: () => SessionOperationStats
 }
 
 function highestTriggeredBonus(streak: number): StreakBonus | null {
@@ -30,6 +32,7 @@ export function useOperationStats(): UseOperationStatsReturn {
   const [lastStreakBonus, setLastStreakBonus] = useState<StreakBonus | null>(null)
   const bonusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const streakRef = useRef(0)
+  const sessionStatsRef = useRef<SessionOperationStats>(createEmptySessionStats())
 
   const clearBonusTimer = useCallback(() => {
     if (bonusTimerRef.current !== null) {
@@ -39,10 +42,11 @@ export function useOperationStats(): UseOperationStatsReturn {
   }, [])
 
   const recordSuccess = useCallback((action: InteractionType): number => {
-    setSessionStats(prev => ({
-      ...prev,
-      [action]: { ...prev[action], success: prev[action].success + 1 },
-    }))
+    setSessionStats(prev => {
+      const next = { ...prev, [action]: { ...prev[action], success: prev[action].success + 1 } }
+      sessionStatsRef.current = next
+      return next
+    })
     const nextStreak = streakRef.current + 1
     streakRef.current = nextStreak
     setStreak(nextStreak)
@@ -52,17 +56,21 @@ export function useOperationStats(): UseOperationStatsReturn {
   }, [clearBonusTimer])
 
   const recordFailure = useCallback((action: InteractionType) => {
-    setSessionStats(prev => ({
-      ...prev,
-      [action]: { ...prev[action], fail: prev[action].fail + 1 },
-    }))
+    setSessionStats(prev => {
+      const next = { ...prev, [action]: { ...prev[action], fail: prev[action].fail + 1 } }
+      sessionStatsRef.current = next
+      return next
+    })
     clearBonusTimer()
     streakRef.current = 0
     setStreak(0)
     setLastStreakBonus(null)
   }, [clearBonusTimer])
 
+  const getLatestSessionStats = useCallback(() => sessionStatsRef.current, [])
+
   const resetSession = useCallback(() => {
+    sessionStatsRef.current = createEmptySessionStats()
     setSessionStats(createEmptySessionStats())
     clearBonusTimer()
     streakRef.current = 0
@@ -70,5 +78,5 @@ export function useOperationStats(): UseOperationStatsReturn {
     setLastStreakBonus(null)
   }, [clearBonusTimer])
 
-  return { sessionStats, streak, lastStreakBonus, recordSuccess, recordFailure, resetSession }
+  return { sessionStats, streak, lastStreakBonus, recordSuccess, recordFailure, resetSession, getLatestSessionStats }
 }

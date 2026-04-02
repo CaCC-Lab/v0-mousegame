@@ -166,11 +166,11 @@ export function useGameLogic() {
       soundEffectsRef.current.playHighScoreSound()
 
       const gamification = gamificationRef.current
-      const stats = operationStatsRef.current
+      const latestStats = operationStatsRef.current.getLatestSessionStats()
       const stageNum = currentStage.currentStage
       const timeLimit = currentStage.currentStageInfo.timeLimit
-      const starRating = gamification.calculateStarRating(stageNum, true, timeLeft, timeLimit, stats.sessionStats)
-      gamification.commitSession(stageNum, starRating, stats.sessionStats)
+      const starRating = gamification.calculateStarRating(stageNum, true, timeLeft, timeLimit, latestStats)
+      gamification.commitSession(stageNum, starRating, latestStats)
       setLastStarRating(starRating)
 
       if (newScore > highScoreRef.current) {

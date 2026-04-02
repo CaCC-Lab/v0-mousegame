@@ -8,7 +8,7 @@
  * | TC-9.1a | クリア即終了・timeLeft>0 | AC-1.1a | commitSession が残り時間付きで呼ばれる | 統合後 Green |
  * | TC-9.1b | 残り時間十分・ミス低 | §7.2a | ★2/★3 取得可能 | lib 検証 |
  * | TC-9.2a | 非レモンに右クリック | AC-5.2a | onFruitClick(..., 'rightClick') | GamePlayArea |
- * | TC-9.2b | 不正ドロップ | AC-5.2a | onFruitClick(..., 'drop') | GamePlayArea |
+ * | TC-9.2b | スイカをドロップ領域外へリリース | AC-5.2a | onFruitClick(watermelon, 'drop') | 失敗パス |
  * | TC-9.3a | recordSuccess 呼び出し | §7.3 | 戻り値が新 streak | useOperationStats |
  * | TC-9.3b | 5連続成功 | §7.3 | 戻り値でボーナス判定（ref 廃止） | useGameLogic |
  */
@@ -188,27 +188,30 @@ describe('starAccuracy (Task 9)', () => {
       expect(onFruitClick).toHaveBeenCalledWith(expect.objectContaining({ type: 'apple' }), 'rightClick')
     })
 
-    it('スイカ以外のドロップ操作で onFruitClick(fruit, "drop") が呼ばれ失敗記録に繋がる（§7.1a）', () => {
-      const apple = baseFruit({ id: 202, type: 'apple' })
+    it('スイカをドロップ領域外にリリースすると onFruitClick(fruit, "drop") が呼ばれ失敗記録に繋がる（§7.1a）', () => {
+      // Given: ドラッグ開始はスイカのみ可能（他フルーツは drop 操作が発生しない）
+      const watermelon = baseFruit({ id: 202, type: 'watermelon' })
       const onFruitClick = jest.fn()
-      renderArea([apple], onFruitClick)
+      renderArea([watermelon], onFruitClick)
 
       const gameArea = screen.getByTestId('game-area')
       const node = gameArea.querySelector('[data-fruit-id="202"]')
       expect(node).toBeTruthy()
 
-      // When: りんごをドロップ領域へ（不正な drop 対象）
-      fireEvent.mouseDown(node!, { button: 0 })
       const dropArea = gameArea.querySelector('.drop-area')
       const dropRect = dropArea!.getBoundingClientRect()
-      fireEvent.mouseMove(gameArea, { clientX: 100, clientY: 100 })
+      const areaRect = gameArea.getBoundingClientRect()
+
+      // When: スイカをドラッグし、ドロップ領域外（左側）でリリース → calculateScore===0 相当の失敗パス
+      fireEvent.mouseDown(node!, { button: 0 })
+      fireEvent.mouseMove(gameArea, { clientX: areaRect.left + 80, clientY: areaRect.top + 80 })
       fireEvent.mouseUp(gameArea, {
-        clientX: (dropRect.left + dropRect.right) / 2,
+        clientX: dropRect.left - 20,
         clientY: (dropRect.top + dropRect.bottom) / 2,
       })
 
-      // Then: design §7.1a — drop が伝わり recordFailure('drop')
-      expect(onFruitClick).toHaveBeenCalledWith(expect.objectContaining({ type: 'apple' }), 'drop')
+      // Then: design §7.1a — 領域外 drop が伝わり recordFailure('drop')
+      expect(onFruitClick).toHaveBeenCalledWith(expect.objectContaining({ type: 'watermelon', id: 202 }), 'drop')
     })
   })
 
