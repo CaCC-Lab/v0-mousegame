@@ -53,6 +53,7 @@ jest.mock('../useOperationStats', () => ({
     recordSuccess: mockRecordSuccess,
     recordFailure: mockRecordFailure,
     resetSession: mockResetSession,
+    getLatestSessionStats: jest.fn(() => createEmptySessionStats()),
   })),
 }))
 

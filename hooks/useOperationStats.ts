@@ -31,6 +31,7 @@ export function useOperationStats(): UseOperationStatsReturn {
   const [streak, setStreak] = useState(0)
   const [lastStreakBonus, setLastStreakBonus] = useState<StreakBonus | null>(null)
   const bonusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // streakRef/sessionStatsRef: React stateの非同期更新を待たず同期的に最新値を取得するためのミラー
   const streakRef = useRef(0)
   const sessionStatsRef = useRef<SessionOperationStats>(createEmptySessionStats())
 
@@ -51,6 +52,7 @@ export function useOperationStats(): UseOperationStatsReturn {
     streakRef.current = nextStreak
     setStreak(nextStreak)
     clearBonusTimer()
+    // setTimeout(0): setStreakとsetLastStreakBonusを別バッチにし、streak表示→ボーナス表示の順序を保証
     bonusTimerRef.current = setTimeout(() => setLastStreakBonus(highestTriggeredBonus(nextStreak)), 0)
     return nextStreak
   }, [clearBonusTimer])

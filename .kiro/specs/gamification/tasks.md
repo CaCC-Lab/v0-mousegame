@@ -66,8 +66,8 @@
   - [x] 8.5 BadgeDisplay をゲーム画面に配置する（アイドル時に表示）
   - [x] 8.6 統合テストを更新する
 
-- [ ] 9. 星評価・統計の正確性改善
-  - [ ] 9.1 ステージクリア条件達成時にゲームを即終了させ、その時点の残り時間で星評価を算出する（AC-1.1a）
-  - [ ] 9.2 `GamePlayArea` で右クリック・ドラッグの失敗操作を `handleFruitInteraction` に伝達する（AC-5.2a）
-  - [ ] 9.3 `useOperationStats.recordSuccess` の戻り値として新しいstreak値を返し、`useGameLogic` の `successStreakRef` を廃止する（design §7.3）
-  - [ ] 9.4 テストを作成・更新する
+- [x] 9. 星評価・統計の正確性改善
+  - [x] 9.1 ステージクリア条件達成時にゲームを即終了させ、その時点の残り時間で星評価を算出する（AC-1.1a）
+  - [x] 9.2 `GamePlayArea` で右クリック・ドラッグの失敗操作を `handleFruitInteraction` に伝達する（AC-5.2a）
+  - [x] 9.3 `useOperationStats.recordSuccess` の戻り値として新しいstreak値を返し、`useGameLogic` の `successStreakRef` を廃止する（design §7.3）
+  - [x] 9.4 テストを作成・更新する

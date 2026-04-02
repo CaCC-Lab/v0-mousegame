@@ -225,8 +225,9 @@ export function useGameLogic() {
           const stageNum = stageRef.current.currentStage
           const stageInfo = stageRef.current.currentStageInfo
           const timeLimit = stageInfo?.timeLimit ?? 60
-          const starRating = gamification.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, stats.sessionStats)
-          gamification.commitSession(stageNum, starRating, stats.sessionStats)
+          const latestSessionStats = stats.getLatestSessionStats()
+          const starRating = gamification.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, latestSessionStats)
+          gamification.commitSession(stageNum, starRating, latestSessionStats)
           setLastStarRating(starRating)
 
           if (scoreRef.current > highScoreRef.current) {
