@@ -10,7 +10,8 @@ export interface UseOperationStatsReturn {
   sessionStats: SessionOperationStats
   streak: number
   lastStreakBonus: StreakBonus | null
-  recordSuccess: (action: InteractionType) => void
+  /** 成功を記録し、更新後のstreak値を返す */
+  recordSuccess: (action: InteractionType) => number
   recordFailure: (action: InteractionType) => void
   resetSession: () => void
 }
@@ -28,6 +29,7 @@ export function useOperationStats(): UseOperationStatsReturn {
   const [streak, setStreak] = useState(0)
   const [lastStreakBonus, setLastStreakBonus] = useState<StreakBonus | null>(null)
   const bonusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const streakRef = useRef(0)
 
   const clearBonusTimer = useCallback(() => {
     if (bonusTimerRef.current !== null) {
@@ -36,17 +38,17 @@ export function useOperationStats(): UseOperationStatsReturn {
     }
   }, [])
 
-  const recordSuccess = useCallback((action: InteractionType) => {
+  const recordSuccess = useCallback((action: InteractionType): number => {
     setSessionStats(prev => ({
       ...prev,
       [action]: { ...prev[action], success: prev[action].success + 1 },
     }))
-    setStreak(prev => {
-      const next = prev + 1
-      clearBonusTimer()
-      bonusTimerRef.current = setTimeout(() => setLastStreakBonus(highestTriggeredBonus(next)), 0)
-      return next
-    })
+    const nextStreak = streakRef.current + 1
+    streakRef.current = nextStreak
+    setStreak(nextStreak)
+    clearBonusTimer()
+    bonusTimerRef.current = setTimeout(() => setLastStreakBonus(highestTriggeredBonus(nextStreak)), 0)
+    return nextStreak
   }, [clearBonusTimer])
 
   const recordFailure = useCallback((action: InteractionType) => {
@@ -55,6 +57,7 @@ export function useOperationStats(): UseOperationStatsReturn {
       [action]: { ...prev[action], fail: prev[action].fail + 1 },
     }))
     clearBonusTimer()
+    streakRef.current = 0
     setStreak(0)
     setLastStreakBonus(null)
   }, [clearBonusTimer])
@@ -62,6 +65,7 @@ export function useOperationStats(): UseOperationStatsReturn {
   const resetSession = useCallback(() => {
     setSessionStats(createEmptySessionStats())
     clearBonusTimer()
+    streakRef.current = 0
     setStreak(0)
     setLastStreakBonus(null)
   }, [clearBonusTimer])
