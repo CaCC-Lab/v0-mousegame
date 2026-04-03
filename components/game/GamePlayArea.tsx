@@ -151,14 +151,20 @@ export function GamePlayArea({
   }, [onPowerUpCollect, onTriggerAnimation, gameAreaRef])
 
   const handleMouseDown = useCallback((e: React.MouseEvent, fruit: FruitType) => {
-    if (e.button === 2 && fruit.type === 'lemon') {
+    if (e.button === 2) {
       e.preventDefault()
-      handleFruitClickWithAnimation(fruit, 'rightClick')
-    } else if (fruit.type === 'watermelon') {
+      if (fruit.type === 'lemon') {
+        // レモンへの正しい右クリック → アニメーション付き収穫
+        handleFruitClickWithAnimation(fruit, 'rightClick')
+      } else {
+        // AC-5.2a: レモン以外への右クリック → 失敗記録
+        onFruitClick(fruit, 'rightClick')
+      }
+    } else if (e.button === 0 && fruit.type === 'watermelon') {
       setDraggedFruit(fruit)
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
-  }, [handleFruitClickWithAnimation])
+  }, [handleFruitClickWithAnimation, onFruitClick])
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (draggedFruit) {
@@ -178,6 +184,9 @@ export function GamePlayArea({
 
         if (isInDropArea) {
           handleFruitClickWithAnimation(draggedFruit, 'drop')
+        } else {
+          // AC-5.2a: ドロップ領域外リリースは失敗記録
+          onFruitClick(draggedFruit, 'drop')
         }
       }
       setDraggedFruit(null)

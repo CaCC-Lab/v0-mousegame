@@ -320,11 +320,27 @@ export function createDefaultGamificationData(): GamificationSaveData {
 - `calculateScore` の戻り値 > 0 → `recordSuccess(action)`
 - `calculateScore` の戻り値 === 0 → `recordFailure(action)`
 
+#### 7.1a 右クリック・ドラッグの失敗記録（AC-5.2a）
+
+`GamePlayArea` のイベントハンドリングで、操作が不正な対象に行われた場合にも `onFruitClick(fruit, action)` を呼び出す。
+- 右クリック: レモン以外のフルーツへの右クリック → `handleFruitInteraction` → `calculateScore === 0` → `recordFailure('rightClick')`
+- ドラッグ: スイカ以外のフルーツのドロップ、またはドロップ領域外のリリース → `handleFruitInteraction` → `calculateScore === 0` → `recordFailure('drop')`
+
 ### 7.2 ゲーム終了時のフロー
+
+#### 7.2a ステージクリア即終了（AC-1.1a）
+
+1. `handleFruitInteraction` 後にスコア・収穫数を評価
+2. ステージクリア条件達成 → `gameState` を `'idle'` に遷移
+3. その時点の `timeLeft` で `calculateStarRating` を算出
+4. `commitSession` で累計統計更新・バッジ判定・永続化
+5. `StageClearModal` + `ResultModal` を表示
+
+#### 7.2b タイマー終了
 
 1. タイマー終了 → `gameState` が `'idle'` に遷移
 2. `useStage.checkStageCompletion` でクリア判定（既存）
-3. `useGamification.calculateStarRating` で星評価算出
+3. `useGamification.calculateStarRating` で星評価算出（`prevTime` を使用）
 4. `useGamification.commitSession` で累計統計更新・バッジ判定・永続化
 5. `ResultModal` を表示
 
@@ -332,6 +348,7 @@ export function createDefaultGamificationData(): GamificationSaveData {
 
 - `StreakIndicator` を `GamePlayArea` 内に配置
 - 5回連続成功時のボーナスフルーツは `useGameLogic` の `setFruits` に1個追加
+- ストリーク管理は `useOperationStats` の `streak` を Single Source of Truth とし、`useGameLogic` 側の独自ref管理を廃止。`recordSuccess` の戻り値として新しいstreak値を返す
 
 ## 8. localStorage キー設計
 

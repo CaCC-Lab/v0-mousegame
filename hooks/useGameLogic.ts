@@ -71,7 +71,6 @@ export function useGameLogic() {
   const stageRef = useRef(stage)
   const soundEffectsRef = useRef(soundEffects)
   const highScoreRef = useRef(highScore)
-  const successStreakRef = useRef(0)
   const operationStatsRef = useRef(operationStats)
   const gamificationRef = useRef(gamification)
 
@@ -102,7 +101,6 @@ export function useGameLogic() {
 
     setHarvestedFruits(createInitialHarvestedFruits())
     operationStats.resetSession()
-    successStreakRef.current = 0
     startSpawning()
     soundEffects.playGameStartSound()
   }, [soundEffects, difficulty, startSpawning, stage, operationStats])
@@ -132,33 +130,54 @@ export function useGameLogic() {
 
     if (basePoints <= 0) {
       operationStatsRef.current.recordFailure(action)
-      successStreakRef.current = 0
       return
     }
 
-    operationStatsRef.current.recordSuccess(action)
-    successStreakRef.current += 1
+    const newStreak = operationStatsRef.current.recordSuccess(action)
 
     let adjustedPoints = difficulty.getAdjustedScore(basePoints)
     const scoreMultiplier = getEffectValue('scoreMultiplier')
     adjustedPoints = Math.floor(adjustedPoints * scoreMultiplier)
 
-    setScore(prevScore => prevScore + adjustedPoints)
-    setHarvestedFruits(prev => ({
-      ...prev,
-      [fruit.type]: prev[fruit.type] + 1
-    }))
+    const newScore = scoreRef.current + adjustedPoints
+    scoreRef.current = newScore
+    setScore(newScore)
+
+    const newHarvested = { ...harvestedFruitsRef.current, [fruit.type]: harvestedFruitsRef.current[fruit.type] + 1 }
+    harvestedFruitsRef.current = newHarvested
+    setHarvestedFruits(newHarvested)
+
     setFruits(prevFruits => {
       const updatedFruits = prevFruits.filter(f => f.id !== fruit.id)
       const newFruits = [...updatedFruits, generateFruit()]
       // Task 7.3: 5回連続成功時にボーナスフルーツ追加
-      if (successStreakRef.current === 5) {
+      if (newStreak === 5) {
         newFruits.push(generateFruit())
       }
       return newFruits
     })
     soundEffects.playCollectSound()
-  }, [gameState, soundEffects, difficulty, getEffectValue])
+
+    // Task 9.1: ステージクリア即終了（AC-1.1a）
+    const currentStage = stageRef.current
+    if (currentStage.currentStageInfo && currentStage.checkStageCompletion(newScore, newHarvested)) {
+      setGameState('idle')
+      stopSpawningRef.current()
+      soundEffectsRef.current.playHighScoreSound()
+
+      const gamification = gamificationRef.current
+      const latestStats = operationStatsRef.current.getLatestSessionStats()
+      const stageNum = currentStage.currentStage
+      const timeLimit = currentStage.currentStageInfo.timeLimit
+      const starRating = gamification.calculateStarRating(stageNum, true, timeLeft, timeLimit, latestStats)
+      gamification.commitSession(stageNum, starRating, latestStats)
+      setLastStarRating(starRating)
+
+      if (newScore > highScoreRef.current) {
+        setHighScore(newScore)
+      }
+    }
+  }, [gameState, soundEffects, difficulty, getEffectValue, timeLeft, setHighScore])
 
   const moveFruits = useCallback(() => {
     if (gameState !== 'playing' || !isHardMode) return
@@ -206,8 +225,9 @@ export function useGameLogic() {
           const stageNum = stageRef.current.currentStage
           const stageInfo = stageRef.current.currentStageInfo
           const timeLimit = stageInfo?.timeLimit ?? 60
-          const starRating = gamification.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, stats.sessionStats)
-          gamification.commitSession(stageNum, starRating, stats.sessionStats)
+          const latestSessionStats = stats.getLatestSessionStats()
+          const starRating = gamification.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, latestSessionStats)
+          gamification.commitSession(stageNum, starRating, latestSessionStats)
           setLastStarRating(starRating)
 
           if (scoreRef.current > highScoreRef.current) {

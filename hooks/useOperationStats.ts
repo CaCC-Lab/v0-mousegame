@@ -10,9 +10,12 @@ export interface UseOperationStatsReturn {
   sessionStats: SessionOperationStats
   streak: number
   lastStreakBonus: StreakBonus | null
-  recordSuccess: (action: InteractionType) => void
+  /** 成功を記録し、更新後のstreak値を返す */
+  recordSuccess: (action: InteractionType) => number
   recordFailure: (action: InteractionType) => void
   resetSession: () => void
+  /** React state更新前の最新sessionStatsを同期的に取得 */
+  getLatestSessionStats: () => SessionOperationStats
 }
 
 function highestTriggeredBonus(streak: number): StreakBonus | null {
@@ -28,6 +31,9 @@ export function useOperationStats(): UseOperationStatsReturn {
   const [streak, setStreak] = useState(0)
   const [lastStreakBonus, setLastStreakBonus] = useState<StreakBonus | null>(null)
   const bonusTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // streakRef/sessionStatsRef: React stateの非同期更新を待たず同期的に最新値を取得するためのミラー
+  const streakRef = useRef(0)
+  const sessionStatsRef = useRef<SessionOperationStats>(createEmptySessionStats())
 
   const clearBonusTimer = useCallback(() => {
     if (bonusTimerRef.current !== null) {
@@ -36,35 +42,43 @@ export function useOperationStats(): UseOperationStatsReturn {
     }
   }, [])
 
-  const recordSuccess = useCallback((action: InteractionType) => {
-    setSessionStats(prev => ({
-      ...prev,
-      [action]: { ...prev[action], success: prev[action].success + 1 },
-    }))
-    setStreak(prev => {
-      const next = prev + 1
-      clearBonusTimer()
-      bonusTimerRef.current = setTimeout(() => setLastStreakBonus(highestTriggeredBonus(next)), 0)
+  const recordSuccess = useCallback((action: InteractionType): number => {
+    setSessionStats(prev => {
+      const next = { ...prev, [action]: { ...prev[action], success: prev[action].success + 1 } }
+      sessionStatsRef.current = next
       return next
     })
+    const nextStreak = streakRef.current + 1
+    streakRef.current = nextStreak
+    setStreak(nextStreak)
+    clearBonusTimer()
+    // setTimeout(0): setStreakとsetLastStreakBonusを別バッチにし、streak表示→ボーナス表示の順序を保証
+    bonusTimerRef.current = setTimeout(() => setLastStreakBonus(highestTriggeredBonus(nextStreak)), 0)
+    return nextStreak
   }, [clearBonusTimer])
 
   const recordFailure = useCallback((action: InteractionType) => {
-    setSessionStats(prev => ({
-      ...prev,
-      [action]: { ...prev[action], fail: prev[action].fail + 1 },
-    }))
+    setSessionStats(prev => {
+      const next = { ...prev, [action]: { ...prev[action], fail: prev[action].fail + 1 } }
+      sessionStatsRef.current = next
+      return next
+    })
     clearBonusTimer()
+    streakRef.current = 0
     setStreak(0)
     setLastStreakBonus(null)
   }, [clearBonusTimer])
+
+  const getLatestSessionStats = useCallback(() => sessionStatsRef.current, [])
 
   const resetSession = useCallback(() => {
+    sessionStatsRef.current = createEmptySessionStats()
     setSessionStats(createEmptySessionStats())
     clearBonusTimer()
+    streakRef.current = 0
     setStreak(0)
     setLastStreakBonus(null)
   }, [clearBonusTimer])
 
-  return { sessionStats, streak, lastStreakBonus, recordSuccess, recordFailure, resetSession }
+  return { sessionStats, streak, lastStreakBonus, recordSuccess, recordFailure, resetSession, getLatestSessionStats }
 }

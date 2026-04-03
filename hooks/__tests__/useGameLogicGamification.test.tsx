@@ -53,6 +53,7 @@ jest.mock('../useOperationStats', () => ({
     recordSuccess: mockRecordSuccess,
     recordFailure: mockRecordFailure,
     resetSession: mockResetSession,
+    getLatestSessionStats: jest.fn(() => createEmptySessionStats()),
   })),
 }))
 
@@ -158,6 +159,14 @@ describe('useGameLogic gamification (Task 7)', () => {
   })
 
   describe('Task 7.3: 5回連続成功でボーナスフルーツ', () => {
+    // Task 9.3: recordSuccess は新 streak（number）を返す。jest.fn() の undefined だと newStreak === 5 が成立しないため、
+    // 呼び出し回数に応じた streak のみこのブロックでモックする（7.1 / 7.2 には影響しない）。
+    let streakCounter = 0
+    beforeEach(() => {
+      streakCounter = 0
+      mockRecordSuccess.mockImplementation(() => ++streakCounter)
+    })
+
     it('5回連続成功後にフルーツが追加される（ボーナス、統合後）', () => {
       // Given: プレイ中 / When: 連続成功×5 / Then: recordSuccess×5 かつ fruits +1（design §7.3）
       const { result } = renderHook(() => useGameLogic())
