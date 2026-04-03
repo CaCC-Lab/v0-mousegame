@@ -72,6 +72,17 @@
   - [x] 9.3 `useOperationStats.recordSuccess` の戻り値として新しいstreak値を返し、`useGameLogic` の `successStreakRef` を廃止する（design §7.3）
   - [x] 9.4 テストを作成・更新する
 
+- [x] 10. 操作別熟達レベル（Phase 2）— PR#4でマージ済み
+
+- [ ] 11. きょうのれんしゅう（Phase 2.5）
+  - [ ] 11.1 `types/gamification.ts` に DateString, DailyGoal, PracticeStampData, DailyPracticeData, DAILY_PRACTICE_STORAGE_KEY を追加する
+  - [ ] 11.2 `lib/dailyPracticeManager.ts` を作成し、getTodayString, createDefaultDailyPracticeData, evaluateDailyGoals, isDailyGoalComplete, addStamp, calculateStreak, load/save/parse を実装する
+  - [ ] 11.3 `hooks/useDailyPractice.ts` を作成し、目標管理・スタンプ・連続日数の状態管理を実装する
+  - [ ] 11.4 `components/game/DailyPracticeCard.tsx` を作成し、今日の目標と達成状況を表示する
+  - [ ] 11.5 `components/game/DailyGoalComplete.tsx` を作成し、全目標達成時の祝福演出を実装する
+  - [ ] 11.6 `components/FruitHarvestGame.tsx` に統合する（アイドル画面配置、commitSession後にupdateGoals、全目標達成時にstampToday + 演出）
+  - [ ] 11.7 テストを作成する（CP-10, CP-11, CP-12の検証を含む）
+
 - [ ] 10. 操作別熟達レベル（Phase 2）
   - [ ] 10.1 `types/gamification.ts` に MasteryLevel, MasteryThreshold, OperationMasteryData, MASTERY_THRESHOLDS を追加する
   - [ ] 10.2 `lib/gamificationManager.ts` に calculateMasteryLevel, calculateAllMasteryLevels, getProgressToNextLevel を追加する
