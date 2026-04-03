@@ -64,6 +64,7 @@ export function useDailyPractice(): UseDailyPracticeReturn {
         rightClick: base.todayGoals.rightClick || g.rightClick,
         drop: base.todayGoals.drop || g.drop,
       }
+      // stamps は日付リセット時も保持（createDefaultDailyPracticeData が stamps を空にするため明示的に上書き）
       const merged = { ...base, todayGoals, todayDate: currentToday, stamps: prev.stamps }
       saveDailyPracticeData(merged)
       return merged

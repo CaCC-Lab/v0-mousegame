@@ -116,6 +116,7 @@ export function FruitHarvestGame(): React.ReactElement {
     handleFruitInteraction(fruit, action)
     // AC-8.2: 収穫成功時にリアルタイムで目標更新
     dailyPractice.updateGoals(operationStats.getLatestSessionStats())
+  // dailyPractice.updateGoals/operationStats.getLatestSessionStats は useCallback([]) で安定参照
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleFruitInteraction])
 
@@ -214,12 +215,13 @@ export function FruitHarvestGame(): React.ReactElement {
       dailyPractice.stampToday()
     }
     prevGameStateRef.current = gameState
+  // dailyPractice.stampToday は today 依存の useCallback だが、日付跨ぎ中のゲーム終了は極めて稀
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState, score])
 
-  // AC-8.3: 全目標達成時にスタンプ押下 + 祝福演出
+  // AC-8.3: 全目標達成時に祝福演出（スタンプはゲーム終了時に既に押下済み）
   useEffect(() => {
     if (dailyPractice.isGoalComplete && dailyPractice.isHydrated) {
-      dailyPractice.stampToday()
       setShowDailyGoalComplete(true)
       const timer = setTimeout(() => setShowDailyGoalComplete(false), 3000)
       return () => clearTimeout(timer)

@@ -74,20 +74,11 @@
 
 - [x] 10. 操作別熟達レベル（Phase 2）— PR#4でマージ済み
 
-- [ ] 11. きょうのれんしゅう（Phase 2.5）
-  - [ ] 11.1 `types/gamification.ts` に DateString, DailyGoal, PracticeStampData, DailyPracticeData, DAILY_PRACTICE_STORAGE_KEY を追加する
-  - [ ] 11.2 `lib/dailyPracticeManager.ts` を作成し、getTodayString, createDefaultDailyPracticeData, evaluateDailyGoals, isDailyGoalComplete, addStamp, calculateStreak, load/save/parse を実装する
-  - [ ] 11.3 `hooks/useDailyPractice.ts` を作成し、目標管理・スタンプ・連続日数の状態管理を実装する
-  - [ ] 11.4 `components/game/DailyPracticeCard.tsx` を作成し、今日の目標と達成状況を表示する
-  - [ ] 11.5 `components/game/DailyGoalComplete.tsx` を作成し、全目標達成時の祝福演出を実装する
-  - [ ] 11.6 `components/FruitHarvestGame.tsx` に統合する（プレイ中もDailyPracticeCard表示、handleFruitInteraction成功時にupdateGoals、ゲーム終了時にstampToday、全目標達成時に演出）
-  - [ ] 11.7 テストを作成する（CP-10, CP-11, CP-12の検証を含む）
-
-- [ ] 10. 操作別熟達レベル（Phase 2）
-  - [ ] 10.1 `types/gamification.ts` に MasteryLevel, MasteryThreshold, OperationMasteryData, MASTERY_THRESHOLDS を追加する
-  - [ ] 10.2 `lib/gamificationManager.ts` に calculateMasteryLevel, calculateAllMasteryLevels, getProgressToNextLevel を追加する
-  - [ ] 10.3 `hooks/useGamification.ts` に masteryLevels と masteryProgress を追加する（cumulativeStatsからuseMemoで導出）
-  - [ ] 10.4 `components/game/MasteryDisplay.tsx` を作成し、4操作の熟達レベル・ラベル・進捗バーを表示する
-  - [ ] 10.5 `components/game/LevelUpNotification.tsx` を作成し、レベルアップ時の祝福演出を実装する
-  - [ ] 10.6 `components/FruitHarvestGame.tsx` のアイドル画面に MasteryDisplay を配置し、commitSession後にレベルアップを検出して LevelUpNotification を表示する
-  - [ ] 10.7 テストを作成する（CP-8, CP-9の検証を含む）
+- [x] 11. きょうのれんしゅう（Phase 2.5）
+  - [x] 11.1 `types/gamification.ts` に DateString, DailyGoal, PracticeStampData, DailyPracticeData, DAILY_PRACTICE_STORAGE_KEY を追加する
+  - [x] 11.2 `lib/dailyPracticeManager.ts` を作成し、getTodayString, createDefaultDailyPracticeData, evaluateDailyGoals, isDailyGoalComplete, addStamp, calculateStreak, load/save/parse を実装する
+  - [x] 11.3 `hooks/useDailyPractice.ts` を作成し、目標管理・スタンプ・連続日数の状態管理を実装する
+  - [x] 11.4 `components/game/DailyPracticeCard.tsx` を作成し、今日の目標と達成状況を表示する
+  - [x] 11.5 `components/game/DailyGoalComplete.tsx` を作成し、全目標達成時の祝福演出を実装する
+  - [x] 11.6 `components/FruitHarvestGame.tsx` に統合する（プレイ中もDailyPracticeCard表示、handleFruitInteraction成功時にupdateGoals、ゲーム終了時にstampToday、全目標達成時に演出）
+  - [x] 11.7 テストを作成する（CP-10, CP-11, CP-12の検証を含む）
