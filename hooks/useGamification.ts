@@ -6,16 +6,20 @@ import type {
   BadgeType,
   CumulativeOperationStats,
   GamificationSaveData,
+  OperationMasteryData,
   SessionOperationStats,
   StarRating,
   StageStarData,
 } from '@/types/gamification'
 import { BADGE_DEFINITIONS } from '@/types/gamification'
+import type { InteractionType } from '@/types/game'
 import {
   addSessionToCumulative,
+  calculateAllMasteryLevels,
   calculateStarRating,
   checkBadgeEarned,
   createDefaultGamificationData,
+  getProgressToNextLevel,
   loadGamificationData,
   mergeStageStarsMonotonic,
   saveGamificationData,
@@ -39,6 +43,8 @@ export interface UseGamificationReturn {
   ) => StarRating
   commitSession: (stageNumber: number, starRating: StarRating, sessionStats: SessionOperationStats) => void
   clearNewBadge: () => void
+  masteryLevels: OperationMasteryData
+  masteryProgress: { [K in InteractionType]: { current: number; nextThreshold: number; remaining: number } | null }
   isHydrated: boolean
 }
 
@@ -133,6 +139,17 @@ export function useGamification(): UseGamificationReturn {
 
   const badgeProgress = useMemo(() => buildBadgeProgress(data.cumulativeStats), [data.cumulativeStats])
 
+  const masteryLevels = useMemo(() => calculateAllMasteryLevels(data.cumulativeStats), [data.cumulativeStats])
+
+  const masteryProgress = useMemo(() => {
+    const keys = ['click', 'doubleClick', 'rightClick', 'drop'] as const
+    const result = {} as UseGamificationReturn['masteryProgress']
+    for (const key of keys) {
+      result[key] = getProgressToNextLevel(data.cumulativeStats[key].totalSuccess)
+    }
+    return result
+  }, [data.cumulativeStats])
+
   return {
     stageStars: data.stageStars,
     earnedBadges: data.badges.earnedBadges,
@@ -144,6 +161,8 @@ export function useGamification(): UseGamificationReturn {
     calculateStarRating: calculateStarRatingCb,
     commitSession,
     clearNewBadge,
+    masteryLevels,
+    masteryProgress,
     isHydrated,
   }
 }

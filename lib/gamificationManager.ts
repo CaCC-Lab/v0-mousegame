@@ -6,6 +6,9 @@ import {
   GamificationSaveData,
   GAMIFICATION_SAVE_VERSION,
   GAMIFICATION_STORAGE_KEY,
+  MASTERY_THRESHOLDS,
+  MasteryLevel,
+  OperationMasteryData,
   SessionOperationStats,
   StarCriteria,
   StarRating,
@@ -259,4 +262,36 @@ export function compareSessionSuccess(
     out[key] = d > 0 ? 'up' : d < 0 ? 'down' : 'same'
   }
   return out
+}
+
+export function calculateMasteryLevel(totalSuccess: number): MasteryLevel {
+  let level: MasteryLevel = 1
+  for (const t of MASTERY_THRESHOLDS) {
+    if (totalSuccess >= t.requiredSuccess) {
+      level = t.level
+    }
+  }
+  return level
+}
+
+export function calculateAllMasteryLevels(cumulativeStats: CumulativeOperationStats): OperationMasteryData {
+  return {
+    click: calculateMasteryLevel(cumulativeStats.click.totalSuccess),
+    doubleClick: calculateMasteryLevel(cumulativeStats.doubleClick.totalSuccess),
+    rightClick: calculateMasteryLevel(cumulativeStats.rightClick.totalSuccess),
+    drop: calculateMasteryLevel(cumulativeStats.drop.totalSuccess),
+  }
+}
+
+export function getProgressToNextLevel(
+  totalSuccess: number
+): { current: number; nextThreshold: number; remaining: number } | null {
+  const currentLevel = calculateMasteryLevel(totalSuccess)
+  const nextThreshold = MASTERY_THRESHOLDS.find(t => t.level === (currentLevel + 1) as MasteryLevel)
+  if (!nextThreshold) return null
+  return {
+    current: totalSuccess,
+    nextThreshold: nextThreshold.requiredSuccess,
+    remaining: nextThreshold.requiredSuccess - totalSuccess,
+  }
 }

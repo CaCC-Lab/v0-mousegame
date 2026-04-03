@@ -19,7 +19,11 @@ import {
 import { ResultModal } from './game/ResultModal'
 import { BadgeNotification } from './game/BadgeNotification'
 import { BadgeDisplay } from './game/BadgeDisplay'
+import { MasteryDisplay } from './game/MasteryDisplay'
+import { LevelUpNotification } from './game/LevelUpNotification'
 import { Fruit, InteractionType } from '@/types/game'
+import type { InteractionType as IT } from '@/types/game'
+import type { MasteryLevel } from '@/types/gamification'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
@@ -84,6 +88,9 @@ export function FruitHarvestGame(): React.ReactElement {
   const [stageClearProcessed, setStageClearProcessed] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
   const [showBadgeNotification, setShowBadgeNotification] = useState(false)
+  const [levelUpInfo, setLevelUpInfo] = useState<{ op: IT; level: MasteryLevel } | null>(null)
+  const prevMasteryRef = useRef(gamification.masteryLevels)
+  const levelUpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const gameAreaRef = useRef<HTMLDivElement>(null)
 
   const handleHardModeChange = useCallback((checked: boolean) => {
@@ -212,14 +219,58 @@ export function FruitHarvestGame(): React.ReactElement {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gamification.newlyEarnedBadge])
 
-  // Reset state when game starts
+  // Detect mastery level up after commitSession (P1: hydration完了後のみ)
+  useEffect(() => {
+    if (!gamification.isHydrated) {
+      prevMasteryRef.current = gamification.masteryLevels
+      return
+    }
+    const prev = prevMasteryRef.current
+    const curr = gamification.masteryLevels
+    const keys = ['click', 'doubleClick', 'rightClick', 'drop'] as const
+    // P2: 全操作の昇格を収集（最初の1つだけでなく全て）
+    const levelUps: { op: IT; level: MasteryLevel }[] = []
+    for (const key of keys) {
+      if (curr[key] > prev[key]) {
+        levelUps.push({ op: key, level: curr[key] })
+      }
+    }
+    prevMasteryRef.current = curr
+    if (levelUps.length > 0) {
+      let idx = 0
+      setLevelUpInfo(levelUps[idx])
+      const clearTimer = () => {
+        if (levelUpTimerRef.current) {
+          clearTimeout(levelUpTimerRef.current)
+          levelUpTimerRef.current = null
+        }
+      }
+      const showNext = () => {
+        idx++
+        if (idx < levelUps.length) {
+          setLevelUpInfo(levelUps[idx])
+          levelUpTimerRef.current = setTimeout(showNext, 3000)
+        } else {
+          setLevelUpInfo(null)
+          levelUpTimerRef.current = null
+        }
+      }
+      levelUpTimerRef.current = setTimeout(showNext, 3000)
+      return clearTimer
+    }
+  }, [gamification.masteryLevels, gamification.isHydrated])
+
+  // Reset state when game starts (P3: levelUpInfoもクリア)
   useEffect(() => {
     if (gameState === 'playing') {
       setStageClearProcessed(false)
       setShowResultModal(false)
       setShowBadgeNotification(false)
+      setLevelUpInfo(null)
       gamification.clearNewBadge()
     }
+  // gamification.clearNewBadge は useCallback([]) で安定参照のためdepsから除外
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState])
 
   // Electron API handlers
@@ -356,12 +407,25 @@ export function FruitHarvestGame(): React.ReactElement {
       />
 
       {gameState === 'idle' && (
-        <div className="max-w-6xl mx-auto mt-4">
+        <div className="max-w-6xl mx-auto mt-4 space-y-4">
+          <MasteryDisplay
+            masteryLevels={gamification.masteryLevels}
+            masteryProgress={gamification.masteryProgress}
+            cumulativeStats={gamification.cumulativeStats}
+          />
           <BadgeDisplay
             earnedBadges={gamification.earnedBadges}
             cumulativeStats={gamification.cumulativeStats}
           />
         </div>
+      )}
+
+      {levelUpInfo && (
+        <LevelUpNotification
+          operationType={levelUpInfo.op}
+          newLevel={levelUpInfo.level}
+          show
+        />
       )}
 
       <StageClearModal
