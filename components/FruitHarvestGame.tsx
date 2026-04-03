@@ -21,9 +21,12 @@ import { BadgeNotification } from './game/BadgeNotification'
 import { BadgeDisplay } from './game/BadgeDisplay'
 import { MasteryDisplay } from './game/MasteryDisplay'
 import { LevelUpNotification } from './game/LevelUpNotification'
+import { DailyPracticeCard } from './game/DailyPracticeCard'
+import { DailyGoalComplete } from './game/DailyGoalComplete'
 import { Fruit, InteractionType } from '@/types/game'
 import type { InteractionType as IT } from '@/types/game'
 import type { MasteryLevel } from '@/types/gamification'
+import { useDailyPractice } from '@/hooks/useDailyPractice'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
@@ -81,6 +84,9 @@ export function FruitHarvestGame(): React.ReactElement {
     onFruitCollected,
     reset: resetAnimations
   } = useAnimation()
+
+  const dailyPractice = useDailyPractice()
+  const [showDailyGoalComplete, setShowDailyGoalComplete] = useState(false)
 
   const [selectedFruitIndex, setSelectedFruitIndex] = useState<number>(-1)
   const [showStageSelector, setShowStageSelector] = useState(false)
@@ -201,9 +207,22 @@ export function FruitHarvestGame(): React.ReactElement {
   useEffect(() => {
     if (prevGameStateRef.current === 'playing' && gameState === 'idle' && score > 0) {
       setShowResultModal(true)
+      // AC-8.2: セッション結果で今日の目標を更新
+      dailyPractice.updateGoals(operationStats.sessionStats)
     }
     prevGameStateRef.current = gameState
   }, [gameState, score])
+
+  // AC-8.3: 全目標達成時にスタンプ押下 + 祝福演出
+  useEffect(() => {
+    if (dailyPractice.isGoalComplete && dailyPractice.isHydrated) {
+      dailyPractice.stampToday()
+      setShowDailyGoalComplete(true)
+      const timer = setTimeout(() => setShowDailyGoalComplete(false), 3000)
+      return () => clearTimeout(timer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailyPractice.isGoalComplete, dailyPractice.isHydrated])
 
   // Auto-dismiss badge notification after 3 seconds
   useEffect(() => {
@@ -408,6 +427,11 @@ export function FruitHarvestGame(): React.ReactElement {
 
       {gameState === 'idle' && (
         <div className="max-w-6xl mx-auto mt-4 space-y-4">
+          <DailyPracticeCard
+            todayGoals={dailyPractice.todayGoals}
+            isGoalComplete={dailyPractice.isGoalComplete}
+            practiceStreak={dailyPractice.practiceStreak}
+          />
           <MasteryDisplay
             masteryLevels={gamification.masteryLevels}
             masteryProgress={gamification.masteryProgress}
@@ -419,6 +443,11 @@ export function FruitHarvestGame(): React.ReactElement {
           />
         </div>
       )}
+
+      <DailyGoalComplete
+        show={showDailyGoalComplete}
+        streak={dailyPractice.practiceStreak}
+      />
 
       {levelUpInfo && (
         <LevelUpNotification
