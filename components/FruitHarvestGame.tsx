@@ -90,6 +90,7 @@ export function FruitHarvestGame(): React.ReactElement {
   const [showBadgeNotification, setShowBadgeNotification] = useState(false)
   const [levelUpInfo, setLevelUpInfo] = useState<{ op: IT; level: MasteryLevel } | null>(null)
   const prevMasteryRef = useRef(gamification.masteryLevels)
+  const levelUpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const gameAreaRef = useRef<HTMLDivElement>(null)
 
   const handleHardModeChange = useCallback((checked: boolean) => {
@@ -236,20 +237,26 @@ export function FruitHarvestGame(): React.ReactElement {
     }
     prevMasteryRef.current = curr
     if (levelUps.length > 0) {
-      // 最初の昇格を表示（複数ある場合は順次表示を将来拡張可能）
       let idx = 0
       setLevelUpInfo(levelUps[idx])
+      const clearTimer = () => {
+        if (levelUpTimerRef.current) {
+          clearTimeout(levelUpTimerRef.current)
+          levelUpTimerRef.current = null
+        }
+      }
       const showNext = () => {
         idx++
         if (idx < levelUps.length) {
           setLevelUpInfo(levelUps[idx])
-          return setTimeout(showNext, 3000)
+          levelUpTimerRef.current = setTimeout(showNext, 3000)
+        } else {
+          setLevelUpInfo(null)
+          levelUpTimerRef.current = null
         }
-        setLevelUpInfo(null)
-        return undefined
       }
-      const timer = setTimeout(showNext, 3000)
-      return () => clearTimeout(timer)
+      levelUpTimerRef.current = setTimeout(showNext, 3000)
+      return clearTimer
     }
   }, [gamification.masteryLevels, gamification.isHydrated])
 
@@ -262,6 +269,8 @@ export function FruitHarvestGame(): React.ReactElement {
       setLevelUpInfo(null)
       gamification.clearNewBadge()
     }
+  // gamification.clearNewBadge は useCallback([]) で安定参照のためdepsから除外
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState])
 
   // Electron API handlers
