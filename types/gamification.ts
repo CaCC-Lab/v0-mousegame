@@ -118,3 +118,30 @@ export interface OperationMasteryData {
   rightClick: MasteryLevel
   drop: MasteryLevel
 }
+
+/** 日付文字列（YYYY-MM-DD） */
+export type DateString = string
+
+/** きょうのれんしゅう目標 */
+export interface DailyGoal {
+  click: boolean
+  doubleClick: boolean
+  rightClick: boolean
+  drop: boolean
+}
+
+/** れんしゅうスタンプデータ */
+export interface PracticeStampData {
+  stamps: DateString[]
+}
+
+/** きょうのれんしゅう永続化データ */
+export interface DailyPracticeData {
+  todayGoals: DailyGoal
+  todayDate: DateString
+  stamps: PracticeStampData
+  version: number
+}
+
+export const DAILY_PRACTICE_STORAGE_KEY = 'dailyPracticeData'
+export const DAILY_PRACTICE_VERSION = 1

@@ -480,3 +480,102 @@ components/game/
 components/
   FruitHarvestGame.tsx      # フック統合・モーダル追加
 ```
+
+## 12. きょうのれんしゅう（Phase 2.5）
+
+### 12.1 型定義（`types/gamification.ts` に追加）
+
+```typescript
+/** 日付文字列（YYYY-MM-DD） */
+export type DateString = string
+
+/** きょうのれんしゅう目標 */
+export interface DailyGoal {
+  click: boolean
+  doubleClick: boolean
+  rightClick: boolean
+  drop: boolean
+}
+
+/** れんしゅうスタンプデータ */
+export interface PracticeStampData {
+  stamps: DateString[]  // プレイした日付のリスト（昇順、重複なし）
+}
+
+/** きょうのれんしゅう永続化データ */
+export interface DailyPracticeData {
+  todayGoals: DailyGoal
+  todayDate: DateString  // 目標が属する日付
+  stamps: PracticeStampData
+  version: number
+}
+
+export const DAILY_PRACTICE_STORAGE_KEY = 'dailyPracticeData'
+export const DAILY_PRACTICE_VERSION = 1
+```
+
+### 12.2 ビジネスロジック（`lib/dailyPracticeManager.ts` 新規）
+
+```typescript
+/** 今日の日付文字列を取得（テスト用にDI可能） */
+export function getTodayString(now?: Date): DateString
+
+/** デフォルトのきょうのれんしゅうデータを作成 */
+export function createDefaultDailyPracticeData(today?: DateString): DailyPracticeData
+
+/** セッション統計から今日の目標達成状況を判定 */
+export function evaluateDailyGoals(sessionStats: SessionOperationStats): DailyGoal
+
+/** 全目標が達成されたか */
+export function isDailyGoalComplete(goals: DailyGoal): boolean
+
+/** スタンプを追加（重複排除、CP-10: 不可逆） */
+export function addStamp(stamps: PracticeStampData, date: DateString): PracticeStampData
+
+/** 連続日数を算出（CP-11） */
+export function calculateStreak(stamps: PracticeStampData, today: DateString): number
+
+/** 永続化：load / save / parse（CP-12: 日付境界安全） */
+export function loadDailyPracticeData(storage?: Pick<Storage, 'getItem'>): DailyPracticeData
+export function saveDailyPracticeData(data: DailyPracticeData, storage?: Pick<Storage, 'setItem'>): void
+export function parseDailyPracticeData(raw: string | null | undefined): DailyPracticeData
+```
+
+### 12.3 フック（`hooks/useDailyPractice.ts` 新規）
+
+```typescript
+interface UseDailyPracticeReturn {
+  todayGoals: DailyGoal
+  isGoalComplete: boolean
+  practiceStreak: number
+  stamps: DateString[]
+  /** セッション結果を評価し目標を更新 */
+  updateGoals: (sessionStats: SessionOperationStats) => void
+  /** 今日のスタンプを押す */
+  stampToday: () => void
+  isHydrated: boolean
+}
+```
+
+- `useEffect` でlocalStorageから読み込み、日付が変わっていれば目標をリセット
+- `updateGoals` はcommitSession後に呼び出される
+- `stampToday` は全目標達成時またはゲーム終了時に呼び出される
+
+### 12.4 UIコンポーネント
+
+#### `components/game/DailyPracticeCard.tsx`（新規）
+- 今日の目標と達成状況を表示（4操作のチェックリスト）
+- 連続日数バッジ
+- Props: `todayGoals`, `isGoalComplete`, `practiceStreak`
+
+#### `components/game/DailyGoalComplete.tsx`（新規）
+- 全目標達成時の祝福演出
+- Props: `show`, `streak`
+
+### 12.5 統合
+
+- `DailyPracticeCard` はプレイ中も表示（ScoreBar下やGamePlayArea横に配置）
+- `handleFruitInteraction` の成功時に即座に `updateGoals` を呼び出し（AC-8.2: リアルタイム更新）
+- ゲーム終了時（playing→idle遷移）に `stampToday` を呼び出し（AC-8.4: プレイした日にスタンプ、全目標達成は不要）
+- 全目標達成時に `DailyGoalComplete` 祝福演出を表示
+- `useDailyPractice` 内で `updateGoals` 呼び出し時に日付変更を検出しリセット（AC-8.7: midnight跨ぎ対応）

@@ -21,9 +21,12 @@ import { BadgeNotification } from './game/BadgeNotification'
 import { BadgeDisplay } from './game/BadgeDisplay'
 import { MasteryDisplay } from './game/MasteryDisplay'
 import { LevelUpNotification } from './game/LevelUpNotification'
+import { DailyPracticeCard } from './game/DailyPracticeCard'
+import { DailyGoalComplete } from './game/DailyGoalComplete'
 import { Fruit, InteractionType } from '@/types/game'
 import type { InteractionType as IT } from '@/types/game'
 import type { MasteryLevel } from '@/types/gamification'
+import { useDailyPractice } from '@/hooks/useDailyPractice'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
@@ -82,6 +85,9 @@ export function FruitHarvestGame(): React.ReactElement {
     reset: resetAnimations
   } = useAnimation()
 
+  const dailyPractice = useDailyPractice()
+  const [showDailyGoalComplete, setShowDailyGoalComplete] = useState(false)
+
   const [selectedFruitIndex, setSelectedFruitIndex] = useState<number>(-1)
   const [showStageSelector, setShowStageSelector] = useState(false)
   const [showStageClearMessage, setShowStageClearMessage] = useState(false)
@@ -108,6 +114,10 @@ export function FruitHarvestGame(): React.ReactElement {
 
   const handleFruitClick = useCallback((fruit: Fruit, action: InteractionType) => {
     handleFruitInteraction(fruit, action)
+    // AC-8.2: 収穫成功時にリアルタイムで目標更新
+    dailyPractice.updateGoals(operationStats.getLatestSessionStats())
+  // dailyPractice.updateGoals/operationStats.getLatestSessionStats は useCallback([]) で安定参照
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleFruitInteraction])
 
   const handleKeyboardEnter = useCallback(() => {
@@ -201,9 +211,23 @@ export function FruitHarvestGame(): React.ReactElement {
   useEffect(() => {
     if (prevGameStateRef.current === 'playing' && gameState === 'idle' && score > 0) {
       setShowResultModal(true)
+      // AC-8.4: プレイした日にスタンプ（全目標達成は不要）
+      dailyPractice.stampToday()
     }
     prevGameStateRef.current = gameState
+  // dailyPractice.stampToday は today 依存の useCallback だが、日付跨ぎ中のゲーム終了は極めて稀
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState, score])
+
+  // AC-8.3: 全目標達成時に祝福演出（スタンプはゲーム終了時に既に押下済み）
+  useEffect(() => {
+    if (dailyPractice.isGoalComplete && dailyPractice.isHydrated) {
+      setShowDailyGoalComplete(true)
+      const timer = setTimeout(() => setShowDailyGoalComplete(false), 3000)
+      return () => clearTimeout(timer)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dailyPractice.isGoalComplete, dailyPractice.isHydrated])
 
   // Auto-dismiss badge notification after 3 seconds
   useEffect(() => {
@@ -406,6 +430,14 @@ export function FruitHarvestGame(): React.ReactElement {
         show={showBadgeNotification}
       />
 
+      <div className="max-w-6xl mx-auto mt-4">
+        <DailyPracticeCard
+          todayGoals={dailyPractice.todayGoals}
+          isGoalComplete={dailyPractice.isGoalComplete}
+          practiceStreak={dailyPractice.practiceStreak}
+        />
+      </div>
+
       {gameState === 'idle' && (
         <div className="max-w-6xl mx-auto mt-4 space-y-4">
           <MasteryDisplay
@@ -419,6 +451,11 @@ export function FruitHarvestGame(): React.ReactElement {
           />
         </div>
       )}
+
+      <DailyGoalComplete
+        show={showDailyGoalComplete}
+        streak={dailyPractice.practiceStreak}
+      />
 
       {levelUpInfo && (
         <LevelUpNotification
