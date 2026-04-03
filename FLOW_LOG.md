@@ -144,8 +144,15 @@
 - [x] Phase 2.5: Spec Sync Gate — PASS
 - [x] Phase 3: テスト作成（Cursor）— 10テスト、Canon TDD制約OK
 - [x] Canon TDD例外手順: Task 8.2テストバグ修正（Cursor）
-- [ ] Phase 4: 実装（Claude Code）
-- [ ] Phase 4.5〜10: 以降
+- [x] Phase 4: 実装（Claude Code）— 全10テストPASS
+- [x] Phase 4.5: /simplify — 未使用state・import削除
+- [x] Phase 5: pre-commit — ESLint修正（テストのno-var-requires）
+- [x] Phase 6: PR作成 → CI全緑
+- [x] Phase 7: 自動レビュー — CodeRabbit pass / Devin pass
+- [x] Phase 9a: Codex — P0(timeLeft=0)/P1(ResultModal deps)/P2(badge永続) 修正
+- [x] Phase 9a: Codex補完 — P1(ResultModal再計算) 修正
+- [x] Phase 9b: 補完レビュー — P1(operationStats deps ref化)/P2(命名・eslint・badge初期化) 修正
+- [x] Phase 10: Merge — Squash and merge 完了
 
 ### Canon TDD 例外記録
 | 項目 | 値 |
@@ -167,3 +174,51 @@
 | Phase 3 | Cursorへの「実装コード作成禁止」明記が奏功 — Canon TDD違反なし | - | 0m | 前回の学びが機能 |
 | Phase 4 | successStreakRefが必要（React stateの非同期更新でstreak値が古い） | useRefで同期的にカウント管理 | 10m | 非同期state依存のゲームロジックにはref必須 |
 | Phase 4 | Task 8.2テストがゲーム終了フロー未シミュレート | Canon TDD例外手順でCursorがテスト修正 | 10m | 統合テストにはフロー全体のシミュレーションを含める |
+
+---
+
+## PR#3: Task 9 星評価・統計の正確性改善
+
+### 実施フェーズ
+- [x] Phase 1: Spec更新（AC-1.1a, AC-5.2a追加、design §7.1a/7.2a/7.3更新）
+- [x] Phase 2: featureブランチ作成（feature/star-accuracy）
+- [x] Phase 2.5: Spec Sync Gate — PASS
+- [x] Phase 3: テスト作成（Cursor）— 6テスト
+- [x] Phase 4: 実装（Claude Code）— 全6テストPASS
+- [x] Canon TDD例外 x2: mockRecordSuccess戻り値追加、test 9.2bドロップ対象変更
+- [x] Phase 5: ビルド成功
+- [x] Phase 6: PR作成 → CI全緑
+- [x] Phase 7: 自動レビュー — CodeRabbit pass / Devin pass
+- [x] Phase 9a: Codex — P1(ドラッグ誤動作)/P1(sessionStats遅れ)/P2(レモン演出) 修正
+- [x] Phase 9b: 補完レビュー — P1(タイマー終了パスgetLatestSessionStats統一)/P2(tasks更新・コメント) 修正
+- [x] Canon TDD例外: getLatestSessionStatsモック追加
+- [x] Phase 10: Merge — Squash and merge 完了
+
+### Canon TDD 例外記録
+| # | トリガー | 対象 | 修正内容 |
+|---|---------|------|---------|
+| 1 | 要件変更（recordSuccess戻り値） | useGameLogicGamification.test.tsx Task 7.3 | mockRecordSuccessがstreak値を返すよう修正 |
+| 2 | テスト設計変更 | starAccuracy.test.tsx Task 9.2b | スイカ以外→スイカのドロップ領域外リリースに変更 |
+| 3 | 要件変更（getLatestSessionStats追加） | useGameLogicGamification.test.tsx Task 7.2 | モックにgetLatestSessionStats追加 |
+
+### 手戻り記録
+| Phase | 手戻り回数 | 原因区分 |
+|-------|--------:|--------|
+| Phase 4 | 1 | Canon TDD例外（recordSuccess戻り値変更に追従） |
+| Phase 9a | 1 | Codex P1 x2（ドラッグ誤動作・sessionStats遅れ） |
+| Phase 9b | 1 | 補完P1（getLatestSessionStats統一） + Canon TDD例外 |
+| **合計** | **3** | |
+
+### 発見・詰まり
+| フェーズ | 内容 | 対処 | 時間 | 再発防止 |
+|----------|------|------|-----:|---------|
+| Phase 4 | 全フルーツでドラッグ開始→通常クリックがdrop失敗に | スイカのみドラッグに戻し、右クリック失敗パスのみ追加 | 15m | UI操作の副作用を設計段階で検証 |
+| Phase 4 | recordSuccess戻り値変更で既存テストのモックが壊れた | Canon TDD例外でCursorがモック修正 | 5m | インターフェース変更時はモック影響を事前確認 |
+| Phase 9a | sessionStatsがReact state非同期でcommitSession時に1手遅れ | getLatestSessionStats()をref経由で追加 | 10m | steering/tech.mdにref同期パターンを追記済み |
+| Phase 9b | タイマー終了パスと即終了パスでsessionStats取得方法が不統一 | 両パスともgetLatestSessionStats()に統一 | 5m | 複数パスがある場合は取得方法を統一 |
+
+### 良かった点
+- Cursorへの「実装コード作成禁止」が定着（PR#2-3ともCanon TDD違反なし）
+- Codexが左クリックドラッグの回帰バグを検出（テストでは見つけられなかった）
+- 補完レビューがパス間の不整合を検出（Codexが見逃した領域）
+- steering/tech.mdにReact state更新ルールを追記し、知見を構造化
