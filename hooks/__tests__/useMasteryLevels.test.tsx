@@ -28,6 +28,14 @@ type MasteryExports = {
 
 const { calculateAllMasteryLevels } = gm as typeof gm & MasteryExports
 
+type UseGamificationWithMastery = ReturnType<typeof useGamification> & {
+  masteryLevels?: OperationMasteryData
+  masteryProgress?: Record<
+    'click' | 'doubleClick' | 'rightClick' | 'drop',
+    { current: number; nextThreshold: number; remaining: number } | null
+  >
+}
+
 describe('useGamification mastery (Task 10.3)', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -46,13 +54,7 @@ describe('useGamification mastery (Task 10.3)', () => {
     const { result } = renderHook(() => useGamification())
     await waitFor(() => expect(result.current.isHydrated).toBe(true))
 
-    const extended = result.current as typeof result.current & {
-      masteryLevels?: OperationMasteryData
-      masteryProgress?: Record<
-        'click' | 'doubleClick' | 'rightClick' | 'drop',
-        { current: number; nextThreshold: number; remaining: number } | null
-      >
-    }
+    const extended = result.current as UseGamificationWithMastery
 
     expect(extended).toHaveProperty('masteryLevels')
     expect(extended).toHaveProperty('masteryProgress')
@@ -67,9 +69,11 @@ describe('useGamification mastery (Task 10.3)', () => {
     })
 
     expect(localStorage.getItem(GAMIFICATION_STORAGE_KEY)).toBeTruthy()
-    expect(extended.masteryLevels).toEqual(calculateAllMasteryLevels(result.current.cumulativeStats))
 
-    const clickProg = extended.masteryProgress!.click
+    const updated = result.current as UseGamificationWithMastery
+    expect(updated.masteryLevels).toEqual(calculateAllMasteryLevels(result.current.cumulativeStats))
+
+    const clickProg = updated.masteryProgress!.click
     expect(clickProg).not.toBeNull()
     expect(clickProg!.current).toBe(result.current.cumulativeStats.click.totalSuccess)
   })

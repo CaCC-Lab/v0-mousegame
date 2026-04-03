@@ -92,3 +92,29 @@ export interface GamificationSaveData {
 export const GAMIFICATION_SAVE_VERSION = 1
 
 export const GAMIFICATION_STORAGE_KEY = 'gamificationData'
+
+/** 熟達レベル（1〜5） */
+export type MasteryLevel = 1 | 2 | 3 | 4 | 5
+
+/** 熟達レベルの閾値定義 */
+export interface MasteryThreshold {
+  level: MasteryLevel
+  requiredSuccess: number
+  label: string
+}
+
+export const MASTERY_THRESHOLDS: MasteryThreshold[] = [
+  { level: 1, requiredSuccess: 0, label: 'はじめて' },
+  { level: 2, requiredSuccess: 10, label: 'できるね' },
+  { level: 3, requiredSuccess: 30, label: 'じょうず' },
+  { level: 4, requiredSuccess: 60, label: 'すごい' },
+  { level: 5, requiredSuccess: 100, label: 'マスター' },
+]
+
+/** 操作別の熟達レベルデータ */
+export interface OperationMasteryData {
+  click: MasteryLevel
+  doubleClick: MasteryLevel
+  rightClick: MasteryLevel
+  drop: MasteryLevel
+}
