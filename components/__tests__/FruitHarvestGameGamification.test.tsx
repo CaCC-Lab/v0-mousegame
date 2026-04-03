@@ -36,6 +36,13 @@ jest.mock('@/hooks/useGamification', () => {
       earnedBadges: [],
       badgeProgress: {},
       cumulativeStats: createDefaultCumulativeStats(),
+      masteryLevels: { click: 1, doubleClick: 1, rightClick: 1, drop: 1 },
+      masteryProgress: {
+        click: { current: 0, nextThreshold: 10, remaining: 10 },
+        doubleClick: { current: 0, nextThreshold: 10, remaining: 10 },
+        rightClick: { current: 0, nextThreshold: 10, remaining: 10 },
+        drop: { current: 0, nextThreshold: 10, remaining: 10 },
+      },
       lastSessionStats: null,
       newlyEarnedBadge: BADGE_DEFINITIONS[0],
       calculateStarRating: jest.fn(() => 2),
@@ -59,6 +66,12 @@ jest.mock('@/hooks/useOperationStats', () => ({
     recordSuccess: jest.fn(),
     recordFailure: jest.fn(),
     resetSession: jest.fn(),
+    getLatestSessionStats: jest.fn(() => ({
+      click: { success: 0, fail: 0 },
+      doubleClick: { success: 0, fail: 0 },
+      rightClick: { success: 0, fail: 0 },
+      drop: { success: 0, fail: 0 },
+    })),
   })),
 }))
 

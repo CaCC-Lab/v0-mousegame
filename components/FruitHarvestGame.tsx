@@ -218,28 +218,48 @@ export function FruitHarvestGame(): React.ReactElement {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gamification.newlyEarnedBadge])
 
-  // Detect mastery level up after commitSession
+  // Detect mastery level up after commitSession (P1: hydration完了後のみ)
   useEffect(() => {
+    if (!gamification.isHydrated) {
+      prevMasteryRef.current = gamification.masteryLevels
+      return
+    }
     const prev = prevMasteryRef.current
     const curr = gamification.masteryLevels
     const keys = ['click', 'doubleClick', 'rightClick', 'drop'] as const
+    // P2: 全操作の昇格を収集（最初の1つだけでなく全て）
+    const levelUps: { op: IT; level: MasteryLevel }[] = []
     for (const key of keys) {
       if (curr[key] > prev[key]) {
-        setLevelUpInfo({ op: key, level: curr[key] })
-        const timer = setTimeout(() => setLevelUpInfo(null), 3000)
-        prevMasteryRef.current = curr
-        return () => clearTimeout(timer)
+        levelUps.push({ op: key, level: curr[key] })
       }
     }
     prevMasteryRef.current = curr
-  }, [gamification.masteryLevels])
+    if (levelUps.length > 0) {
+      // 最初の昇格を表示（複数ある場合は順次表示を将来拡張可能）
+      let idx = 0
+      setLevelUpInfo(levelUps[idx])
+      const showNext = () => {
+        idx++
+        if (idx < levelUps.length) {
+          setLevelUpInfo(levelUps[idx])
+          return setTimeout(showNext, 3000)
+        }
+        setLevelUpInfo(null)
+        return undefined
+      }
+      const timer = setTimeout(showNext, 3000)
+      return () => clearTimeout(timer)
+    }
+  }, [gamification.masteryLevels, gamification.isHydrated])
 
-  // Reset state when game starts
+  // Reset state when game starts (P3: levelUpInfoもクリア)
   useEffect(() => {
     if (gameState === 'playing') {
       setStageClearProcessed(false)
       setShowResultModal(false)
       setShowBadgeNotification(false)
+      setLevelUpInfo(null)
       gamification.clearNewBadge()
     }
   }, [gameState])
