@@ -372,28 +372,111 @@ export function createDefaultGamificationData(): GamificationSaveData {
 | CP-5 | 累計統計の単調増加 | PBT: `commitSession` 前後で累計値が減少しないことを検証 |
 | CP-6 | 永続化の冪等性 | PBT: `save` → `load` → `save` → `load` で同一データが得られる |
 | CP-7 | デシリアライズの安全性 | PBT: 任意の文字列入力に対して `loadGamificationData` がクラッシュしない |
+| CP-8 | 熟達レベルの単調性 | PBT: `commitSession` 後に任意操作の熟達レベルが減少しないことを検証 |
+| CP-9 | 熟達レベルの導出可能性 | 同じ `cumulativeStats` から常に同じ熟達レベルが導出されることを検証 |
 
-## 10. ファイル構成
+## 10. 操作別熟達レベル（Phase 2）
+
+### 10.1 型定義（`types/gamification.ts` に追加）
+
+```typescript
+/** 熟達レベル（1〜5） */
+export type MasteryLevel = 1 | 2 | 3 | 4 | 5
+
+/** 熟達レベルの閾値定義 */
+export interface MasteryThreshold {
+  level: MasteryLevel
+  requiredSuccess: number
+  label: string
+}
+
+export const MASTERY_THRESHOLDS: MasteryThreshold[] = [
+  { level: 1, requiredSuccess: 0, label: 'はじめて' },
+  { level: 2, requiredSuccess: 10, label: 'できるね' },
+  { level: 3, requiredSuccess: 30, label: 'じょうず' },
+  { level: 4, requiredSuccess: 60, label: 'すごい' },
+  { level: 5, requiredSuccess: 100, label: 'マスター' },
+]
+
+/** 操作別の熟達レベルデータ */
+export interface OperationMasteryData {
+  click: MasteryLevel
+  doubleClick: MasteryLevel
+  rightClick: MasteryLevel
+  drop: MasteryLevel
+}
+```
+
+### 10.2 ビジネスロジック（`lib/gamificationManager.ts` に追加）
+
+```typescript
+/** 累計成功回数から熟達レベルを算出（CP-8, CP-9） */
+export function calculateMasteryLevel(totalSuccess: number): MasteryLevel {
+  // MASTERY_THRESHOLDS を降順に走査し、最初に条件を満たすレベルを返す
+}
+
+/** 全操作の熟達レベルを一括算出 */
+export function calculateAllMasteryLevels(
+  cumulativeStats: CumulativeOperationStats
+): OperationMasteryData {
+  // 各操作のtotalSuccessからcalculateMasteryLevelを呼び出す
+}
+
+/** 次のレベルまでの残り回数を算出 */
+export function getProgressToNextLevel(
+  totalSuccess: number
+): { current: number; nextThreshold: number; remaining: number } | null {
+  // 現在のレベルの次の閾値を返す。Lv.5なら null
+}
+```
+
+### 10.3 フック拡張（`hooks/useGamification.ts`）
+
+`useGamification` の返り値に以下を追加:
+- `masteryLevels: OperationMasteryData` — cumulativeStatsから `useMemo` で導出
+- `masteryProgress: { [key in InteractionType]: { current: number; nextThreshold: number; remaining: number } | null }` — 進捗情報
+
+### 10.4 UIコンポーネント
+
+#### `components/game/MasteryDisplay.tsx`（新規）
+- 4操作の熟達レベル・ラベル・進捗バーを表示
+- Props: `masteryLevels`, `masteryProgress`, `cumulativeStats`
+- アイドル時に `BadgeDisplay` と並べて表示
+
+#### `components/game/LevelUpNotification.tsx`（新規）
+- レベルアップ時の祝福演出
+- Props: `operationType`, `newLevel`, `show`
+- framer-motion でアニメーション
+
+### 10.5 統合
+
+- `FruitHarvestGame` のアイドル画面に `MasteryDisplay` を配置
+- `commitSession` 後にレベルアップを検出し `LevelUpNotification` を表示
+- レベルアップ検出: commitSession前後の `calculateAllMasteryLevels` を比較
+
+## 11. ファイル構成
 
 ```
 types/
-  gamification.ts          # 新規: 型定義・定数
+  gamification.ts          # 型定義・定数（MasteryLevel, MasteryThreshold 追加）
 
 lib/
-  gamificationManager.ts   # 新規: 星評価計算・バッジ判定・永続化
+  gamificationManager.ts   # ビジネスロジック（calculateMasteryLevel 等追加）
 
 hooks/
-  useOperationStats.ts     # 新規: 操作別統計・連続成功
-  useGamification.ts       # 新規: 星・バッジ・累計統計管理
+  useOperationStats.ts     # 操作別統計・連続成功
+  useGamification.ts       # 星・バッジ・累計統計・熟達レベル管理
 
 components/game/
-  ResultModal.tsx           # 新規: 結果画面
-  BadgeDisplay.tsx          # 新規: バッジ一覧
-  BadgeNotification.tsx     # 新規: バッジ獲得演出
-  StreakIndicator.tsx       # 新規: 連続成功表示
-  StageClearModal.tsx       # 変更: 星評価表示追加
-  ScoreBar.tsx              # 変更: 連続成功カウント追加
+  ResultModal.tsx           # 結果画面
+  BadgeDisplay.tsx          # バッジ一覧
+  BadgeNotification.tsx     # バッジ獲得演出
+  StreakIndicator.tsx       # 連続成功表示
+  MasteryDisplay.tsx        # 新規: 操作別熟達レベル一覧
+  LevelUpNotification.tsx   # 新規: レベルアップ演出
+  StageClearModal.tsx       # 星評価表示
+  ScoreBar.tsx              # 連続成功カウント
 
 components/
-  FruitHarvestGame.tsx      # 変更: フック統合・モーダル追加
+  FruitHarvestGame.tsx      # フック統合・モーダル追加
 ```

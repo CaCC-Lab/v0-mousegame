@@ -71,3 +71,12 @@
   - [x] 9.2 `GamePlayArea` で右クリック・ドラッグの失敗操作を `handleFruitInteraction` に伝達する（AC-5.2a）
   - [x] 9.3 `useOperationStats.recordSuccess` の戻り値として新しいstreak値を返し、`useGameLogic` の `successStreakRef` を廃止する（design §7.3）
   - [x] 9.4 テストを作成・更新する
+
+- [ ] 10. 操作別熟達レベル（Phase 2）
+  - [ ] 10.1 `types/gamification.ts` に MasteryLevel, MasteryThreshold, OperationMasteryData, MASTERY_THRESHOLDS を追加する
+  - [ ] 10.2 `lib/gamificationManager.ts` に calculateMasteryLevel, calculateAllMasteryLevels, getProgressToNextLevel を追加する
+  - [ ] 10.3 `hooks/useGamification.ts` に masteryLevels と masteryProgress を追加する（cumulativeStatsからuseMemoで導出）
+  - [ ] 10.4 `components/game/MasteryDisplay.tsx` を作成し、4操作の熟達レベル・ラベル・進捗バーを表示する
+  - [ ] 10.5 `components/game/LevelUpNotification.tsx` を作成し、レベルアップ時の祝福演出を実装する
+  - [ ] 10.6 `components/FruitHarvestGame.tsx` のアイドル画面に MasteryDisplay を配置し、commitSession後にレベルアップを検出して LevelUpNotification を表示する
+  - [ ] 10.7 テストを作成する（CP-8, CP-9の検証を含む）
