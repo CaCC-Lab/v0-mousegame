@@ -114,6 +114,9 @@ export function FruitHarvestGame(): React.ReactElement {
 
   const handleFruitClick = useCallback((fruit: Fruit, action: InteractionType) => {
     handleFruitInteraction(fruit, action)
+    // AC-8.2: 収穫成功時にリアルタイムで目標更新
+    dailyPractice.updateGoals(operationStats.getLatestSessionStats())
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [handleFruitInteraction])
 
   const handleKeyboardEnter = useCallback(() => {
@@ -207,8 +210,8 @@ export function FruitHarvestGame(): React.ReactElement {
   useEffect(() => {
     if (prevGameStateRef.current === 'playing' && gameState === 'idle' && score > 0) {
       setShowResultModal(true)
-      // AC-8.2: セッション結果で今日の目標を更新
-      dailyPractice.updateGoals(operationStats.sessionStats)
+      // AC-8.4: プレイした日にスタンプ（全目標達成は不要）
+      dailyPractice.stampToday()
     }
     prevGameStateRef.current = gameState
   }, [gameState, score])
@@ -425,13 +428,16 @@ export function FruitHarvestGame(): React.ReactElement {
         show={showBadgeNotification}
       />
 
+      <div className="max-w-6xl mx-auto mt-4">
+        <DailyPracticeCard
+          todayGoals={dailyPractice.todayGoals}
+          isGoalComplete={dailyPractice.isGoalComplete}
+          practiceStreak={dailyPractice.practiceStreak}
+        />
+      </div>
+
       {gameState === 'idle' && (
         <div className="max-w-6xl mx-auto mt-4 space-y-4">
-          <DailyPracticeCard
-            todayGoals={dailyPractice.todayGoals}
-            isGoalComplete={dailyPractice.isGoalComplete}
-            practiceStreak={dailyPractice.practiceStreak}
-          />
           <MasteryDisplay
             masteryLevels={gamification.masteryLevels}
             masteryProgress={gamification.masteryProgress}

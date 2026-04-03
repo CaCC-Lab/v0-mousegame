@@ -51,19 +51,24 @@ export function useDailyPractice(): UseDailyPracticeReturn {
   const isGoalComplete = isDailyGoalComplete(data.todayGoals)
 
   const updateGoals = useCallback((sessionStats: SessionOperationStats) => {
+    const currentToday = getTodayString()
     setData(prev => {
+      // AC-8.7: midnight跨ぎ検出 — 日付が変わっていれば目標リセット
+      const base = prev.todayDate !== currentToday
+        ? createDefaultDailyPracticeData(currentToday)
+        : prev
       const g = evaluateDailyGoals(sessionStats)
       const todayGoals: DailyGoal = {
-        click: prev.todayGoals.click || g.click,
-        doubleClick: prev.todayGoals.doubleClick || g.doubleClick,
-        rightClick: prev.todayGoals.rightClick || g.rightClick,
-        drop: prev.todayGoals.drop || g.drop,
+        click: base.todayGoals.click || g.click,
+        doubleClick: base.todayGoals.doubleClick || g.doubleClick,
+        rightClick: base.todayGoals.rightClick || g.rightClick,
+        drop: base.todayGoals.drop || g.drop,
       }
-      const merged = { ...prev, todayGoals, todayDate: today }
+      const merged = { ...base, todayGoals, todayDate: currentToday, stamps: prev.stamps }
       saveDailyPracticeData(merged)
       return merged
     })
-  }, [today])
+  }, [])
 
   const stampToday = useCallback(() => {
     setData(prev => {

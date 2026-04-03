@@ -574,6 +574,8 @@ interface UseDailyPracticeReturn {
 
 ### 12.5 統合
 
-- `FruitHarvestGame` のアイドル画面に `DailyPracticeCard` を配置
-- `commitSession` 後に `updateGoals` を呼び出し
-- 全目標達成時に `stampToday` + `DailyGoalComplete` 表示
+- `DailyPracticeCard` はプレイ中も表示（ScoreBar下やGamePlayArea横に配置）
+- `handleFruitInteraction` の成功時に即座に `updateGoals` を呼び出し（AC-8.2: リアルタイム更新）
+- ゲーム終了時（playing→idle遷移）に `stampToday` を呼び出し（AC-8.4: プレイした日にスタンプ、全目標達成は不要）
+- 全目標達成時に `DailyGoalComplete` 祝福演出を表示
+- `useDailyPractice` 内で `updateGoals` 呼び出し時に日付変更を検出しリセット（AC-8.7: midnight跨ぎ対応）

@@ -80,7 +80,7 @@
   - [ ] 11.3 `hooks/useDailyPractice.ts` を作成し、目標管理・スタンプ・連続日数の状態管理を実装する
   - [ ] 11.4 `components/game/DailyPracticeCard.tsx` を作成し、今日の目標と達成状況を表示する
   - [ ] 11.5 `components/game/DailyGoalComplete.tsx` を作成し、全目標達成時の祝福演出を実装する
-  - [ ] 11.6 `components/FruitHarvestGame.tsx` に統合する（アイドル画面配置、commitSession後にupdateGoals、全目標達成時にstampToday + 演出）
+  - [ ] 11.6 `components/FruitHarvestGame.tsx` に統合する（プレイ中もDailyPracticeCard表示、handleFruitInteraction成功時にupdateGoals、ゲーム終了時にstampToday、全目標達成時に演出）
   - [ ] 11.7 テストを作成する（CP-10, CP-11, CP-12の検証を含む）
 
 - [ ] 10. 操作別熟達レベル（Phase 2）
