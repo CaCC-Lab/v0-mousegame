@@ -267,6 +267,11 @@ export function FruitHarvestGame(): React.ReactElement {
       setShowResultModal(false)
       setShowBadgeNotification(false)
       setLevelUpInfo(null)
+      // レベルアップ通知のタイマーをクリア
+      if (levelUpTimerRef.current) {
+        clearTimeout(levelUpTimerRef.current)
+        levelUpTimerRef.current = null
+      }
       gamification.clearNewBadge()
     }
   // gamification.clearNewBadge は useCallback([]) で安定参照のためdepsから除外
@@ -420,13 +425,11 @@ export function FruitHarvestGame(): React.ReactElement {
         </div>
       )}
 
-      {levelUpInfo && (
-        <LevelUpNotification
-          operationType={levelUpInfo.op}
-          newLevel={levelUpInfo.level}
-          show
-        />
-      )}
+      <LevelUpNotification
+        operationType={levelUpInfo?.op ?? 'click'}
+        newLevel={levelUpInfo?.level ?? 1}
+        show={!!levelUpInfo}
+      />
 
       <StageClearModal
         show={showStageClearMessage}

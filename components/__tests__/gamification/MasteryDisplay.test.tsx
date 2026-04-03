@@ -1,10 +1,6 @@
 /**
  * Task 10.4 / design.md §10.4 — 操作別熟達レベル一覧
  *
- * 実装の `components/game/MasteryDisplay.tsx` が未追加のため、
- * design §10.4 の Props 契約に沿ったテスト用スタブで表示仕様を検証する。
- * 本番コンポーネント追加後は `@/components/game/MasteryDisplay` を import しスタブを削除すること。
- *
  * テスト観点表（抜粋）
  * | Case ID | Input | Expected |
  * |---------|-------|----------|
@@ -15,73 +11,10 @@ import React from 'react'
 import { render, screen } from '@testing-library/react'
 import type { CumulativeOperationStats } from '@/types/gamification'
 import type { InteractionType } from '@/types/game'
-
-/** design §10.1 */
-type MasteryLevel = 1 | 2 | 3 | 4 | 5
-type OperationMasteryData = {
-  click: MasteryLevel
-  doubleClick: MasteryLevel
-  rightClick: MasteryLevel
-  drop: MasteryLevel
-}
-
-const MASTERY_LABELS: Record<MasteryLevel, string> = {
-  1: 'はじめて',
-  2: 'できるね',
-  3: 'じょうず',
-  4: 'すごい',
-  5: 'マスター',
-}
+import { MasteryDisplay } from '@/components/game/MasteryDisplay'
+import type { OperationMasteryData } from '@/types/gamification'
 
 const OPERATIONS: InteractionType[] = ['click', 'doubleClick', 'rightClick', 'drop']
-
-export interface MasteryDisplayProps {
-  masteryLevels: OperationMasteryData
-  masteryProgress: {
-    [K in InteractionType]: { current: number; nextThreshold: number; remaining: number } | null
-  }
-  cumulativeStats: CumulativeOperationStats
-}
-
-/** MasteryDisplay の契約（Task 10.4）— 本番実装と testid を揃える */
-function MasteryDisplay({ masteryLevels, masteryProgress, cumulativeStats }: MasteryDisplayProps): React.ReactElement {
-  return (
-    <div data-testid="mastery-display" className="grid gap-3">
-      {OPERATIONS.map(op => {
-        const prog = masteryProgress[op]
-        const label = MASTERY_LABELS[masteryLevels[op]]
-        const total = cumulativeStats[op].totalSuccess
-        return (
-          <div
-            key={op}
-            data-testid={`mastery-row-${op}`}
-            aria-label={`mastery-${op}`}
-          >
-            <div className="flex gap-2">
-              <span data-testid={`mastery-level-${op}`}>Lv.{masteryLevels[op]}</span>
-              <span data-testid={`mastery-label-${op}`}>{label}</span>
-            </div>
-            <div data-testid={`mastery-total-${op}`} className="text-sm">
-              累計成功: {total}
-            </div>
-            {prog ? (
-              <div
-                data-testid={`mastery-progress-${op}`}
-                role="progressbar"
-                aria-valuenow={prog.current}
-                aria-valuemax={prog.nextThreshold}
-              >
-                次まで {prog.remaining} / 閾値 {prog.nextThreshold}
-              </div>
-            ) : (
-              <div data-testid={`mastery-progress-${op}`}>MAX</div>
-            )}
-          </div>
-        )
-      })}
-    </div>
-  )
-}
 
 describe('MasteryDisplay (Task 10.4)', () => {
   const baseCum: CumulativeOperationStats = {
