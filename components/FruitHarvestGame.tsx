@@ -19,7 +19,11 @@ import {
 import { ResultModal } from './game/ResultModal'
 import { BadgeNotification } from './game/BadgeNotification'
 import { BadgeDisplay } from './game/BadgeDisplay'
+import { MasteryDisplay } from './game/MasteryDisplay'
+import { LevelUpNotification } from './game/LevelUpNotification'
 import { Fruit, InteractionType } from '@/types/game'
+import type { InteractionType as IT } from '@/types/game'
+import type { MasteryLevel } from '@/types/gamification'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
@@ -84,6 +88,8 @@ export function FruitHarvestGame(): React.ReactElement {
   const [stageClearProcessed, setStageClearProcessed] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
   const [showBadgeNotification, setShowBadgeNotification] = useState(false)
+  const [levelUpInfo, setLevelUpInfo] = useState<{ op: IT; level: MasteryLevel } | null>(null)
+  const prevMasteryRef = useRef(gamification.masteryLevels)
   const gameAreaRef = useRef<HTMLDivElement>(null)
 
   const handleHardModeChange = useCallback((checked: boolean) => {
@@ -211,6 +217,22 @@ export function FruitHarvestGame(): React.ReactElement {
   // gamification.clearNewBadge は useCallback([]) で安定参照のためdepsから除外
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gamification.newlyEarnedBadge])
+
+  // Detect mastery level up after commitSession
+  useEffect(() => {
+    const prev = prevMasteryRef.current
+    const curr = gamification.masteryLevels
+    const keys = ['click', 'doubleClick', 'rightClick', 'drop'] as const
+    for (const key of keys) {
+      if (curr[key] > prev[key]) {
+        setLevelUpInfo({ op: key, level: curr[key] })
+        const timer = setTimeout(() => setLevelUpInfo(null), 3000)
+        prevMasteryRef.current = curr
+        return () => clearTimeout(timer)
+      }
+    }
+    prevMasteryRef.current = curr
+  }, [gamification.masteryLevels])
 
   // Reset state when game starts
   useEffect(() => {
@@ -356,12 +378,25 @@ export function FruitHarvestGame(): React.ReactElement {
       />
 
       {gameState === 'idle' && (
-        <div className="max-w-6xl mx-auto mt-4">
+        <div className="max-w-6xl mx-auto mt-4 space-y-4">
+          <MasteryDisplay
+            masteryLevels={gamification.masteryLevels}
+            masteryProgress={gamification.masteryProgress}
+            cumulativeStats={gamification.cumulativeStats}
+          />
           <BadgeDisplay
             earnedBadges={gamification.earnedBadges}
             cumulativeStats={gamification.cumulativeStats}
           />
         </div>
+      )}
+
+      {levelUpInfo && (
+        <LevelUpNotification
+          operationType={levelUpInfo.op}
+          newLevel={levelUpInfo.level}
+          show
+        />
       )}
 
       <StageClearModal
