@@ -467,12 +467,6 @@ export function FruitHarvestGame(): React.ReactElement {
         open={showCollection}
         onClose={() => setShowCollection(false)}
         cumulativeStats={gamification.cumulativeStats}
-        harvestedFruits={{
-          apple: gamification.cumulativeStats.click.totalSuccess,
-          blueberry: gamification.cumulativeStats.doubleClick.totalSuccess,
-          lemon: gamification.cumulativeStats.rightClick.totalSuccess,
-          watermelon: gamification.cumulativeStats.drop.totalSuccess,
-        }}
         earnedBadges={gamification.earnedBadges}
         masteryLevels={gamification.masteryLevels}
         masteryProgress={gamification.masteryProgress}

@@ -37,8 +37,8 @@ export interface CollectionModalProps {
   open: boolean
   onClose: () => void
   cumulativeStats: CumulativeOperationStats
-  /** 累計収穫数（cumulativeStatsから導出推奨） */
-  harvestedFruits: HarvestedFruits
+  /** 累計収穫数。省略時はcumulativeStatsから導出 */
+  harvestedFruits?: HarvestedFruits
   earnedBadges: BadgeType[]
   masteryLevels: OperationMasteryData
   masteryProgress: MasteryProgress
@@ -61,7 +61,13 @@ export function CollectionModal({
 
   if (!open) return null
 
-  const allFruitsHarvested = FRUITS.every(f => harvestedFruits[f.key] > 0)
+  const resolvedFruits: HarvestedFruits = harvestedFruits ?? {
+    apple: cumulativeStats.click.totalSuccess,
+    blueberry: cumulativeStats.doubleClick.totalSuccess,
+    lemon: cumulativeStats.rightClick.totalSuccess,
+    watermelon: cumulativeStats.drop.totalSuccess,
+  }
+  const allFruitsHarvested = FRUITS.every(f => resolvedFruits[f.key] > 0)
   const stampSet = new Set(stamps)
 
   return (
@@ -93,10 +99,10 @@ export function CollectionModal({
         {tab === 'fruits' && (
           <div data-testid="collection-panel-fruits" role="tabpanel" className="space-y-3">
             {FRUITS.map(f => (
-              <div key={f.key} data-testid={`collection-fruit-${f.key}`} data-harvest-count={harvestedFruits[f.key]} className="flex items-center gap-3 p-3 rounded border">
+              <div key={f.key} data-testid={`collection-fruit-${f.key}`} data-harvest-count={resolvedFruits[f.key]} className="flex items-center gap-3 p-3 rounded border">
                 <span data-testid={`collection-fruit-emoji-${f.key}`} className="text-3xl">{f.emoji}</span>
                 <span data-testid={`collection-fruit-name-${f.key}`} className="font-semibold">{f.name}</span>
-                <span data-testid={`collection-fruit-count-${f.key}`} className="ml-auto text-lg font-bold">{harvestedFruits[f.key]}</span>
+                <span data-testid={`collection-fruit-count-${f.key}`} className="ml-auto text-lg font-bold">{resolvedFruits[f.key]}</span>
               </div>
             ))}
             {allFruitsHarvested && (
