@@ -2,9 +2,6 @@
  * Task 12 / design.md §13 — CollectionModal
  * AC-9.1〜9.7, CP-13
  *
- * components/game/CollectionModal.tsx 未追加のため、jest.mock(..., { virtual: true }) で §13.2 の契約に沿った参照 UI を注入する。
- * 実装マージ後はモックを削除し @/components/game/CollectionModal を import し、testid を揃えること。
- *
  * テスト観点表（抜粋）
  * | Case ID | Perspective | Expected |
  * |---------|-------------|----------|
@@ -20,141 +17,14 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { BADGE_DEFINITIONS } from '@/types/gamification'
-import type { BadgeType, CumulativeOperationStats, DateString, OperationMasteryData } from '@/types/gamification'
+import type { BadgeType, DateString, OperationMasteryData } from '@/types/gamification'
 import type { HarvestedFruits, InteractionType } from '@/types/game'
 import { createDefaultCumulativeStats } from '@/lib/gamificationManager'
+import { CollectionModal } from '@/components/game/CollectionModal'
 
 type MasteryProgress = {
   [K in InteractionType]: { current: number; nextThreshold: number; remaining: number } | null
 }
-
-jest.mock('../../game/CollectionModal', () => {
-  const React = require('react') as typeof import('react')
-  const FRUITS = [
-    { key: 'apple' as const, name: 'りんご', emoji: '🍎' },
-    { key: 'blueberry' as const, name: 'ブルーベリー', emoji: '🫐' },
-    { key: 'lemon' as const, name: 'レモン', emoji: '🍋' },
-    { key: 'watermelon' as const, name: 'スイカ', emoji: '🍉' },
-  ] as const
-
-  type Props = {
-    open: boolean
-    onClose: () => void
-    cumulativeStats: CumulativeOperationStats
-    harvestedFruits: HarvestedFruits
-    earnedBadges: BadgeType[]
-    masteryLevels: OperationMasteryData
-    masteryProgress: MasteryProgress
-    stamps: DateString[]
-    practiceStreak: number
-  }
-
-  function CollectionModal({
-    open,
-    onClose,
-    cumulativeStats: _cumulativeStats,
-    harvestedFruits,
-    earnedBadges,
-    masteryLevels,
-    masteryProgress,
-    stamps,
-    practiceStreak,
-  }: Props): React.ReactElement | null {
-    const [tab, setTab] = React.useState<'fruits' | 'badges' | 'mastery' | 'practice'>('fruits')
-
-    if (!open) {
-      return null
-    }
-
-    const allFruitsHarvested = FRUITS.every(f => harvestedFruits[f.key] > 0)
-
-    const last30 = Array.from({ length: 30 }, (_, i) => i)
-
-    return (
-      <div data-testid="collection-modal" role="dialog" aria-modal="true">
-        <button type="button" data-testid="collection-modal-close" onClick={onClose}>
-          閉じる
-        </button>
-        <div data-testid="collection-tabs" role="tablist">
-          <button type="button" role="tab" data-testid="collection-tab-fruits" aria-selected={tab === 'fruits'} onClick={() => setTab('fruits')}>
-            フルーツ
-          </button>
-          <button type="button" role="tab" data-testid="collection-tab-badges" aria-selected={tab === 'badges'} onClick={() => setTab('badges')}>
-            バッジ
-          </button>
-          <button type="button" role="tab" data-testid="collection-tab-mastery" aria-selected={tab === 'mastery'} onClick={() => setTab('mastery')}>
-            じゅくたつ
-          </button>
-          <button type="button" role="tab" data-testid="collection-tab-practice" aria-selected={tab === 'practice'} onClick={() => setTab('practice')}>
-            れんしゅう
-          </button>
-        </div>
-
-        {tab === 'fruits' && (
-          <div data-testid="collection-panel-fruits" role="tabpanel">
-            {FRUITS.map(f => (
-              <div key={f.key} data-testid={`collection-fruit-${f.key}`} data-harvest-count={harvestedFruits[f.key]}>
-                <span data-testid={`collection-fruit-emoji-${f.key}`}>{f.emoji}</span>
-                <span data-testid={`collection-fruit-name-${f.key}`}>{f.name}</span>
-                <span data-testid={`collection-fruit-count-${f.key}`}>{harvestedFruits[f.key]}</span>
-              </div>
-            ))}
-            {allFruitsHarvested && <div data-testid="collection-fruits-complete">コンプリート！</div>}
-          </div>
-        )}
-
-        {tab === 'badges' && (
-          <div data-testid="collection-panel-badges" role="tabpanel">
-            {BADGE_DEFINITIONS.map(def => {
-              const earned = earnedBadges.includes(def.type)
-              return (
-                <div
-                  key={def.type}
-                  data-testid={`collection-badge-${def.type}`}
-                  data-earned={earned ? 'true' : 'false'}
-                  className={earned ? 'collection-badge-earned' : 'collection-badge-silhouette'}
-                >
-                  <span>{def.icon}</span>
-                  <span>{def.name}</span>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {tab === 'mastery' && (
-          <div data-testid="collection-panel-mastery" role="tabpanel">
-            {(['click', 'doubleClick', 'rightClick', 'drop'] as const).map(op => {
-              const prog = masteryProgress[op]
-              return (
-                <div key={op} data-testid={`collection-mastery-${op}`}>
-                  <span data-testid={`collection-mastery-level-${op}`}>Lv.{masteryLevels[op]}</span>
-                  <span data-testid={`collection-mastery-current-${op}`}>{prog?.current ?? 0}</span>
-                </div>
-              )
-            })}
-          </div>
-        )}
-
-        {tab === 'practice' && (
-          <div data-testid="collection-panel-practice" role="tabpanel">
-            <div data-testid="collection-practice-streak">{practiceStreak}</div>
-            <div data-testid="collection-stamp-calendar" aria-label="直近30日スタンプカレンダー">
-              {last30.map(i => (
-                <span key={i} data-testid={`collection-stamp-day-${i}`} data-stamped={stamps.length > i % 3 ? 'true' : 'false'} />
-              ))}
-            </div>
-          </div>
-        )}
-      </div>
-    )
-  }
-
-  return { CollectionModal }
-}, { virtual: true })
-
-import { CollectionModal } from '../../game/CollectionModal'
 
 function baseMasteryProgress(): MasteryProgress {
   return {

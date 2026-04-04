@@ -83,11 +83,11 @@
   - [x] 11.6 `components/FruitHarvestGame.tsx` に統合する（プレイ中もDailyPracticeCard表示、handleFruitInteraction成功時にupdateGoals、ゲーム終了時にstampToday、全目標達成時に演出）
   - [x] 11.7 テストを作成する（CP-10, CP-11, CP-12の検証を含む）
 
-- [ ] 12. 図鑑 / アルバム（Phase 3）
-  - [ ] 12.1 `components/game/CollectionModal.tsx` を作成し、タブ切り替え4セクション（フルーツ・バッジ・じゅくたつ・れんしゅうきろく）を実装する
-  - [ ] 12.2 フルーツずかんタブ: 4フルーツの絵文字・名前・累計収穫数・コンプリート判定
-  - [ ] 12.3 バッジずかんタブ: 獲得済み=カラー、未獲得=グレーシルエット
-  - [ ] 12.4 じゅくたつタブ: 既存MasteryDisplayの情報を表示
-  - [ ] 12.5 れんしゅうきろくタブ: 連続日数 + 直近30日スタンプカレンダー
-  - [ ] 12.6 `components/FruitHarvestGame.tsx` のアイドル画面に「ずかん」ボタンを追加し、CollectionModalを表示する
-  - [ ] 12.7 テストを作成する（CP-13の検証を含む）
+- [x] 12. 図鑑 / アルバム（Phase 3）
+  - [x] 12.1 `components/game/CollectionModal.tsx` を作成し、タブ切り替え4セクション（フルーツ・バッジ・じゅくたつ・れんしゅうきろく）を実装する
+  - [x] 12.2 フルーツずかんタブ: 4フルーツの絵文字・名前・累計収穫数・コンプリート判定
+  - [x] 12.3 バッジずかんタブ: 獲得済み=カラー、未獲得=グレーシルエット
+  - [x] 12.4 じゅくたつタブ: 既存MasteryDisplayの情報を表示
+  - [x] 12.5 れんしゅうきろくタブ: 連続日数 + 直近30日スタンプカレンダー
+  - [x] 12.6 `components/FruitHarvestGame.tsx` のアイドル画面に「ずかん」ボタンを追加し、CollectionModalを表示する
+  - [x] 12.7 テストを作成する（CP-13の検証を含む）
