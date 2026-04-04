@@ -37,6 +37,7 @@ export interface CollectionModalProps {
   open: boolean
   onClose: () => void
   cumulativeStats: CumulativeOperationStats
+  /** 累計収穫数（cumulativeStatsから導出推奨） */
   harvestedFruits: HarvestedFruits
   earnedBadges: BadgeType[]
   masteryLevels: OperationMasteryData
@@ -48,6 +49,7 @@ export interface CollectionModalProps {
 export function CollectionModal({
   open,
   onClose,
+  cumulativeStats,
   harvestedFruits,
   earnedBadges,
   masteryLevels,
@@ -136,7 +138,7 @@ export function CollectionModal({
                     <span data-testid={`collection-mastery-level-${key}`} className="text-blue-600">Lv.{masteryLevels[key]}</span>
                   </div>
                   <div data-testid={`collection-mastery-current-${key}`} className="text-sm text-gray-500 mt-1">
-                    {prog?.current ?? 0}
+                    {cumulativeStats[key].totalSuccess}
                   </div>
                 </div>
               )

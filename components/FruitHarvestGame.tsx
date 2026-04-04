@@ -189,7 +189,7 @@ export function FruitHarvestGame(): React.ReactElement {
     onSpacePress: handleKeyboardSpace,
     onEnterPress: handleKeyboardEnter,
     onArrowKeys: handleArrowKeys
-  }, gameState === 'playing' || gameState === 'paused' || gameState === 'idle')
+  }, (gameState === 'playing' || gameState === 'paused' || gameState === 'idle') && !showCollection)
 
   // Stage completion check
   useEffect(() => {
@@ -467,7 +467,12 @@ export function FruitHarvestGame(): React.ReactElement {
         open={showCollection}
         onClose={() => setShowCollection(false)}
         cumulativeStats={gamification.cumulativeStats}
-        harvestedFruits={harvestedFruits}
+        harvestedFruits={{
+          apple: gamification.cumulativeStats.click.totalSuccess,
+          blueberry: gamification.cumulativeStats.doubleClick.totalSuccess,
+          lemon: gamification.cumulativeStats.rightClick.totalSuccess,
+          watermelon: gamification.cumulativeStats.drop.totalSuccess,
+        }}
         earnedBadges={gamification.earnedBadges}
         masteryLevels={gamification.masteryLevels}
         masteryProgress={gamification.masteryProgress}

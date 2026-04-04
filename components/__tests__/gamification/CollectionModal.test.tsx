@@ -19,7 +19,6 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import type { BadgeType, DateString, OperationMasteryData } from '@/types/gamification'
 import type { HarvestedFruits, InteractionType } from '@/types/game'
-import { createDefaultCumulativeStats } from '@/lib/gamificationManager'
 import { CollectionModal } from '@/components/game/CollectionModal'
 
 type MasteryProgress = {
@@ -47,7 +46,12 @@ describe('CollectionModal (Task 12 / design §13)', () => {
   const defaultProps = () => ({
     open: true,
     onClose: jest.fn(),
-    cumulativeStats: createDefaultCumulativeStats(),
+    cumulativeStats: {
+      click: { totalSuccess: 5, totalFail: 0 },
+      doubleClick: { totalSuccess: 0, totalFail: 0 },
+      rightClick: { totalSuccess: 0, totalFail: 0 },
+      drop: { totalSuccess: 2, totalFail: 0 },
+    },
     harvestedFruits: baseHarvested(),
     earnedBadges: ['clickMaster'] as BadgeType[],
     masteryLevels: baseMasteryLevels(),
