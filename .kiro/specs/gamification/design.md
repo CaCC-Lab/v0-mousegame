@@ -579,3 +579,41 @@ interface UseDailyPracticeReturn {
 - ゲーム終了時（playing→idle遷移）に `stampToday` を呼び出し（AC-8.4: プレイした日にスタンプ、全目標達成は不要）
 - 全目標達成時に `DailyGoalComplete` 祝福演出を表示
 - `useDailyPractice` 内で `updateGoals` 呼び出し時に日付変更を検出しリセット（AC-8.7: midnight跨ぎ対応）
+
+## 13. 図鑑 / アルバム（Phase 3）
+
+### 13.1 設計方針
+
+図鑑は**表示専用のビューレイヤー**。新規ビジネスロジックや永続化は不要（CP-13）。
+既存データソースから導出する:
+- フルーツ図鑑: `gamificationData.cumulativeStats` の各操作の totalSuccess（フルーツ種別と操作が1:1対応）
+- バッジ図鑑: `gamificationData.badges.earnedBadges` + `BADGE_DEFINITIONS`
+- じゅくたつ図鑑: `useGamification.masteryLevels` + `masteryProgress`
+- れんしゅう記録: `useDailyPractice.stamps` + `practiceStreak`
+
+### 13.2 UIコンポーネント
+
+#### `components/game/CollectionModal.tsx`（新規）
+- タブ切り替えで4つのセクションを表示
+- Props:
+  - `open: boolean`
+  - `onClose: () => void`
+  - `cumulativeStats: CumulativeOperationStats`
+  - `harvestedFruits: HarvestedFruits`（全体の累計収穫数）
+  - `earnedBadges: BadgeType[]`
+  - `masteryLevels: OperationMasteryData`
+  - `masteryProgress: UseGamificationReturn['masteryProgress']`
+  - `stamps: DateString[]`
+  - `practiceStreak: number`
+
+#### タブ構成
+1. **フルーツずかん**: 4フルーツの絵文字・名前・累計収穫数。全種収穫済みなら「コンプリート！」
+2. **バッジずかん**: BADGE_DEFINITIONS をmap。獲得済み=カラー表示、未獲得=グレーシルエット
+3. **じゅくたつ**: MasteryDisplay と同等の情報（再利用）
+4. **れんしゅうきろく**: 連続日数 + 直近30日のスタンプカレンダー（日付グリッド、スタンプ日はハイライト）
+
+### 13.3 統合
+
+- `FruitHarvestGame` のアイドル画面に「ずかん」ボタンを追加
+- ボタン押下で `CollectionModal` を `open=true` で表示
+- Propsは全て既存フック（useGameLogic, useGamification, useDailyPractice）から取得
