@@ -136,7 +136,6 @@ export function CollectionModal({
         {tab === 'mastery' && (
           <div data-testid="collection-panel-mastery" role="tabpanel" className="space-y-3">
             {OPERATIONS.map(({ key, name }) => {
-              const prog = masteryProgress[key]
               return (
                 <div key={key} data-testid={`collection-mastery-${key}`} className="p-3 rounded border">
                   <div className="flex items-center gap-2">
