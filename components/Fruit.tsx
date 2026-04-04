@@ -47,10 +47,7 @@ const ANIMATION_VARIANTS = {
   idle: {
     scale: 1,
     rotate: 0,
-    y: [0, -3, 0],
-    transition: {
-      y: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
-    },
+    y: 0,
   },
   hover: {
     scale: 1.15,
