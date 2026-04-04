@@ -47,7 +47,10 @@ const ANIMATION_VARIANTS = {
   idle: {
     scale: 1,
     rotate: 0,
-    y: 0,
+    y: [0, -3, 0],
+    transition: {
+      y: { duration: 2, repeat: Infinity, ease: 'easeInOut' },
+    },
   },
   hover: {
     scale: 1.15,
@@ -245,7 +248,7 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
     >
       <BackgroundCircle fruitStyle={fruitStyle} />
 
-      <div className="relative z-10 animate-float">
+      <div className="relative z-10 p-2 -m-2">
         {FRUIT_EMOJI[fruit.type]}
       </div>
 
