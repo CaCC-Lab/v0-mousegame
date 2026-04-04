@@ -53,7 +53,6 @@ export function CollectionModal({
   harvestedFruits,
   earnedBadges,
   masteryLevels,
-  masteryProgress,
   stamps,
   practiceStreak,
 }: CollectionModalProps): React.ReactElement | null {
