@@ -201,7 +201,7 @@ export function GamePlayArea({
     <div
       ref={gameAreaRef}
       data-testid="game-area"
-      className="relative h-[60vh] overflow-hidden select-none bg-pattern-dots"
+      className="relative h-[60vh] min-h-[300px] overflow-hidden select-none bg-pattern-dots"
       style={{ background: 'linear-gradient(180deg, #A8DADC 0%, #4ECDC4 100%)' }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
