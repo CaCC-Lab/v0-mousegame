@@ -23,6 +23,8 @@ import { MasteryDisplay } from './game/MasteryDisplay'
 import { LevelUpNotification } from './game/LevelUpNotification'
 import { DailyPracticeCard } from './game/DailyPracticeCard'
 import { DailyGoalComplete } from './game/DailyGoalComplete'
+import { CollectionModal } from './game/CollectionModal'
+import { Button } from './ui/button'
 import { Fruit, InteractionType } from '@/types/game'
 import type { InteractionType as IT } from '@/types/game'
 import type { MasteryLevel } from '@/types/gamification'
@@ -90,6 +92,7 @@ export function FruitHarvestGame(): React.ReactElement {
 
   const [selectedFruitIndex, setSelectedFruitIndex] = useState<number>(-1)
   const [showStageSelector, setShowStageSelector] = useState(false)
+  const [showCollection, setShowCollection] = useState(false)
   const [showStageClearMessage, setShowStageClearMessage] = useState(false)
   const [stageClearProcessed, setStageClearProcessed] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
@@ -186,7 +189,7 @@ export function FruitHarvestGame(): React.ReactElement {
     onSpacePress: handleKeyboardSpace,
     onEnterPress: handleKeyboardEnter,
     onArrowKeys: handleArrowKeys
-  }, gameState === 'playing' || gameState === 'paused' || gameState === 'idle')
+  }, (gameState === 'playing' || gameState === 'paused' || gameState === 'idle') && !showCollection)
 
   // Stage completion check
   useEffect(() => {
@@ -449,8 +452,27 @@ export function FruitHarvestGame(): React.ReactElement {
             earnedBadges={gamification.earnedBadges}
             cumulativeStats={gamification.cumulativeStats}
           />
+          <Button
+            data-testid="collection-open-button"
+            onClick={() => setShowCollection(true)}
+            className="w-full"
+            variant="outline"
+          >
+            ずかんを見る
+          </Button>
         </div>
       )}
+
+      <CollectionModal
+        open={showCollection}
+        onClose={() => setShowCollection(false)}
+        cumulativeStats={gamification.cumulativeStats}
+        earnedBadges={gamification.earnedBadges}
+        masteryLevels={gamification.masteryLevels}
+        masteryProgress={gamification.masteryProgress}
+        stamps={dailyPractice.stamps}
+        practiceStreak={dailyPractice.practiceStreak}
+      />
 
       <DailyGoalComplete
         show={showDailyGoalComplete}
