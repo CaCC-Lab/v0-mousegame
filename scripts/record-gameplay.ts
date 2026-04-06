@@ -11,9 +11,9 @@ async function main() {
   const context = await browser.newContext({
     recordVideo: {
       dir: 'docs/videos/',
-      size: { width: 1280, height: 720 },
+      size: { width: 1280, height: 960 },
     },
-    viewport: { width: 1280, height: 720 },
+    viewport: { width: 1280, height: 960 },
   })
 
   const page = await context.newPage()
