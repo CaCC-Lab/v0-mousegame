@@ -31,22 +31,38 @@
   <table>
     <tr>
       <td align="center">
-        <strong>練習画面</strong><br>
-        <em>画面のあちこちに現れるフルーツをキャッチ</em>
+        <img src="docs/screenshots/01-idle-screen.png" width="300" alt="ホーム画面"><br>
+        <strong>ホーム画面</strong><br>
+        <em>きょうのれんしゅう・熟達レベル・バッジ進捗を一覧表示</em>
       </td>
       <td align="center">
-        <strong>操作説明</strong><br>
-        <em>視覚的にわかりやすい操作ガイド</em>
+        <img src="docs/screenshots/02-playing.png" width="300" alt="プレイ中"><br>
+        <strong>プレイ中</strong><br>
+        <em>画面のあちこちに現れるフルーツをキャッチ</em>
       </td>
     </tr>
     <tr>
       <td align="center">
-        <strong>ステージクリア</strong><br>
-        <em>達成感を演出する画面設計</em>
+        <img src="docs/screenshots/04-result-modal.png" width="300" alt="結果画面"><br>
+        <strong>結果画面</strong><br>
+        <em>操作別の成績と前回比較で上達を実感</em>
       </td>
       <td align="center">
-        <strong>成績表示</strong><br>
-        <em>上達が実感できるスコア画面</em>
+        <img src="docs/screenshots/05-gamification-overview.png" width="300" alt="ゲーミフィケーション"><br>
+        <strong>ゲーミフィケーション</strong><br>
+        <em>熟達レベル・バッジ進捗・日次目標を可視化</em>
+      </td>
+    </tr>
+    <tr>
+      <td align="center">
+        <img src="docs/screenshots/06-collection-fruits.png" width="300" alt="図鑑（フルーツ）"><br>
+        <strong>図鑑（フルーツ）</strong><br>
+        <em>集めたフルーツの累計収穫数を確認</em>
+      </td>
+      <td align="center">
+        <img src="docs/screenshots/07-collection-badges.png" width="300" alt="図鑑（バッジ）"><br>
+        <strong>図鑑（バッジ）</strong><br>
+        <em>獲得済みバッジと未獲得バッジのシルエット</em>
       </td>
     </tr>
   </table>
