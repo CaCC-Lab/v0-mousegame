@@ -25,6 +25,16 @@
 
 ---
 
+## 🎬 プレイ動画
+
+<div align="center">
+
+https://github.com/CaCC-Lab/v0-mousegame/raw/master/docs/videos/gameplay.webm
+
+*AIがPlaywright MCPで自動プレイした様子（りんごクリック → ブルーベリーダブルクリック → レモン右クリック → スイカドラッグ&ドロップ → 結果画面 → 図鑑）*
+
+</div>
+
 ## 📸 スクリーンショット
 
 <div align="center">
