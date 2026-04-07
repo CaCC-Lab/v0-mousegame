@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "npx",
+      "args": [
+        "@playwright/mcp@latest",
+        "--headless",
+        "--allowed-hosts",
+        "localhost,127.0.0.1"
+      ]
+    }
+  }
+}

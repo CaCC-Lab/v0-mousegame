@@ -1,7 +1,3 @@
-/**
- * Playwright でゲームプレイを録画するスクリプト
- * 出力: docs/videos/gameplay.webm
- */
 import { chromium } from '@playwright/test'
 
 const BASE_URL = process.env.BASE_URL || 'http://localhost:3001'
@@ -9,10 +5,7 @@ const BASE_URL = process.env.BASE_URL || 'http://localhost:3001'
 async function main() {
   const browser = await chromium.launch({ headless: true })
   const context = await browser.newContext({
-    recordVideo: {
-      dir: 'docs/videos/',
-      size: { width: 1280, height: 960 },
-    },
+    recordVideo: { dir: 'docs/videos/', size: { width: 1280, height: 960 } },
     viewport: { width: 1280, height: 960 },
   })
 
@@ -20,8 +13,6 @@ async function main() {
   await page.goto(BASE_URL)
   await page.waitForLoadState('networkidle')
   console.log('Page loaded')
-
-  // 1秒待ってホーム画面を見せる
   await page.waitForTimeout(2000)
 
   // ゲーム開始
@@ -30,7 +21,7 @@ async function main() {
   console.log('Game started')
   await page.waitForTimeout(1000)
 
-  // りんごを連続クリック（5回）
+  // りんごを連続クリック
   for (let i = 0; i < 8; i++) {
     const apple = page.getByRole('button', { name: /apple fruit/i }).first()
     if (await apple.isVisible({ timeout: 500 }).catch(() => false)) {
@@ -86,22 +77,18 @@ async function main() {
     }
   }
 
-  // タイマー終了を待つ（最大60秒）
+  // タイマー終了を待つ
   console.log('Waiting for game to end...')
   await page.waitForTimeout(45000)
-
-  // 結果モーダルを2秒表示
   await page.waitForTimeout(3000)
 
-  // とじるボタンをクリック
+  // とじる
   const closeBtn = page.getByRole('button', { name: /とじる/i })
   if (await closeBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
     await closeBtn.click()
     console.log('Result modal closed')
   }
-
-  // アイドル画面を3秒表示
-  await page.waitForTimeout(3000)
+  await page.waitForTimeout(2000)
 
   // 図鑑を開く
   const collectionBtn = page.getByTestId('collection-open-button')
@@ -109,22 +96,6 @@ async function main() {
     await collectionBtn.click()
     console.log('Collection opened')
     await page.waitForTimeout(2000)
-
-    // バッジタブ
-    const badgeTab = page.getByTestId('collection-tab-badges')
-    if (await badgeTab.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await badgeTab.click()
-      await page.waitForTimeout(1500)
-    }
-
-    // じゅくたつタブ
-    const masteryTab = page.getByTestId('collection-tab-mastery')
-    if (await masteryTab.isVisible({ timeout: 1000 }).catch(() => false)) {
-      await masteryTab.click()
-      await page.waitForTimeout(1500)
-    }
-
-    // 閉じる
     const closeCollection = page.getByTestId('collection-modal-close')
     if (await closeCollection.isVisible({ timeout: 1000 }).catch(() => false)) {
       await closeCollection.click()
@@ -132,11 +103,8 @@ async function main() {
   }
 
   await page.waitForTimeout(1000)
-
-  // 録画を保存するためにコンテキストを閉じる
   await context.close()
   await browser.close()
-
   console.log('Recording saved to docs/videos/')
 }
 
