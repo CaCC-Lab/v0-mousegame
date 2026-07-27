@@ -113,17 +113,30 @@ describe('useGameLogic with Sound Integration', () => {
   it('plays sounds when achieving high score', () => {
     const { result } = renderHook(() => useGameLogic())
 
+    // フルーツは種類ごとに操作が決まっている（lib/gameLogic.ts の INTERACTION_RULES 参照）
+    const ACTION_BY_FRUIT_TYPE = {
+      apple: 'click',
+      blueberry: 'doubleClick',
+      lemon: 'rightClick',
+      watermelon: 'drop',
+    } as const
+
+    const harvest = (fruits: typeof result.current.fruits) => {
+      fruits.forEach(fruit => {
+        act(() => {
+          result.current.handleFruitInteraction(fruit, ACTION_BY_FRUIT_TYPE[fruit.type])
+        })
+      })
+    }
+
     // 以前のハイスコアを設定
     act(() => {
       result.current.startGame()
     })
 
-    // いくつかフルーツを収穫してスコアを獲得
-    result.current.fruits.slice(0, 5).forEach(fruit => {
-      act(() => {
-        result.current.handleFruitInteraction(fruit, 'click')
-      })
-    })
+    // 1個だけ収穫する（1個の最高点は🍉の25点）
+    expect(result.current.fruits.length).toBeGreaterThanOrEqual(4)
+    harvest(result.current.fruits.slice(0, 1))
 
     const score = result.current.score
     expect(score).toBeGreaterThan(0)
@@ -139,12 +152,9 @@ describe('useGameLogic with Sound Integration', () => {
       result.current.startGame()
     })
 
-    // 前回より高いスコアを獲得
-    result.current.fruits.slice(0, 10).forEach(fruit => {
-      act(() => {
-        result.current.handleFruitInteraction(fruit, 'click')
-      })
-    })
+    // 4個収穫する（4個の最低点は🍎×4の40点なので、必ず前回を上回る）
+    expect(result.current.fruits.length).toBeGreaterThanOrEqual(4)
+    harvest(result.current.fruits.slice(0, 4))
 
     expect(result.current.score).toBeGreaterThan(score)
   })

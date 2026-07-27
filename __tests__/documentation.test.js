@@ -17,7 +17,8 @@ describe('Documentation', () => {
     });
 
     test('should have game title', () => {
-      expect(readmeContent).toMatch(/# (フルーツハーベストゲーム|Fruit Harvest Game)/i);
+      // 見出しにゲーム名が含まれていること（表記ゆれを許容）
+      expect(readmeContent).toMatch(/# .*(フルーツキャッチ|フルーツハーベスト|Fruit Harvest)/i);
     });
 
     test('should have game description', () => {

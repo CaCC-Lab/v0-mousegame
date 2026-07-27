@@ -28,9 +28,9 @@ describe('Internationalization (i18n)', () => {
     test('should display current language', () => {
       render(<FruitHarvestGame />)
       
-      // Should show current language (default Japanese) - button shows JA
+      // Should show current language (default Japanese) - button shows 日本語
       const languageButton = screen.getByRole('button', { name: /language/i })
-      expect(languageButton).toHaveTextContent(/JA/i)
+      expect(languageButton).toHaveTextContent('日本語')
     })
 
     test('should toggle between Japanese and English', async () => {
@@ -99,7 +99,7 @@ describe('Internationalization (i18n)', () => {
       
       expect(screen.getByText('はじめる')).toBeInTheDocument()
       expect(screen.getByText('リセット')).toBeInTheDocument()
-      expect(screen.getByText('むずかしいモード')).toBeInTheDocument()
+      expect(screen.getByText('うごくモード')).toBeInTheDocument()
       expect(screen.getByText('あそびかた')).toBeInTheDocument()
     })
 
@@ -112,7 +112,7 @@ describe('Internationalization (i18n)', () => {
       
       expect(screen.getByText('Start')).toBeInTheDocument()
       expect(screen.getByText('Reset')).toBeInTheDocument()
-      expect(screen.getByText('Hard Mode')).toBeInTheDocument()
+      expect(screen.getByText('Moving Mode')).toBeInTheDocument()
       expect(screen.getByText('How to Play')).toBeInTheDocument()
     })
 
@@ -163,10 +163,13 @@ describe('Internationalization (i18n)', () => {
       await user.click(helpButton)
       
       // Check Japanese content
+      // 絵文字とフルーツ名はカード上部に別要素で表示されるため、
+      // 説明文は「🍎 りんご: 」の接頭辞を除いた本文で照合する（HelpDialog参照）
       await waitFor(() => {
-        expect(screen.getByText('フルーツハーベストゲームのあそびかた')).toBeInTheDocument()
-        expect(screen.getByText(/🍎 りんご: クリックして収穫/)).toBeInTheDocument()
-        expect(screen.getByText(/制限時間は3分間です/)).toBeInTheDocument()
+        expect(screen.getByText('フルーツあつめゲームのあそびかた')).toBeInTheDocument()
+        expect(screen.getByText('🍓 フルーツのとりかた 🍓')).toBeInTheDocument()
+        expect(screen.getByText(/マウスでカチッとクリックしてつかまえよう/)).toBeInTheDocument()
+        expect(screen.getByText(/すばやく２かいクリック/)).toBeInTheDocument()
       })
     })
 
@@ -193,10 +196,12 @@ describe('Internationalization (i18n)', () => {
       await user.click(helpButton)
 
       // Check English content
+      // 日本語版と同様、説明文は「🍎 Apple: 」の接頭辞を除いた本文で照合する
       await waitFor(() => {
         expect(screen.getByText('How to Play Fruit Collecting Game')).toBeInTheDocument()
-        expect(screen.getByText(/🍎 Apple: Click once to catch it!/)).toBeInTheDocument()
-        expect(screen.getByText(/You have 3 minutes!/)).toBeInTheDocument()
+        expect(screen.getByText('🍓 How to Catch Fruits 🍓')).toBeInTheDocument()
+        expect(screen.getByText(/Click once to catch it!/)).toBeInTheDocument()
+        expect(screen.getByText(/Click twice quickly/)).toBeInTheDocument()
       })
     })
   })

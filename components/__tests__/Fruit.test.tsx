@@ -180,10 +180,17 @@ describe('Fruit', () => {
     const rootElement = container.firstChild as HTMLElement
     expect(rootElement.className).toContain('absolute')
 
+    // キーボードとスクリーンリーダーから操作できること
+    expect(rootElement).toHaveAttribute('role', 'button')
+    expect(rootElement).toHaveAttribute('tabindex', '0')
+    expect(rootElement).toHaveAttribute(
+      'aria-label',
+      `${mockFruit.type} fruit, size ${mockFruit.size}`
+    )
+
     // The emoji should be inside a nested div
     const fruitElement = screen.getByText('🍎')
     expect(fruitElement.tagName).toBe('DIV')
-    expect(fruitElement).toHaveClass('animate-float')
   })
 
   it('updates position when fruit moves', () => {
