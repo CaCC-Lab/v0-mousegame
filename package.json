@@ -11,6 +11,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "build:itch": "next build && node scripts/build-itch.mjs",
     "start": "next start",
     "lint": "next lint",
     "test": "jest",
