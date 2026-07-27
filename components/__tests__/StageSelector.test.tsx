@@ -48,6 +48,14 @@ describe('StageSelector', () => {
 
   beforeEach(() => {
     jest.clearAllMocks()
+    // StageSelectorはstage.nameではなくuseLanguageの翻訳を表示するため、
+    // 日本語表示を検証するには言語設定を日本語に固定する必要がある。
+    // 未設定だとJSDOMのnavigator.language(en-US)から英語が選ばれる
+    window.localStorage.setItem('fruitHarvestLanguage', '"ja"')
+  })
+
+  afterEach(() => {
+    window.localStorage.clear()
   })
 
   describe('rendering', () => {
@@ -97,7 +105,8 @@ describe('StageSelector', () => {
       expect(stage1).toHaveTextContent('目標スコア:')
       expect(stage1).toHaveTextContent('100')
       expect(stage1).toHaveTextContent('目標フルーツ:')
-      expect(stage1).toHaveTextContent('10個')
+      // StageSelectorは「10 個」のように数値と単位を空白で区切って表示する
+      expect(stage1).toHaveTextContent('10 個')
     })
 
     it('should show completion status', () => {
@@ -111,7 +120,7 @@ describe('StageSelector', () => {
       )
       
       expect(screen.getByText('✅ クリア済み')).toBeInTheDocument()
-      expect(screen.getByText(/ハイスコア: 150/)).toBeInTheDocument()
+      expect(screen.getByText(/最高得点: 150/)).toBeInTheDocument()
     })
 
     it('should show locked status', () => {
