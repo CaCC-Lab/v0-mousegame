@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="ja">
+    <head>
+        <meta charset="UTF-8" />
+        <title>フルーツハーベスト - itch.io カバー画像</title>
+        <!-- 固定キャンバスのメタデータ（itch.io推奨のカバーサイズ 630x500） -->
+        <meta name="hz:slide-selector" content=".cover" />
+        <meta name="hz:canvas-width" content="630" />
+        <meta name="hz:canvas-height" content="500" />
+        <style>
+            /* Fredoka/Nunitoはゲーム本体と同じ。日本語グリフを持たないため、
+               日本語には同系統の丸ゴシック(M PLUS Rounded 1c)を重ねる */
+            @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Nunito:wght@400;600;700;800&family=M+PLUS+Rounded+1c:wght@700;800&display=swap');
+
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+
+            body {
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                min-height: 100vh;
+                background: #e5e5e5;
+            }
+
+            /* ゲーム本体と同じクリーム＋ティールの配色 */
+            .cover {
+                position: relative;
+                width: 630px;
+                height: 500px;
+                overflow: hidden;
+                background: linear-gradient(160deg, #fdf6dc 0%, #fbeec8 45%, #cdeeea 100%);
+                font-family: 'Fredoka', 'M PLUS Rounded 1c', sans-serif;
+            }
+
+            /* 背景の装飾円（奥行きを出す） */
+            .blob {
+                position: absolute;
+                border-radius: 50%;
+            }
+            .blob-teal {
+                width: 340px;
+                height: 340px;
+                left: -110px;
+                bottom: -150px;
+                background: rgba(94, 200, 192, 0.28);
+            }
+            .blob-orange {
+                width: 260px;
+                height: 260px;
+                right: -90px;
+                top: -110px;
+                background: rgba(255, 154, 60, 0.25);
+            }
+
+            .title {
+                position: absolute;
+                top: 46px;
+                left: 0;
+                width: 630px;
+                text-align: center;
+                font-family: 'M PLUS Rounded 1c', 'Fredoka', sans-serif;
+                font-size: 60px;
+                font-weight: 800;
+                letter-spacing: 1px;
+                line-height: 1;
+                background: linear-gradient(95deg, #ff8a3d 0%, #f4543c 55%, #e8417a 100%);
+                -webkit-background-clip: text;
+                background-clip: text;
+                color: transparent;
+            }
+
+            .subtitle {
+                position: absolute;
+                top: 126px;
+                left: 0;
+                width: 630px;
+                text-align: center;
+                font-family: 'Nunito', 'M PLUS Rounded 1c', sans-serif;
+                font-size: 25px;
+                font-weight: 800;
+                color: #2f5d8a;
+            }
+
+            /* 4つの操作カード */
+            .fruits {
+                position: absolute;
+                top: 196px;
+                left: 45px;
+                width: 540px;
+                display: flex;
+                justify-content: space-between;
+            }
+
+            .fruit-card {
+                width: 122px;
+                height: 152px;
+                border-radius: 26px;
+                background: #ffffff;
+                box-shadow: 0 8px 0 rgba(47, 93, 138, 0.16);
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
+            }
+
+            .fruit-emoji {
+                font-size: 62px;
+                line-height: 1;
+            }
+
+            .fruit-label {
+                font-family: 'Nunito', 'M PLUS Rounded 1c', sans-serif;
+                font-size: 17px;
+                font-weight: 800;
+                color: #3d6b4f;
+                text-align: center;
+                line-height: 1.15;
+            }
+
+            /* 下部の帯 */
+            .footer {
+                position: absolute;
+                left: 45px;
+                bottom: 34px;
+                width: 540px;
+                height: 62px;
+                border-radius: 20px;
+                background: #5ec8c0;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 14px;
+                box-shadow: 0 7px 0 rgba(47, 93, 138, 0.18);
+            }
+
+            .footer-text {
+                font-family: 'Nunito', 'M PLUS Rounded 1c', sans-serif;
+                font-size: 24px;
+                font-weight: 800;
+                color: #ffffff;
+            }
+
+            .footer-badge {
+                font-family: 'Nunito', 'M PLUS Rounded 1c', sans-serif;
+                font-size: 16px;
+                font-weight: 800;
+                color: #2f7a74;
+                background: #ffffff;
+                border-radius: 999px;
+                padding: 5px 14px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="cover" data-canvas-width="630" data-canvas-height="500">
+            <div class="blob blob-teal"></div>
+            <div class="blob blob-orange"></div>
+
+            <h1 class="title">フルーツハーベスト</h1>
+            <p class="subtitle">マウス操作を楽しく学ぼう！</p>
+
+            <div class="fruits">
+                <div class="fruit-card">
+                    <div class="fruit-emoji">🍎</div>
+                    <div class="fruit-label">クリック</div>
+                </div>
+                <div class="fruit-card">
+                    <div class="fruit-emoji">🫐</div>
+                    <div class="fruit-label">ダブル<br />クリック</div>
+                </div>
+                <div class="fruit-card">
+                    <div class="fruit-emoji">🍋</div>
+                    <div class="fruit-label">右クリック</div>
+                </div>
+                <div class="fruit-card">
+                    <div class="fruit-emoji">🍉</div>
+                    <div class="fruit-label">ドラッグ</div>
+                </div>
+            </div>
+
+            <div class="footer">
+                <span class="footer-text">6ステージ・1回1〜2分</span>
+                <span class="footer-badge">ブラウザで無料</span>
+            </div>
+        </div>
+    </body>
+</html>
