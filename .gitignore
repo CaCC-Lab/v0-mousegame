@@ -22,6 +22,9 @@
 # Electron dist
 /dist
 
+# itch.io向け配布ビルド
+/dist-itch
+
 # misc
 .DS_Store
 *.pem
