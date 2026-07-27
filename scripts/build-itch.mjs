@@ -34,8 +34,20 @@ const EXCLUDED_ENTRIES = [
   'index.txt', // App RouterのRSCペイロード。静的配信では未使用
 ]
 
-/** itch.ioのHTML5アップロード上限（無料プラン） */
-const ITCH_ZIP_LIMIT_BYTES = 1024 * 1024 * 1024
+/**
+ * itch.ioのHTML5アップロード制限
+ * https://itch.io/docs/creators/html5
+ */
+const ITCH_LIMITS = {
+  /** zip内のファイル数 */
+  fileCount: 1000,
+  /** 単一ファイルのサイズ */
+  singleFileBytes: 200 * 1024 * 1024,
+  /** 展開後の合計サイズ */
+  extractedBytes: 500 * 1024 * 1024,
+  /** ファイルパスの長さ（文字数） */
+  pathLength: 240,
+}
 
 function fail(what, why, how) {
   console.error(`\n❌ ${what}\n   原因: ${why}\n   対処: ${how}\n`)
@@ -129,7 +141,47 @@ function main() {
     )
   }
 
-  // 5. zipに固める（zip直下にindex.htmlが来るようステージング内で実行）
+  // 5. itch.ioのアップロード制限を満たしているか確認する
+  const payloadFiles = collectFiles(stagingDir)
+  const extractedBytes = payloadFiles.reduce((total, file) => total + fs.statSync(file).size, 0)
+
+  if (payloadFiles.length > ITCH_LIMITS.fileCount) {
+    fail(
+      'zip内のファイル数がitch.ioの上限を超えています',
+      `${payloadFiles.length} 個は上限の ${ITCH_LIMITS.fileCount} 個を超えます`,
+      'ビルド成果物を減らすか、アセットをまとめてください'
+    )
+  }
+
+  const oversized = payloadFiles.find((file) => fs.statSync(file).size > ITCH_LIMITS.singleFileBytes)
+  if (oversized) {
+    fail(
+      '単一ファイルのサイズがitch.ioの上限を超えています',
+      `${path.relative(stagingDir, oversized)} は上限の ${formatSize(ITCH_LIMITS.singleFileBytes)} を超えます`,
+      'そのファイルを分割・圧縮してください'
+    )
+  }
+
+  if (extractedBytes > ITCH_LIMITS.extractedBytes) {
+    fail(
+      '展開後の合計サイズがitch.ioの上限を超えています',
+      `${formatSize(extractedBytes)} は上限の ${formatSize(ITCH_LIMITS.extractedBytes)} を超えます`,
+      'アセットを削減してください'
+    )
+  }
+
+  const longPath = payloadFiles.find(
+    (file) => path.relative(stagingDir, file).length > ITCH_LIMITS.pathLength
+  )
+  if (longPath) {
+    fail(
+      'ファイルパスがitch.ioの長さ制限を超えています',
+      `${path.relative(stagingDir, longPath)} は ${ITCH_LIMITS.pathLength} 文字を超えます`,
+      'ディレクトリ階層を浅くしてください'
+    )
+  }
+
+  // 6. zipに固める（zip直下にindex.htmlが来るようステージング内で実行）
   fs.rmSync(zipPath, { force: true })
   try {
     execFileSync('zip', ['-r', '-q', zipPath, '.'], { cwd: stagingDir })
@@ -142,16 +194,13 @@ function main() {
   }
 
   const zipSize = fs.statSync(zipPath).size
-  if (zipSize > ITCH_ZIP_LIMIT_BYTES) {
-    fail(
-      'zipがitch.ioのアップロード上限を超えています',
-      `${formatSize(zipSize)} は上限の ${formatSize(ITCH_ZIP_LIMIT_BYTES)} を超えます`,
-      'アセットを削減するか、itch.ioに容量上限の引き上げを申請してください'
-    )
-  }
 
   console.log('\n✅ itch.io向けビルドが完成しました')
   console.log(`   zip:  ${path.relative(projectRoot, zipPath)} (${formatSize(zipSize)})`)
+  console.log(
+    `   内訳: ${payloadFiles.length} ファイル / 展開後 ${formatSize(extractedBytes)}` +
+      `（itch.io上限: ${ITCH_LIMITS.fileCount} ファイル / ${formatSize(ITCH_LIMITS.extractedBytes)}）`
+  )
   console.log(`   検証用ディレクトリ: ${path.relative(projectRoot, stagingDir)}`)
   console.log('\n   次の手順は docs/itch-io-release.md を参照してください。\n')
 }
