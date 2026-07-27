@@ -38,24 +38,24 @@ export const translations = {
         description: 'フルーツ収穫の基本を学びましょう'
       },
       stage2: {
-        name: 'ベリーの森',
-        description: 'ブルーベリーのダブルクリックをマスターしよう'
+        name: 'リンゴ園',
+        description: 'リンゴを中心に収穫しましょう'
       },
       stage3: {
-        name: 'レモン園',
-        description: '右クリックでレモンを収穫しましょう'
+        name: 'ブルーベリー農園',
+        description: 'ブルーベリーのダブルクリックに挑戦'
       },
       stage4: {
-        name: 'スイカファーム',
-        description: '大きなスイカをドラッグ&ドロップで運びましょう'
+        name: 'レモン畑',
+        description: 'レモンの右クリックをマスターしよう'
       },
       stage5: {
-        name: 'フルーツミックス',
-        description: 'すべてのフルーツを使いこなそう'
+        name: 'スイカ畑',
+        description: 'スイカドラッグの技を極めよう'
       },
       stage6: {
-        name: 'フルーツマスター',
-        description: '最終チャレンジ！すべての技術を駆使しよう'
+        name: 'フルーツパラダイス',
+        description: '全てのフルーツをバランスよく収穫'
       }
     },
     
@@ -109,7 +109,7 @@ export const translations = {
       watermelon: '🍉 スイカ: マウスでつかんで、みぎがわのきいろいエリアまでもっていこう！',
       hardModeDesc: 'うごくモード: フルーツがにげまわるよ！おいかけてつかまえよう',
       easyModeDesc: 'とまるモード: フルーツはうごかないから、ゆっくりあそべるよ',
-      timeLimit: 'じかんは３ぷんかん！（ステージによってかわるよ）',
+      timeLimit: 'じかんはステージによってかわるよ（だいたい１ぷん〜２ふん３０びょう）',
       goal: 'できるだけたくさんのフルーツをあつめて、たかいてんすうをめざそう！',
       keyboardTitle: 'キーボードでもあそべるよ:',
       keyboardSpace: 'スペースキー: ゲームをとめたり、つづけたりできるよ',
@@ -166,24 +166,24 @@ export const translations = {
         description: 'Learn the basics of fruit harvesting'
       },
       stage2: {
-        name: 'Berry Forest',
-        description: 'Master the double-click for blueberries'
+        name: 'Apple Orchard',
+        description: 'Focus on harvesting apples'
       },
       stage3: {
-        name: 'Lemon Garden',
-        description: 'Harvest lemons with right-click'
+        name: 'Blueberry Farm',
+        description: 'Take on the blueberry double-click'
       },
       stage4: {
-        name: 'Watermelon Farm',
-        description: 'Drag & drop the big watermelons'
+        name: 'Lemon Grove',
+        description: 'Master the right-click with lemons'
       },
       stage5: {
-        name: 'Fruit Mix',
-        description: 'Master all types of fruits'
+        name: 'Watermelon Field',
+        description: 'Perfect your watermelon drag'
       },
       stage6: {
-        name: 'Fruit Master',
-        description: 'Final challenge! Use all your skills'
+        name: 'Fruit Paradise',
+        description: 'Harvest every fruit in balance'
       }
     },
     
@@ -237,7 +237,7 @@ export const translations = {
       watermelon: '🍉 Watermelon: Drag it to the yellow area on the right!',
       hardModeDesc: 'Moving Mode: Fruits run away! Chase and catch them',
       easyModeDesc: 'Still Mode: Fruits don\'t move, so you can play slowly',
-      timeLimit: 'You have 3 minutes! (Time varies by stage)',
+      timeLimit: 'Time varies by stage (about 1 to 2.5 minutes)',
       goal: 'Collect as many fruits as you can for a high score!',
       keyboardTitle: 'You can also use keyboard:',
       keyboardSpace: 'Space: Stop or continue the game',
