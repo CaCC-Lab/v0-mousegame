@@ -1,6 +1,9 @@
 import { defineConfig, devices } from '@playwright/test'
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
+// 3000番が他のアプリで塞がっている場合に備えて、ポートを差し替えられるようにする。
+// 例: PORT=3100 npx playwright test
+const PORT = process.env.PORT || '3000'
+const BASE_URL = process.env.BASE_URL || `http://localhost:${PORT}`
 
 export default defineConfig({
   testDir: './e2e',
@@ -35,7 +38,7 @@ export default defineConfig({
   ],
 
   webServer: {
-    command: 'npm run dev',
+    command: `npm run dev -- --port ${PORT}`,
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120 * 1000,
