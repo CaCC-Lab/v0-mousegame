@@ -126,7 +126,7 @@ function KeyboardRow({ keyLabel, description }: { keyLabel: string; description:
 
 export function HelpDialog({ t }: HelpDialogProps): React.ReactElement {
   return (
-    <div className="bg-gradient-playful p-4 text-center">
+    <div className="bg-gradient-playful p-2 text-center shrink-0">
       <Dialog>
         <DialogTrigger asChild>
           <Button

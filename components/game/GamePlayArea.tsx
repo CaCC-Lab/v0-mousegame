@@ -197,11 +197,14 @@ export function GamePlayArea({
     setHarvestAnimations(prev => prev.filter(a => a.id !== id))
   }, [])
 
+  // プレイエリアの高さは親（ゲームカード）の余りを受け取る。
+  // 固定の 60vh だと、ヘッダーやスコアバーの分だけ「はじめる」ボタンが
+  // 画面外へ押し出されてしまうため、flex-1 で残りを埋める形にしている。
   return (
     <div
       ref={gameAreaRef}
       data-testid="game-area"
-      className="relative h-[60vh] min-h-[300px] overflow-hidden select-none bg-pattern-dots"
+      className="relative flex-1 min-h-[200px] overflow-hidden select-none bg-pattern-dots"
       style={{ background: 'linear-gradient(180deg, #A8DADC 0%, #4ECDC4 100%)' }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
