@@ -67,7 +67,6 @@ hooks/
 ├── usePowerUps.ts          # パワーアップシステム
 ├── useSoundEffects.ts      # サウンドエフェクト制御
 ├── useStage.ts             # ステージ管理
-├── useTouchEvents.ts       # タッチイベント制御
 └── __tests__/              # フックテスト
     └── [hookName].test.tsx
 ```

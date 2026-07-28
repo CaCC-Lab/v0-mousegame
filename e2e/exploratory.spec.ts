@@ -459,7 +459,11 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
 
       const apple = page.getByTestId('game-area').locator('text=🍎').first()
       if (await apple.isVisible({ timeout: 300 }).catch(() => false)) {
-        await apple.click().catch(() => {})
+        // 狭い幅ではドロップエリアに遮られる個体があり、タイムアウトなしの
+        // クリックは無期限に再試行してテストごと固まる。
+        // このテストの目的は「リサイズ中の操作でエラーが出ない」ことなので、
+        // 遮蔽チェックを省くforceクリックで操作だけ行う
+        await apple.click({ force: true, timeout: 1500 }).catch(() => {})
       }
 
       await page.setViewportSize({ width: 1920, height: 1080 }) // Desktop

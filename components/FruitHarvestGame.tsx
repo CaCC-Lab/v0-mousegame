@@ -13,7 +13,8 @@ import {
   HarvestedFruitsDisplay,
   HelpDialog,
   StageClearModal,
-  GamePlayArea
+  GamePlayArea,
+  TouchDeviceNotice
 } from './game'
 import { ResultModal } from './game/ResultModal'
 import { BadgeNotification } from './game/BadgeNotification'
@@ -348,11 +349,10 @@ export function FruitHarvestGame(): React.ReactElement {
         画面はスリムなHUDバー（タイトル・スコア・時間）と操作バーで挟み、
         残りの高さをすべてプレイエリアに割り当てる。
         目標や収穫数はプレイエリアの上にクリック透過のオーバーレイとして重ねる。
-
-        md未満（スマホ縦）ではHUDが折り返して固定高さに収まらないため、
-        高さ固定をやめて自然な縦スクロールにする（プレイエリアは45vh）。
+        対象はマウスのあるPC（タッチ専用端末はTouchDeviceNoticeが案内する）。
+        画面が低すぎる場合はmin-hを下回らず、ページ側がスクロールする。
       */}
-      <div className="max-w-6xl mx-auto flex flex-col md:h-[calc(100dvh-1.5rem)]">
+      <div className="max-w-6xl mx-auto flex flex-col h-[calc(100dvh-1rem)] md:h-[calc(100dvh-1.5rem)] min-h-[480px]">
         <motion.div
           initial={GAME_CONTAINER_ANIMATION.initial}
           animate={GAME_CONTAINER_ANIMATION.animate}
@@ -360,6 +360,8 @@ export function FruitHarvestGame(): React.ReactElement {
           className="bg-white/90 backdrop-blur-sm rounded-[var(--radius-xl)] shadow-playful overflow-hidden flex flex-col flex-1 min-h-0"
           style={{ border: '4px solid var(--color-secondary)' }}
         >
+          <TouchDeviceNotice t={t} />
+
           {/* HUDバー: タイトル + スコア/時間チップ + あそびかた */}
           <div className="bg-gradient-ocean px-3 py-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 shrink-0">
             <h1 className="text-display text-lg md:text-xl font-bold text-white whitespace-nowrap drop-shadow">
@@ -380,8 +382,8 @@ export function FruitHarvestGame(): React.ReactElement {
             <HelpDialog t={t} />
           </div>
 
-          {/* プレイエリア + オーバーレイ（md未満は45vh固定、md以上は残り全部） */}
-          <div className="relative flex flex-col h-[45vh] md:h-auto md:flex-1 min-h-0">
+          {/* プレイエリア + オーバーレイ */}
+          <div className="relative flex flex-col flex-1 min-h-0">
             <GamePlayArea
               fruits={fruits}
               powerUps={powerUps}

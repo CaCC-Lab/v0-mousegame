@@ -25,7 +25,7 @@ itch.io の「Edit game」画面にそのまま貼り付けるための原稿。
 | Viewport dimensions | 1280 × 800 | ゲーム開始に必要な部分は高さ736pxに収まる。800pxなら余裕があり、閲覧者の画面にも入りやすい |
 | Fullscreen button | ON | 小さい画面でも操作対象を大きく表示できる |
 | Enable scrollbars | ON | ゲーム下部の練習記録・図鑑まで到達できるようにする |
-| Mobile friendly | OFF | マウス操作の学習が目的のため |
+| Mobile friendly | OFF | マウス操作の学習が目的のため。マウスなし端末にはゲーム内で案内バナーを表示する |
 | Automatically start on page load | OFF | 音とアニメーションが不意に始まらないようにする |
 
 > **右クリック（レモン）について**

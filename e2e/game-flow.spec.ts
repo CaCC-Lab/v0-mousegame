@@ -34,10 +34,22 @@ test.describe('Fruit Harvest Game Flow', () => {
     
     // Check if at least one fruit is visible
     await expect(gameArea.getByRole('button').first()).toBeVisible()
-    
+
     // Try to click a fruit
-    const firstFruit = gameArea.getByRole('button').first()
-    await firstFruit.click()
+    // フルーツはランダム配置のため、右端のドロップエリアに重なった個体を
+    // クリックするとポインタが遮られて失敗する。重なっていない個体を選ぶ
+    const dropAreaBox = await gameArea.locator('.drop-area').boundingBox()
+    const fruits = gameArea.getByRole('button')
+    const fruitCount = await fruits.count()
+    for (let i = 0; i < fruitCount; i++) {
+      const box = await fruits.nth(i).boundingBox()
+      if (!box) continue
+      const overlapsDropArea = dropAreaBox !== null && box.x + box.width > dropAreaBox.x
+      if (!overlapsDropArea) {
+        await fruits.nth(i).click()
+        break
+      }
+    }
     
     // Check if score changes (might be 0 if wrong interaction type)
     await expect(page.getByText('得点:', { exact: true })).toBeVisible()
@@ -140,14 +152,20 @@ test.describe('Fruit Harvest Game Flow', () => {
     await page.getByRole('button', { name: /はじめる|Start/ }).click()
     
     // Try to score by clicking fruits
+    // ドロップエリアに重なった個体はクリックが遮られるため避ける
     const gameArea = page.getByTestId('game-area')
+    const dropAreaBox = await gameArea.locator('.drop-area').boundingBox()
     const fruits = gameArea.getByRole('button')
-    
-    // Click multiple fruits to try to score
-    for (let i = 0; i < 3; i++) {
-      const fruit = fruits.nth(i)
-      if (await fruit.isVisible()) {
-        await fruit.click()
+    const fruitCount = await fruits.count()
+
+    let clicked = 0
+    for (let i = 0; i < fruitCount && clicked < 3; i++) {
+      const box = await fruits.nth(i).boundingBox()
+      if (!box) continue
+      const overlapsDropArea = dropAreaBox !== null && box.x + box.width > dropAreaBox.x
+      if (!overlapsDropArea) {
+        await fruits.nth(i).click()
+        clicked++
         await page.waitForTimeout(100)
       }
     }

@@ -1,7 +1,6 @@
-import React, { useRef, useState, useMemo } from 'react'
+import React, { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Fruit as FruitType, FRUIT_EMOJI } from '@/types/game'
-import { useTouchEvents } from '@/hooks/useTouchEvents'
 
 interface FruitProps {
   fruit: FruitType
@@ -154,43 +153,6 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
   const sizeClass = getSizeClass(fruit.size)
   const fruitStyle = FRUIT_STYLES[fruit.type]
   const animationState = getAnimationState(isSelected, isPressed, isHovered)
-
-  const touchHandlers = useMemo(() => {
-    switch (fruit.type) {
-      case 'apple':
-        return { onTap: onClick }
-      case 'blueberry':
-        return { onDoubleTap: onDoubleClick }
-      case 'lemon':
-        return {
-          onLongPress: (point: { x: number; y: number }) => {
-            const syntheticEvent = {
-              button: 2,
-              clientX: point.x,
-              clientY: point.y,
-              preventDefault: () => {}
-            } as unknown as React.MouseEvent
-            onMouseDown(syntheticEvent)
-          }
-        }
-      case 'watermelon':
-        return {
-          onDragStart: (point: { x: number; y: number }) => {
-            const syntheticEvent = {
-              button: 0,
-              clientX: point.x,
-              clientY: point.y,
-              preventDefault: () => {}
-            } as unknown as React.MouseEvent
-            onMouseDown(syntheticEvent)
-          }
-        }
-      default:
-        return {}
-    }
-  }, [fruit.type, onClick, onDoubleClick, onMouseDown])
-
-  useTouchEvents(elementRef.current, touchHandlers)
 
   const handleMouseDown = (e: React.MouseEvent) => {
     setIsPressed(true)
