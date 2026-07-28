@@ -131,7 +131,7 @@ python3 -m http.server 8765 --directory /tmp/itch-check
 | 設定 | 値 |
 | --- | --- |
 | Embed in page | 選択 |
-| Viewport dimensions | **1280 × 960** |
+| Viewport dimensions | **1280 × 800** |
 | Fullscreen button | ✅ ON |
 | Enable scrollbars | ✅ ON |
 | Click to launch | ✅ ON（既定） |
