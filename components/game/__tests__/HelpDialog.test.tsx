@@ -35,6 +35,21 @@ describe('HelpDialog', () => {
       expect(screen.getByText(/きいろいエリアまでもっていこう/)).toBeInTheDocument()
     })
 
+    it('フルーツごとの色分けクラスを静的に付与する', async () => {
+      // Tailwindはソース中の完全なクラス名しか検出しないため、
+      // `bg-${color}-50` のように組み立てるとCSSが生成されず色が付かない
+      await openDialog(translations.ja)
+      await screen.findByText('🍓 フルーツのとりかた 🍓')
+
+      const cardOf = (fruitName: string) =>
+        screen.getByText(fruitName).closest('div.p-4')!
+
+      expect(cardOf('りんご').className).toContain('bg-red-50')
+      expect(cardOf('ブルーベリー').className).toContain('bg-blue-50')
+      expect(cardOf('レモン').className).toContain('bg-yellow-50')
+      expect(cardOf('スイカ').className).toContain('bg-green-50')
+    })
+
     it('ゲームモードの違いを表示する', async () => {
       await openDialog(translations.ja)
 

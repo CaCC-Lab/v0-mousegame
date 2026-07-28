@@ -22,15 +22,50 @@ interface HelpDialogProps {
 interface FruitHelpInfo {
   type: string
   emoji: string
-  color: string
   points: number
+  /**
+   * Tailwindはソース中に現れる完全なクラス名しか拾わないため、
+   * `bg-${color}-50` のように組み立ててはいけない（CSSが生成されず色が付かない）。
+   * 色ごとのクラスは静的に書き下す。
+   */
+  cardClass: string
+  nameClass: string
+  pointsClass: string
 }
 
 const FRUIT_HELP_DATA: FruitHelpInfo[] = [
-  { type: 'apple', emoji: '🍎', color: 'red', points: 10 },
-  { type: 'blueberry', emoji: '🫐', color: 'blue', points: 20 },
-  { type: 'lemon', emoji: '🍋', color: 'yellow', points: 15 },
-  { type: 'watermelon', emoji: '🍉', color: 'green', points: 25 },
+  {
+    type: 'apple',
+    emoji: '🍎',
+    points: 10,
+    cardClass: 'bg-red-50 border-red-200 hover:border-red-400',
+    nameClass: 'text-red-700',
+    pointsClass: 'text-red-600',
+  },
+  {
+    type: 'blueberry',
+    emoji: '🫐',
+    points: 20,
+    cardClass: 'bg-blue-50 border-blue-200 hover:border-blue-400',
+    nameClass: 'text-blue-700',
+    pointsClass: 'text-blue-600',
+  },
+  {
+    type: 'lemon',
+    emoji: '🍋',
+    points: 15,
+    cardClass: 'bg-yellow-50 border-yellow-200 hover:border-yellow-400',
+    nameClass: 'text-yellow-700',
+    pointsClass: 'text-yellow-600',
+  },
+  {
+    type: 'watermelon',
+    emoji: '🍉',
+    points: 25,
+    cardClass: 'bg-green-50 border-green-200 hover:border-green-400',
+    nameClass: 'text-green-700',
+    pointsClass: 'text-green-600',
+  },
 ]
 
 /** 説明文の一覧に並べるパワーアップの翻訳キー */
@@ -59,19 +94,19 @@ function FruitHelpCard({ info, t }: { info: FruitHelpInfo; t: HelpDialogProps['t
 
   return (
     <motion.div
-      className={`p-4 bg-${info.color}-50 rounded-[var(--radius-lg)] border-2 border-${info.color}-200 hover:border-${info.color}-400 hover-lift`}
+      className={`p-4 rounded-[var(--radius-lg)] border-2 hover-lift ${info.cardClass}`}
       whileHover={{ scale: 1.05 }}
     >
       <div className="flex items-center mb-2">
         <span className="text-4xl mr-3">{info.emoji}</span>
-        <span className={`text-display text-xl font-bold text-${info.color}-700`}>
+        <span className={`text-display text-xl font-bold ${info.nameClass}`}>
           {fruitName}
         </span>
       </div>
       <div className="text-base leading-relaxed">
         {helpText}
       </div>
-      <div className={`mt-2 text-sm text-${info.color}-600 font-semibold`}>
+      <div className={`mt-2 text-sm font-semibold ${info.pointsClass}`}>
         {info.points} {t.points}
       </div>
     </motion.div>
