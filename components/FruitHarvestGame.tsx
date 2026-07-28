@@ -344,7 +344,13 @@ export function FruitHarvestGame(): React.ReactElement {
       aria-label={t.gameTitle}
       role="application"
     >
-      <div className="max-w-6xl mx-auto">
+      {/*
+        タイトルからコントロール（「はじめる」）までが画面内に収まるよう、
+        表示領域の高さに合わせて縦に組む。
+        余った高さはプレイエリア（GamePlayArea の flex-1）が受け取る。
+        画面が低すぎる場合に潰れないよう、ゲームカードには最低高さを持たせている。
+      */}
+      <div className="max-w-6xl mx-auto flex flex-col h-[calc(100dvh-2rem)] min-h-[560px] md:h-[calc(100dvh-4rem)]">
         <GameHeader
           title={`🍎 ${t.gameTitle} 🍉`}
           subtitle="マウス操作を楽しく学ぼう！"
@@ -354,7 +360,7 @@ export function FruitHarvestGame(): React.ReactElement {
           initial={GAME_CONTAINER_ANIMATION.initial}
           animate={GAME_CONTAINER_ANIMATION.animate}
           transition={GAME_CONTAINER_ANIMATION.transition}
-          className="bg-white/90 backdrop-blur-sm rounded-[var(--radius-xl)] shadow-playful overflow-hidden"
+          className="bg-white/90 backdrop-blur-sm rounded-[var(--radius-xl)] shadow-playful overflow-hidden flex flex-col flex-1 min-h-0"
           style={{ border: '4px solid var(--color-secondary)' }}
         >
           <ScoreBar

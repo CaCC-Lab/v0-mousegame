@@ -432,9 +432,12 @@ describe('FruitHarvestGame', () => {
   describe('responsive behavior', () => {
     it('game area is responsive', () => {
       render(<FruitHarvestGame />)
-      
+
       const gameArea = screen.getByTestId('game-area')
-      expect(gameArea).toHaveClass('h-[60vh]')
+      // プレイエリアは固定高さではなく、ゲームカードの余りを受け取る。
+      // これにより画面が低くても「はじめる」ボタンが画面外に押し出されない
+      expect(gameArea).toHaveClass('flex-1')
+      expect(gameArea).toHaveClass('min-h-[200px]')
     })
 
     it('container has max width', () => {

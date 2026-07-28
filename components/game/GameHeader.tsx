@@ -20,9 +20,9 @@ export function GameHeader({ title, subtitle }: GameHeaderProps): React.ReactEle
       initial={HEADER_ANIMATION.initial}
       animate={HEADER_ANIMATION.animate}
       transition={HEADER_ANIMATION.transition}
-      className="text-center mb-6"
+      className="text-center mb-3 shrink-0"
     >
-      <h1 className="text-display text-5xl md:text-6xl font-bold text-gradient mb-2 drop-shadow-lg">
+      <h1 className="text-display text-4xl md:text-5xl font-bold text-gradient mb-1 drop-shadow-lg">
         {title}
       </h1>
       <p className="text-body text-lg md:text-xl" style={{ color: 'var(--color-purple)' }}>

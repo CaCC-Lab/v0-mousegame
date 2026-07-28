@@ -30,7 +30,7 @@ function StageGoals({ score, harvestedFruits, stage, t }: HarvestedFruitsDisplay
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-4 text-center bg-white/20 backdrop-blur-sm px-4 py-3 rounded-[var(--radius-md)]"
+      className="mb-2 text-center bg-white/20 backdrop-blur-sm px-4 py-2 rounded-[var(--radius-md)]"
     >
       <div className="text-sm font-bold text-white mb-2">{t.stageGoals}</div>
       <div className="flex justify-center gap-6 flex-wrap">
@@ -71,7 +71,7 @@ export function HarvestedFruitsDisplay({
   t
 }: HarvestedFruitsDisplayProps): React.ReactElement {
   return (
-    <div className="p-4 md:p-6" style={{ background: 'var(--gradient-sunset)' }}>
+    <div className="p-3 md:p-4 shrink-0" style={{ background: 'var(--gradient-sunset)' }}>
       <StageGoals score={score} harvestedFruits={harvestedFruits} stage={stage} t={t} />
 
       <div className="flex justify-around items-center flex-wrap gap-4">
