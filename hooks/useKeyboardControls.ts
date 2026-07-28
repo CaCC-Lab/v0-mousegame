@@ -7,6 +7,22 @@ export interface KeyboardHandlers {
   onArrowKeys?: (direction: 'up' | 'down' | 'left' | 'right') => void
 }
 
+/** その要素自身がキー操作を持つフォーム部品かどうか */
+function isFormControl(target: EventTarget | null): boolean {
+  if (!target || !(target as HTMLElement).tagName) return false
+
+  const element = target as HTMLElement
+  const tagName = element.tagName.toUpperCase()
+
+  return (
+    tagName === 'INPUT' ||
+    tagName === 'SELECT' ||
+    tagName === 'TEXTAREA' ||
+    tagName === 'BUTTON' ||
+    element.isContentEditable === true
+  )
+}
+
 export function useKeyboardControls(
   handlers: KeyboardHandlers,
   enabled: boolean = true
@@ -15,6 +31,11 @@ export function useKeyboardControls(
 
   const handleKeyDown = useCallback((event: KeyboardEvent) => {
     if (!enabled) return
+
+    // チェックボックスやセレクトにフォーカスがあるときは、その要素本来のキー操作を優先する。
+    // ここで横取りすると、スペースキーでモードを切り替えられないなど
+    // キーボードだけで操作できない状態になる
+    if (isFormControl(event.target)) return
 
     switch (event.key) {
       case ' ':
