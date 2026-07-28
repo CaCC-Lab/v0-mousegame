@@ -8,7 +8,6 @@ import { useLanguage } from '@/hooks/useLanguage'
 import { useAnimation } from '@/hooks/useAnimation'
 import { StageSelector } from './StageSelector'
 import {
-  GameHeader,
   ScoreBar,
   GameControls,
   HarvestedFruitsDisplay,
@@ -339,23 +338,21 @@ export function FruitHarvestGame(): React.ReactElement {
   return (
     <div
       ref={gameContainerRef as React.RefObject<HTMLDivElement>}
-      className="min-h-screen p-4 md:p-8 bg-gradient-to-br from-[var(--color-cream)] via-[var(--color-cream-dark)] to-[var(--color-sky-light)]"
+      className="min-h-screen p-2 md:p-3 bg-gradient-to-br from-[var(--color-cream)] via-[var(--color-cream-dark)] to-[var(--color-sky-light)]"
       tabIndex={0}
       aria-label={t.gameTitle}
       role="application"
     >
       {/*
-        タイトルからコントロール（「はじめる」）までが画面内に収まるよう、
-        表示領域の高さに合わせて縦に組む。
-        余った高さはプレイエリア（GamePlayArea の flex-1）が受け取る。
-        画面が低すぎる場合に潰れないよう、ゲームカードには最低高さを持たせている。
-      */}
-      <div className="max-w-6xl mx-auto flex flex-col h-[calc(100dvh-2rem)] min-h-[560px] md:h-[calc(100dvh-4rem)]">
-        <GameHeader
-          title={`🍎 ${t.gameTitle} 🍉`}
-          subtitle="マウス操作を楽しく学ぼう！"
-        />
+        プレイエリアが主役のレイアウト。
+        画面はスリムなHUDバー（タイトル・スコア・時間）と操作バーで挟み、
+        残りの高さをすべてプレイエリアに割り当てる。
+        目標や収穫数はプレイエリアの上にクリック透過のオーバーレイとして重ねる。
 
+        md未満（スマホ縦）ではHUDが折り返して固定高さに収まらないため、
+        高さ固定をやめて自然な縦スクロールにする（プレイエリアは45vh）。
+      */}
+      <div className="max-w-6xl mx-auto flex flex-col md:h-[calc(100dvh-1.5rem)]">
         <motion.div
           initial={GAME_CONTAINER_ANIMATION.initial}
           animate={GAME_CONTAINER_ANIMATION.animate}
@@ -363,41 +360,53 @@ export function FruitHarvestGame(): React.ReactElement {
           className="bg-white/90 backdrop-blur-sm rounded-[var(--radius-xl)] shadow-playful overflow-hidden flex flex-col flex-1 min-h-0"
           style={{ border: '4px solid var(--color-secondary)' }}
         >
-          <ScoreBar
-            score={score}
-            highScore={highScore}
-            timeLeft={timeLeft}
-            streak={operationStats.streak}
-            gameState={gameState}
-            combo={combo}
-            stage={stage}
-            t={t}
-          />
+          {/* HUDバー: タイトル + スコア/時間チップ + あそびかた */}
+          <div className="bg-gradient-ocean px-3 py-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 shrink-0">
+            <h1 className="text-display text-lg md:text-xl font-bold text-white whitespace-nowrap drop-shadow">
+              🍎 {t.gameTitle}
+            </h1>
+            <div className="flex-1 min-w-0">
+              <ScoreBar
+                score={score}
+                highScore={highScore}
+                timeLeft={timeLeft}
+                streak={operationStats.streak}
+                gameState={gameState}
+                combo={combo}
+                stage={stage}
+                t={t}
+              />
+            </div>
+            <HelpDialog t={t} />
+          </div>
 
-          <HelpDialog t={t} />
-
-          <HarvestedFruitsDisplay
-            harvestedFruits={harvestedFruits}
-            score={score}
-            stage={stage}
-            t={t}
-          />
-
-          <GamePlayArea
-            fruits={fruits}
-            powerUps={powerUps}
-            particles={particles}
-            isHardMode={isHardMode}
-            selectedFruitIndex={selectedFruitIndex}
-            dropAreaText={t.dropArea}
-            onFruitClick={handleFruitClick}
-            onPowerUpCollect={handlePowerUpClick}
-            onTriggerAnimation={triggerAnimation}
-            onFruitCollected={onFruitCollected}
-            gameAreaRef={gameAreaRef}
-            streak={operationStats.streak}
-            lastStreakBonus={operationStats.lastStreakBonus}
-          />
+          {/* プレイエリア + オーバーレイ（md未満は45vh固定、md以上は残り全部） */}
+          <div className="relative flex flex-col h-[45vh] md:h-auto md:flex-1 min-h-0">
+            <GamePlayArea
+              fruits={fruits}
+              powerUps={powerUps}
+              particles={particles}
+              isHardMode={isHardMode}
+              selectedFruitIndex={selectedFruitIndex}
+              dropAreaText={t.dropArea}
+              onFruitClick={handleFruitClick}
+              onPowerUpCollect={handlePowerUpClick}
+              onTriggerAnimation={triggerAnimation}
+              onFruitCollected={onFruitCollected}
+              gameAreaRef={gameAreaRef}
+              streak={operationStats.streak}
+              lastStreakBonus={operationStats.lastStreakBonus}
+            />
+            {/* pointer-events-none でクリックを下のフルーツへ通す */}
+            <div className="absolute top-1.5 inset-x-0 z-20 pointer-events-none">
+              <HarvestedFruitsDisplay
+                harvestedFruits={harvestedFruits}
+                score={score}
+                stage={stage}
+                t={t}
+              />
+            </div>
+          </div>
 
           <GameControls
             gameState={gameState}

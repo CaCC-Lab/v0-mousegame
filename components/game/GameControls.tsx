@@ -90,14 +90,15 @@ function ControlButton({ config, index }: { config: ControlButtonConfig; index: 
 
   return (
     <motion.div
-      initial={{ scale: 0, rotate: -180 }}
-      animate={{ scale: 1, rotate: 0 }}
-      transition={{ delay: 0.1 * index, type: 'spring', bounce: 0.5 }}
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: 0.05 * index, type: 'spring', bounce: 0.4 }}
     >
       <Button
         onClick={config.action}
         disabled={config.disabled}
-        className="px-6 py-3 rounded-[var(--radius-full)] font-bold shadow-playful hover-lift text-display"
+        size="sm"
+        className="px-4 py-1.5 rounded-[var(--radius-full)] font-bold shadow-playful hover-lift text-display"
         style={{
           backgroundColor: config.color,
           color: 'white',
@@ -105,7 +106,7 @@ function ControlButton({ config, index }: { config: ControlButtonConfig; index: 
           border: 'none',
         }}
       >
-        <Icon className="mr-2 h-5 w-5" style={{ color: 'white' }} /> {config.label}
+        <Icon className="mr-1.5 h-4 w-4" style={{ color: 'white' }} /> {config.label}
       </Button>
     </motion.div>
   )
@@ -150,18 +151,16 @@ function DifficultySettings({
 
 function LanguageToggle({ language, onToggleLanguage, t }: Pick<GameControlsProps, 'language' | 'onToggleLanguage' | 't'>): React.ReactElement {
   return (
-    <div className="bg-white rounded-[var(--radius-lg)] px-4 py-2 shadow-md">
-      <Button
-        onClick={onToggleLanguage}
-        variant="outline"
-        size="sm"
-        className="flex items-center font-semibold hover-lift"
-        aria-label={`Language: ${t.language}`}
-      >
-        <Languages className="w-5 h-5 mr-2" />
-        {language === 'ja' ? '\u65e5\u672c\u8a9e' : 'English'}
-      </Button>
-    </div>
+    <Button
+      onClick={onToggleLanguage}
+      variant="outline"
+      size="sm"
+      className="flex items-center font-semibold hover-lift bg-white"
+      aria-label={`Language: ${t.language}`}
+    >
+      <Languages className="w-4 h-4 mr-1.5" />
+      {language === 'ja' ? '\u65e5\u672c\u8a9e' : 'English'}
+    </Button>
   )
 }
 
@@ -181,23 +180,17 @@ export function GameControls({
 }: GameControlsProps): React.ReactElement {
   const controlButtons = getControlButtons(gameState, onStart, onPause, onReset, onStageSelect, t)
 
+  // プレイエリアを最大化するため、操作は1行のスリムなバーに収める。
+  // 難易度などの設定はプレイ中に変更できない（selectはdisabled）ため、
+  // 待機中（idle）のときだけ2行目として表示する
   return (
-    <div className="p-6" style={{ background: 'var(--color-cream-dark)' }}>
-      <div className="flex flex-wrap gap-4 justify-center mb-6">
+    // relative: 高さが足りない環境でプレイエリアがはみ出しても、
+    // 操作ボタンが下に隠れないよう描画順を上にする
+    <div className="relative shrink-0 px-3 py-2 flex flex-col gap-2" style={{ background: 'var(--color-cream-dark)' }}>
+      <div className="flex flex-wrap gap-2 justify-center items-center">
         {controlButtons.map((config, index) => (
           <ControlButton key={config.label} config={config} index={index} />
         ))}
-      </div>
-
-      <div className="flex flex-wrap gap-6 justify-center items-center">
-        <DifficultySettings
-          difficulty={difficulty}
-          gameState={gameState}
-          isHardMode={isHardMode}
-          onHardModeChange={onHardModeChange}
-          language={language}
-          t={t}
-        />
 
         <LanguageToggle
           language={language}
@@ -205,7 +198,7 @@ export function GameControls({
           t={t}
         />
 
-        <div className="bg-white rounded-[var(--radius-lg)] px-4 py-2 shadow-md">
+        <div className="bg-white rounded-[var(--radius-lg)] px-2 py-1 shadow">
           <SoundControls
             soundEnabled={soundEffects.soundEnabled}
             volume={soundEffects.volume}
@@ -214,6 +207,20 @@ export function GameControls({
           />
         </div>
       </div>
+
+      {gameState === 'idle' && (
+        // 高さの低い画面（スマホ横向きなど）では設定を畳み、プレイエリアを確保する
+        <div className="flex flex-wrap gap-3 justify-center items-center [@media(max-height:520px)]:hidden">
+          <DifficultySettings
+            difficulty={difficulty}
+            gameState={gameState}
+            isHardMode={isHardMode}
+            onHardModeChange={onHardModeChange}
+            language={language}
+            t={t}
+          />
+        </div>
+      )}
     </div>
   )
 }

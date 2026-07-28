@@ -126,15 +126,17 @@ function KeyboardRow({ keyLabel, description }: { keyLabel: string; description:
 
 export function HelpDialog({ t }: HelpDialogProps): React.ReactElement {
   return (
-    <div className="bg-gradient-playful p-2 text-center shrink-0">
+    // HUDバーの1要素として並ぶため、自前の全幅バーは持たない
+    <div className="shrink-0">
       <Dialog>
         <DialogTrigger asChild>
           <Button
             variant="outline"
-            className="bg-white hover:bg-white/90 shadow-lg px-6 py-3 rounded-[var(--radius-full)] font-bold text-[var(--color-purple)] border-2 border-[var(--color-purple)] hover-lift"
+            size="sm"
+            className="bg-white hover:bg-white/90 shadow px-3 py-1 rounded-[var(--radius-full)] font-bold text-[var(--color-purple)] border-2 border-[var(--color-purple)]"
             data-help-trigger
           >
-            <Info className="mr-2 h-5 w-5" /> {t.howToPlay}
+            <Info className="mr-1 h-4 w-4" /> {t.howToPlay}
           </Button>
         </DialogTrigger>
         <DialogContent className="bg-white max-w-3xl max-h-[90vh] overflow-y-auto rounded-[var(--radius-xl)]">
