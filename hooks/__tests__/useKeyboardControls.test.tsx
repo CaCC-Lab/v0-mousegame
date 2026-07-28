@@ -139,4 +139,63 @@ describe('useKeyboardControls', () => {
     expect(typeof result.current.focusGame).toBe('function')
     expect(typeof result.current.blurGame).toBe('function')
   })
+
+  describe('フォーム要素にフォーカスがあるとき', () => {
+    /** 指定タグの要素を実際にDOMへ追加してフォーカスする */
+    const focusElement = (tagName: string, type?: string) => {
+      const el = document.createElement(tagName) as HTMLInputElement
+      if (type) el.type = type
+      document.body.appendChild(el)
+      el.focus()
+      return el
+    }
+
+    afterEach(() => {
+      document.body.innerHTML = ''
+    })
+
+    it.each([
+      ['input', 'checkbox'],
+      ['input', 'text'],
+      ['select', undefined],
+      ['textarea', undefined],
+      ['button', undefined],
+    ])('%s(%s) にフォーカスがあるとスペースキーを横取りしない', (tagName, type) => {
+      // ゲームのショートカットが優先されると、チェックボックスの切り替えなど
+      // 要素本来のキー操作ができなくなる
+      renderHook(() => useKeyboardControls(mockHandlers))
+      const el = focusElement(tagName, type as string | undefined)
+
+      act(() => {
+        el.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true }))
+      })
+
+      expect(mockHandlers.onSpacePress).not.toHaveBeenCalled()
+    })
+
+    it('フォーム要素以外にフォーカスがあるときは従来どおり動作する', () => {
+      renderHook(() => useKeyboardControls(mockHandlers))
+      const div = document.createElement('div')
+      div.tabIndex = 0
+      document.body.appendChild(div)
+      div.focus()
+
+      act(() => {
+        div.dispatchEvent(new KeyboardEvent('keydown', { key: ' ', code: 'Space', bubbles: true }))
+      })
+
+      expect(mockHandlers.onSpacePress).toHaveBeenCalledTimes(1)
+    })
+
+    it('矢印キーもフォーム要素にフォーカスがあるときは横取りしない', () => {
+      renderHook(() => useKeyboardControls(mockHandlers))
+      const select = focusElement('select')
+
+      act(() => {
+        select.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }))
+      })
+
+      expect(mockHandlers.onArrowKeys).not.toHaveBeenCalled()
+    })
+  })
 })

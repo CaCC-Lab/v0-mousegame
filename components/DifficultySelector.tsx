@@ -61,7 +61,6 @@ export function DifficultySelector({
             ${DIFFICULTY_COLORS[currentDifficulty]}
           `}
           aria-label={`${t.difficulty} selector`}
-          role="combobox"
         >
           {availableDifficulties.map((difficulty) => (
             <option

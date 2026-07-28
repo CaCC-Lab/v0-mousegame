@@ -53,7 +53,7 @@ function FruitCounter({ fruit, count, index }: { fruit: string; count: number; i
       initial={{ scale: 0, rotate: -180 }}
       animate={{ scale: 1, rotate: 0 }}
       transition={{ delay: index * 0.1, type: 'spring', bounce: 0.6 }}
-      className="flex items-center gap-2 bg-white/90 px-4 py-3 rounded-[var(--radius-full)] shadow-md hover-lift"
+      className="flex items-center gap-2 bg-white/90 px-3 py-2 rounded-[var(--radius-full)] shadow-md hover-lift"
       whileHover={{ scale: 1.1 }}
     >
       <span className="text-3xl">{FRUIT_EMOJI[fruit as FruitType['type']]}</span>
@@ -74,7 +74,7 @@ export function HarvestedFruitsDisplay({
     <div className="p-3 md:p-4 shrink-0" style={{ background: 'var(--gradient-sunset)' }}>
       <StageGoals score={score} harvestedFruits={harvestedFruits} stage={stage} t={t} />
 
-      <div className="flex justify-around items-center flex-wrap gap-4">
+      <div className="flex justify-around items-center flex-wrap gap-2">
         {Object.entries(harvestedFruits).map(([fruit, count], index) => (
           <FruitCounter key={fruit} fruit={fruit} count={count} index={index} />
         ))}
