@@ -54,6 +54,7 @@ export function MasteryDisplay({ masteryLevels, masteryProgress, cumulativeStats
                   data-testid={`mastery-progress-${key}`}
                   className="h-2 w-full rounded bg-gray-200"
                   role="progressbar"
+                  aria-label={`${name}のレベル進捗`}
                   aria-valuenow={prog.current}
                   aria-valuemax={prog.nextThreshold}
                 >

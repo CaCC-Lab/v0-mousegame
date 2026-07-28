@@ -39,7 +39,13 @@ export function BadgeDisplay({
             >
               {current} / {target}
             </div>
-            <div className="mt-1 h-2 w-full rounded bg-gray-200" role="progressbar" aria-valuenow={current} aria-valuemax={target}>
+            <div
+              className="mt-1 h-2 w-full rounded bg-gray-200"
+              role="progressbar"
+              aria-label={`${def.name}の進捗`}
+              aria-valuenow={current}
+              aria-valuemax={target}
+            >
               <div
                 className="h-2 rounded bg-blue-500"
                 style={{
