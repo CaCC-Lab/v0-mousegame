@@ -22,7 +22,7 @@ itch.io の「Edit game」画面にそのまま貼り付けるための原稿。
 
 | 項目 | 入力値 | 理由 |
 | --- | --- | --- |
-| Viewport dimensions | 1280 × 960 | 縦にゲーム＋学習パネルが並ぶため、縦に余裕のある比率にする |
+| Viewport dimensions | 1280 × 800 | ゲーム開始に必要な部分は高さ736pxに収まる。800pxなら余裕があり、閲覧者の画面にも入りやすい |
 | Fullscreen button | ON | 小さい画面でも操作対象を大きく表示できる |
 | Enable scrollbars | ON | ゲーム下部の練習記録・図鑑まで到達できるようにする |
 | Mobile friendly | OFF | マウス操作の学習が目的のため |
@@ -169,7 +169,7 @@ node scripts/render-cover.mjs
 
 - [ ] `npm run build:itch` を実行し `dist-itch/fruit-harvest-itch.zip` を生成した
 - [ ] zip を「This file will be played in the browser」に設定した
-- [ ] Viewport を 1280 × 960、fullscreen を ON にした
+- [ ] Viewport を 1280 × 800、fullscreen を ON にした
 - [ ] 価格を「$0 or donate」にした
 - [ ] カバー画像（630×500）をアップロードした
 - [ ] スクリーンショットを 3 枚以上登録した
