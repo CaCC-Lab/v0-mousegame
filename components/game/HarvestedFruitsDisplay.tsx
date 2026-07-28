@@ -19,6 +19,14 @@ interface HarvestedFruitsDisplayProps {
   }
 }
 
+/**
+ * ステージ目標と収穫数の表示。
+ *
+ * プレイエリアの上に重ねるオーバーレイとして描画する。
+ * - 親側で pointer-events-none を付けて重ねる前提（下のフルーツをクリックできる）
+ * - 邪魔にならないよう、半透明の小さなチップ1行に収める
+ */
+
 function StageGoals({ score, harvestedFruits, stage, t }: HarvestedFruitsDisplayProps): React.ReactElement | null {
   if (!stage?.isHydrated || !stage?.currentStageInfo) {
     return null
@@ -28,21 +36,19 @@ function StageGoals({ score, harvestedFruits, stage, t }: HarvestedFruitsDisplay
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 10 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-2 text-center bg-white/20 backdrop-blur-sm px-4 py-2 rounded-[var(--radius-md)]"
+      className="flex items-center gap-2 bg-black/40 backdrop-blur-sm text-white px-3 py-1 rounded-[var(--radius-full)] text-xs font-bold whitespace-nowrap"
     >
-      <div className="text-sm font-bold text-white mb-2">{t.stageGoals}</div>
-      <div className="flex justify-center gap-6 flex-wrap">
-        <span className="text-white font-semibold">
-          {t.scoreText} {score} / {stage.currentStageInfo.targetScore}
+      <span>{t.stageGoals}</span>
+      <span>
+        {t.scoreText} {score} / {stage.currentStageInfo.targetScore}
+      </span>
+      {stage.currentStageInfo.targetFruits?.total && (
+        <span>
+          {t.fruitsText} {totalFruitsCollected} / {stage.currentStageInfo.targetFruits.total}
         </span>
-        {stage.currentStageInfo.targetFruits?.total && (
-          <span className="text-white font-semibold">
-            {t.fruitsText} {totalFruitsCollected} / {stage.currentStageInfo.targetFruits.total}
-          </span>
-        )}
-      </div>
+      )}
     </motion.div>
   )
 }
@@ -50,14 +56,13 @@ function StageGoals({ score, harvestedFruits, stage, t }: HarvestedFruitsDisplay
 function FruitCounter({ fruit, count, index }: { fruit: string; count: number; index: number }): React.ReactElement {
   return (
     <motion.div
-      initial={{ scale: 0, rotate: -180 }}
-      animate={{ scale: 1, rotate: 0 }}
-      transition={{ delay: index * 0.1, type: 'spring', bounce: 0.6 }}
-      className="flex items-center gap-2 bg-white/90 px-3 py-2 rounded-[var(--radius-full)] shadow-md hover-lift"
-      whileHover={{ scale: 1.1 }}
+      initial={{ scale: 0 }}
+      animate={{ scale: 1 }}
+      transition={{ delay: index * 0.05, type: 'spring', bounce: 0.5 }}
+      className="flex items-center gap-1 bg-white/85 backdrop-blur-sm px-2 py-0.5 rounded-[var(--radius-full)] shadow-sm"
     >
-      <span className="text-3xl">{FRUIT_EMOJI[fruit as FruitType['type']]}</span>
-      <span className="text-display text-2xl font-bold" style={{ color: 'var(--color-purple)' }}>
+      <span className="text-lg leading-none">{FRUIT_EMOJI[fruit as FruitType['type']]}</span>
+      <span className="text-display text-sm font-bold" style={{ color: 'var(--color-purple)' }}>
         {count}
       </span>
     </motion.div>
@@ -71,14 +76,11 @@ export function HarvestedFruitsDisplay({
   t
 }: HarvestedFruitsDisplayProps): React.ReactElement {
   return (
-    <div className="p-3 md:p-4 shrink-0" style={{ background: 'var(--gradient-sunset)' }}>
+    <div className="flex flex-wrap items-center justify-center gap-1.5 px-2">
       <StageGoals score={score} harvestedFruits={harvestedFruits} stage={stage} t={t} />
-
-      <div className="flex justify-around items-center flex-wrap gap-2">
-        {Object.entries(harvestedFruits).map(([fruit, count], index) => (
-          <FruitCounter key={fruit} fruit={fruit} count={count} index={index} />
-        ))}
-      </div>
+      {Object.entries(harvestedFruits).map(([fruit, count], index) => (
+        <FruitCounter key={fruit} fruit={fruit} count={count} index={index} />
+      ))}
     </div>
   )
 }

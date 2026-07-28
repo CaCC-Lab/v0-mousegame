@@ -69,6 +69,22 @@ test.describe('画面サイズごとの収まり', () => {
     expect(large!).toBeGreaterThan(small!)
   })
 
+  test('プレイ中はプレイエリアが画面の主役になる', async ({ page }) => {
+    // 「フルーツの表示エリアが狭すぎる」という不具合の再発防止。
+    // 旧レイアウトはHUDと設定の縦積みでプレイエリアが200pxしかなかった
+    await page.setViewportSize({ width: 1280, height: 720 })
+    await page.goto('/')
+    await waitForEntranceAnimation(page)
+
+    await page.getByRole('button', { name: /はじめる|Start/ }).click()
+    await page.waitForTimeout(600)
+
+    const height = await layoutHeight(page, 'game-area')
+    expect(height).not.toBeNull()
+    // 画面高さの7割以上をゲームに使う
+    expect(height!).toBeGreaterThanOrEqual(720 * 0.7)
+  })
+
   test('プレイエリアは狭い画面でも最低限の高さを保つ', async ({ page }) => {
     await page.setViewportSize({ width: 1024, height: 700 })
     await page.goto('/')
