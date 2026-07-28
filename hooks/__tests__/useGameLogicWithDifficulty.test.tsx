@@ -191,12 +191,21 @@ describe('useGameLogic with Difficulty Integration', () => {
         result.current.startGame()
       })
       
-      // いくつかフルーツを収集
+      // いくつかフルーツを収集する。
+      // フルーツは種類ごとに操作が決まっている（lib/gameLogic.ts の INTERACTION_RULES 参照）ため、
+      // 一律に'click'を送ると先頭3個にりんごが含まれない回だけスコアが0になり、テストが不安定になる
+      const ACTION_BY_FRUIT_TYPE = {
+        apple: 'click',
+        blueberry: 'doubleClick',
+        lemon: 'rightClick',
+        watermelon: 'drop',
+      } as const
+
       for (let i = 0; i < 3; i++) {
         const fruit = result.current.fruits[i]
         if (fruit) {
           act(() => {
-            result.current.handleFruitInteraction(fruit, 'click')
+            result.current.handleFruitInteraction(fruit, ACTION_BY_FRUIT_TYPE[fruit.type])
           })
         }
       }
