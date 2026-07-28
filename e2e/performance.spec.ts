@@ -56,19 +56,19 @@ test.describe('Performance Tests', () => {
 
   test('should handle multiple fruits without lag', async ({ page }) => {
     // Enable hard mode for moving fruits
-    const hardModeSwitch = page.getByRole('switch', { name: /むずかしいモード|Hard Mode/ })
+    const hardModeSwitch = page.getByRole('checkbox', { name: /うごくモード|Moving Mode/ })
     await hardModeSwitch.click()
     
     // Start the game
     await startGame(page)
     
     // Check if fruits are rendering smoothly
-    const gameArea = page.locator('.bg-green-300, .dark\\:bg-green-800')
-    const initialFruitCount = await gameArea.locator('button').count()
+    const gameArea = page.getByTestId('game-area')
+    const initialFruitCount = await gameArea.getByRole('button').count()
     
     // Wait and check fruit count remains stable
     await page.waitForTimeout(2000)
-    const afterFruitCount = await gameArea.locator('button').count()
+    const afterFruitCount = await gameArea.getByRole('button').count()
     
     expect(afterFruitCount).toBeGreaterThan(0)
     expect(Math.abs(afterFruitCount - initialFruitCount)).toBeLessThan(3)
@@ -114,20 +114,17 @@ test.describe('Performance Tests', () => {
   test('should handle rapid user interactions', async ({ page }) => {
     await startGame(page)
     
-    // Rapidly click multiple buttons
-    const buttons = [
-      page.getByRole('button', { name: /ちゅうだん|Pause/ }),
-      page.getByRole('button', { name: /リセット|Reset/ })
-    ]
-    
-    // Click buttons rapidly
-    for (let i = 0; i < 10; i++) {
-      await buttons[i % 2].click({ force: true })
-      await page.waitForTimeout(50)
+    // 一時停止と再開を素早く繰り返す。
+    // リセットを挟むと「ちゅうだん」が消えてしまい、
+    // 存在しないボタンを待ち続けることになるため交互操作にしている
+    for (let i = 0; i < 5; i++) {
+      await page.getByRole('button', { name: /ちゅうだん|Pause/ }).click()
+      await page.getByRole('button', { name: /さいかい|Resume/ }).click()
     }
-    
+
     // App should still be responsive
     await expect(page.getByRole('application')).toBeVisible()
+    await page.getByRole('button', { name: /リセット|Reset/ }).click()
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
   })
 
@@ -137,7 +134,7 @@ test.describe('Performance Tests', () => {
     
     page.on('response', response => {
       const url = response.url()
-      const timing = response.timing()
+      const timing = response.request().timing()
       if (timing) {
         resourceTimings[url] = timing.responseEnd - timing.requestStart
       }

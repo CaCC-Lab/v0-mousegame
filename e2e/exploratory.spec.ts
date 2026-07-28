@@ -4,8 +4,6 @@
  */
 import { test, expect, Page } from '@playwright/test'
 
-const BASE_URL = process.env.BASE_URL || 'http://localhost:3000'
-
 // ヘルパー: コンソールエラーを収集
 function collectConsoleErrors(page: Page): string[] {
   const errors: string[] = []
@@ -30,9 +28,12 @@ async function getFruits(page: Page) {
   return page.locator('[data-fruit-id]').all()
 }
 
+// 連打・モンキーテストを含むため、既定の30秒では足りない
+test.setTimeout(90_000)
+
 test.describe('探索的テスト: フルーツハーベストゲーム', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto(BASE_URL)
+    await page.goto('/')
     await page.waitForLoadState('networkidle')
   })
 
@@ -42,7 +43,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
     const errors = collectConsoleErrors(page)
 
     // ゲームタイトル表示
-    await expect(page.getByText(/Fruit Harvest Game/i)).toBeVisible()
+    await expect(page.getByRole('heading', { name: /フルーツハーベストゲーム|Fruit Harvest Game/i })).toBeVisible()
 
     // ゲーム開始ボタン
     const startBtn = page.getByRole('button', { name: /Start|はじめる/i })

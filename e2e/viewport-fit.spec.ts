@@ -29,6 +29,8 @@ async function layoutHeight(page: import('@playwright/test').Page, testId: strin
 
 /** ゲーム開始に必要な操作ボタンが表示領域に収まるべき画面サイズ */
 const SUPPORTED_VIEWPORTS = [
+  // Playwright の Desktop Chrome 既定サイズ。実機のノートPCでもよくある高さ
+  { name: 'Desktop Chrome 既定 (1280x720)', width: 1280, height: 720 },
   { name: 'itch.io 推奨 (1280x800)', width: 1280, height: 800 },
   { name: 'itch.io 旧推奨 (1280x960)', width: 1280, height: 960 },
   { name: 'ノートPC (1024x768)', width: 1024, height: 768 },
