@@ -1,0 +1,32 @@
+# Dependabot の設定
+# https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+#
+# 方針:
+#   - セキュリティ更新は受け取る（脆弱性の見落としを防ぐため）
+#   - 通常のバージョン更新の PR は作らない（レビュー対象を絞るため）
+#   - Next.js は 14 系を維持し、15 系以降への更新 PR は作らない
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+
+    # 通常のバージョン更新の PR を作らない設定。
+    # セキュリティ更新の PR はこの上限の対象外なので、引き続き作成される。
+    open-pull-requests-limit: 0
+
+    ignore:
+      # Next.js は 14 系（現在 14.2.35）を維持する。
+      # 15/16 系へのメジャーアップは App Router の破壊的変更への追従が必要で、
+      # 現状の残存 advisory（Image Optimizer の DoS、RSC のリクエストデシリアライズ DoS）は
+      # いずれも self-hosted のサーバー実行が前提のため、
+      # output: 'export' の静的サイトである本プロジェクトには該当しない。
+      #
+      # update-types ではなく versions で指定している点に注意:
+      # update-types はバージョン更新にしか効かず、セキュリティ更新には適用されない。
+      # 14 系のパッチ更新（14.2.36 など）は引き続き通知される。
+      - dependency-name: "next"
+        versions: [">=15.0.0"]
+      - dependency-name: "eslint-config-next"
+        versions: [">=15.0.0"]
