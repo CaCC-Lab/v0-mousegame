@@ -19,7 +19,12 @@ const customJestConfig = {
     '!**/*.d.ts',
     '!**/node_modules/**',
   ],
-  testPathIgnorePatterns: ['<rootDir>/node_modules/', '<rootDir>/.next/', '<rootDir>/e2e/'],
+  testPathIgnorePatterns: [
+    '<rootDir>/node_modules/',
+    '<rootDir>/.next/',
+    '<rootDir>/e2e/',
+    '<rootDir>/e2e-electron/',
+  ],
 }
 
 // createJestConfig is exported this way to ensure that next/jest can load the Next.js config which is async
