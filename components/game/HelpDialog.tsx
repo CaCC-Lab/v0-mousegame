@@ -12,25 +12,11 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
+import type { translations } from '@/lib/i18n/translations'
 
 interface HelpDialogProps {
-  t: {
-    howToPlay: string
-    helpTitle: string
-    helpDescription: string
-    fruitSection: string
-    apple: string
-    blueberry: string
-    lemon: string
-    watermelon: string
-    points: string
-    helpContent: {
-      apple: string
-      blueberry: string
-      lemon: string
-      watermelon: string
-    }
-  }
+  /** 現在の言語の翻訳データ（lib/i18n/translations.ts） */
+  t: typeof translations.ja
 }
 
 interface FruitHelpInfo {
@@ -41,15 +27,35 @@ interface FruitHelpInfo {
 }
 
 const FRUIT_HELP_DATA: FruitHelpInfo[] = [
-  { type: 'apple', emoji: '\ud83c\udf4e', color: 'red', points: 10 },
-  { type: 'blueberry', emoji: '\ud83e\uded0', color: 'blue', points: 20 },
-  { type: 'lemon', emoji: '\ud83c\udf4b', color: 'yellow', points: 15 },
-  { type: 'watermelon', emoji: '\ud83c\udf49', color: 'green', points: 25 },
+  { type: 'apple', emoji: '🍎', color: 'red', points: 10 },
+  { type: 'blueberry', emoji: '🫐', color: 'blue', points: 20 },
+  { type: 'lemon', emoji: '🍋', color: 'yellow', points: 15 },
+  { type: 'watermelon', emoji: '🍉', color: 'green', points: 25 },
 ]
+
+/** 説明文の一覧に並べるパワーアップの翻訳キー */
+const POWER_UP_KEYS = [
+  'powerUpSpeedBoost',
+  'powerUpScoreMultiplier',
+  'powerUpSlowMotion',
+  'powerUpMagnet',
+  'powerUpShield',
+  'powerUpTimeExtension',
+  'powerUpExtraFruits',
+  'powerUpFreezeTime',
+] as const
+
+/**
+ * 「🍎 りんご: 〜」「とまるモード: 〜」のような見出し部分を取り除く。
+ * 見出しはカードのタイトルとして別に表示するため、本文では重複させない。
+ */
+function stripLabel(text: string): string {
+  return text.replace(/^[^:]+:\s*/, '')
+}
 
 function FruitHelpCard({ info, t }: { info: FruitHelpInfo; t: HelpDialogProps['t'] }): React.ReactElement {
   const fruitName = t[info.type as keyof typeof t] as string
-  const helpText = (t.helpContent[info.type as keyof typeof t.helpContent] as string).replace(/^[^:]+:\s*/, '')
+  const helpText = stripLabel(t.helpContent[info.type as keyof typeof t.helpContent] as string)
 
   return (
     <motion.div
@@ -69,6 +75,17 @@ function FruitHelpCard({ info, t }: { info: FruitHelpInfo; t: HelpDialogProps['t
         {info.points} {t.points}
       </div>
     </motion.div>
+  )
+}
+
+function KeyboardRow({ keyLabel, description }: { keyLabel: string; description: string }): React.ReactElement {
+  return (
+    <div className="flex items-center gap-3 p-2 hover:bg-gray-100 rounded-[var(--radius-lg)]">
+      <kbd className="px-4 py-2 bg-white border-2 border-gray-300 rounded-[var(--radius-lg)] text-base font-mono shadow-sm shrink-0">
+        {keyLabel}
+      </kbd>
+      <span className="text-base">{description}</span>
+    </div>
   )
 }
 
@@ -93,6 +110,7 @@ export function HelpDialog({ t }: HelpDialogProps): React.ReactElement {
             <DialogDescription className="sr-only">{t.helpDescription}</DialogDescription>
           </DialogHeader>
           <div className="mt-6 text-left text-gray-700">
+            {/* フルーツの取り方 */}
             <h3 className="text-display text-2xl font-bold mb-4 text-center" style={{ color: 'var(--color-secondary)' }}>
               {t.fruitSection}
             </h3>
@@ -101,6 +119,58 @@ export function HelpDialog({ t }: HelpDialogProps): React.ReactElement {
                 <FruitHelpCard key={info.type} info={info} t={t} />
               ))}
             </div>
+
+            {/* ゲームモード */}
+            <section className="mb-6 p-4 bg-purple-50 rounded-[var(--radius-lg)] border-2 border-purple-200">
+              <h4 className="text-display font-bold text-lg text-purple-700 mb-3 text-center">
+                {t.modeSection}
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div className="p-3 bg-white rounded-[var(--radius-lg)]">
+                  <div className="font-semibold text-purple-600 mb-1">{t.easyMode}</div>
+                  <div className="text-sm">{stripLabel(t.helpContent.easyModeDesc)}</div>
+                </div>
+                <div className="p-3 bg-white rounded-[var(--radius-lg)]">
+                  <div className="font-semibold text-purple-600 mb-1">{t.hardModeTitle}</div>
+                  <div className="text-sm">{stripLabel(t.helpContent.hardModeDesc)}</div>
+                </div>
+              </div>
+            </section>
+
+            {/* 制限時間と目標 */}
+            <section className="mb-6 p-4 bg-orange-50 rounded-[var(--radius-lg)] border-2 border-orange-200">
+              <div className="text-center space-y-2">
+                <div className="text-lg">⏱️ {t.helpContent.timeLimit}</div>
+                <div className="text-lg font-semibold">🎯 {t.helpContent.goal}</div>
+              </div>
+            </section>
+
+            {/* キーボード操作 */}
+            <section className="mb-6 p-4 bg-gray-50 rounded-[var(--radius-lg)] border-2 border-gray-200">
+              <h4 className="text-display font-bold text-lg text-gray-700 mb-3 text-center">
+                {t.helpContent.keyboardTitle}
+              </h4>
+              <div className="space-y-3">
+                <KeyboardRow keyLabel="Space" description={stripLabel(t.helpContent.keyboardSpace)} />
+                <KeyboardRow keyLabel="↑↓←→" description={stripLabel(t.helpContent.keyboardArrow)} />
+                <KeyboardRow keyLabel="Enter" description={stripLabel(t.helpContent.keyboardEnter)} />
+              </div>
+            </section>
+
+            {/* パワーアップアイテム */}
+            <section className="p-4 bg-pink-50 rounded-[var(--radius-lg)] border-2 border-pink-200">
+              <h4 className="text-display font-bold text-lg text-pink-700 mb-3 text-center">
+                {t.helpContent.powerUpTitle}
+              </h4>
+              <p className="text-sm text-gray-600 mb-4 text-center">{t.helpContent.powerUpDesc}</p>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {POWER_UP_KEYS.map((key) => (
+                  <div key={key} className="p-3 bg-white rounded-[var(--radius-lg)]">
+                    <div className="text-base">{t.helpContent[key]}</div>
+                  </div>
+                ))}
+              </div>
+            </section>
           </div>
         </DialogContent>
       </Dialog>
