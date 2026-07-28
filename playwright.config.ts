@@ -16,6 +16,10 @@ export default defineConfig({
     baseURL: BASE_URL,
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
+    // アプリは navigator.language から表示言語を決める（hooks/useLanguage.ts）。
+    // 指定しないと en-US と判定されて英語表示になり、
+    // 日本語の文言を期待しているテストがすべて要素を見つけられなくなる
+    locale: 'ja-JP',
   },
 
   projects: [

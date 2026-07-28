@@ -3,6 +3,10 @@ import { test, expect } from '@playwright/test'
 test.describe('Fruit Harvest Game Flow', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
+    // Reactのハイドレーション完了を待つ。
+    // 待たずに操作するとイベントハンドラが未登録で反応せず、実行タイミング次第で落ちる
+    await page.waitForLoadState('networkidle')
+    await page.waitForTimeout(500)
   })
 
   test('should load the game page', async ({ page }) => {
@@ -10,7 +14,7 @@ test.describe('Fruit Harvest Game Flow', () => {
     await expect(page.getByRole('application', { name: 'フルーツハーベストゲーム' })).toBeVisible()
     
     // Check if score displays
-    await expect(page.getByText(/得点:|Score:/)).toBeVisible()
+    await expect(page.getByText('得点:', { exact: true })).toBeVisible()
     
     // Check if start button is visible
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
@@ -25,18 +29,18 @@ test.describe('Fruit Harvest Game Flow', () => {
     await expect(page.getByRole('button', { name: /ちゅうだん|Pause/ })).toBeVisible()
     
     // Check if fruits are visible in the game area
-    const gameArea = page.locator('.bg-green-300, .dark\\:bg-green-800')
+    const gameArea = page.getByTestId('game-area')
     await expect(gameArea).toBeVisible()
     
     // Check if at least one fruit is visible
-    await expect(gameArea.locator('button').first()).toBeVisible()
+    await expect(gameArea.getByRole('button').first()).toBeVisible()
     
     // Try to click a fruit
-    const firstFruit = gameArea.locator('button').first()
+    const firstFruit = gameArea.getByRole('button').first()
     await firstFruit.click()
     
     // Check if score changes (might be 0 if wrong interaction type)
-    await expect(page.getByText(/得点:|Score:/)).toBeVisible()
+    await expect(page.getByText('得点:', { exact: true })).toBeVisible()
   })
 
   test('should pause and resume the game', async ({ page }) => {
@@ -71,12 +75,12 @@ test.describe('Fruit Harvest Game Flow', () => {
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
     
     // Check if score is reset to 0
-    await expect(page.getByText(/得点:|Score:/).locator('..').getByText('0')).toBeVisible()
+    await expect(page.getByText('得点:', { exact: true }).locator('..').getByText('0').first()).toBeVisible()
   })
 
   test('should toggle hard mode', async ({ page }) => {
     // Find hard mode switch
-    const hardModeSwitch = page.getByRole('switch', { name: /むずかしいモード|Hard Mode/ })
+    const hardModeSwitch = page.getByRole('checkbox', { name: /うごくモード|Moving Mode/ })
     
     // Check initial state
     await expect(hardModeSwitch).not.toBeChecked()
@@ -97,12 +101,14 @@ test.describe('Fruit Harvest Game Flow', () => {
     await page.getByRole('button', { name: /あそびかた|How to Play/ }).click()
     
     // Check if help dialog appears
-    await expect(page.getByRole('dialog')).toBeVisible()
-    await expect(page.getByText(/フルーツハーベストゲームのあそびかた|How to Play Fruit Harvest Game/)).toBeVisible()
-    
+    const dialog = page.getByRole('dialog')
+    await expect(dialog).toBeVisible()
+    await expect(page.getByText(/フルーツあつめゲームのあそびかた|How to Play Fruit Collecting Game/)).toBeVisible()
+
     // Check if fruit instructions are visible
-    await expect(page.getByText(/りんご|Apple/)).toBeVisible()
-    await expect(page.getByText(/クリック|Click/)).toBeVisible()
+    // 同じ語が複数のカードに現れるため、ダイアログ内の先頭要素で確認する
+    await expect(dialog.getByText(/りんご|Apple/).first()).toBeVisible()
+    await expect(dialog.getByText(/クリック|Click/).first()).toBeVisible()
     
     // Close dialog
     await page.keyboard.press('Escape')
@@ -134,8 +140,8 @@ test.describe('Fruit Harvest Game Flow', () => {
     await page.getByRole('button', { name: /はじめる|Start/ }).click()
     
     // Try to score by clicking fruits
-    const gameArea = page.locator('.bg-green-300, .dark\\:bg-green-800')
-    const fruits = gameArea.locator('button')
+    const gameArea = page.getByTestId('game-area')
+    const fruits = gameArea.getByRole('button')
     
     // Click multiple fruits to try to score
     for (let i = 0; i < 3; i++) {

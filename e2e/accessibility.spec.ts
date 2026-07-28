@@ -26,25 +26,24 @@ test.describe('Accessibility Tests', () => {
     await expect(page.getByRole('button', { name: /リセット|Reset/ })).toBeVisible()
     
     // Check switches have labels
-    const hardModeSwitch = page.getByRole('switch', { name: /むずかしいモード|Hard Mode/ })
+    const hardModeSwitch = page.getByRole('checkbox', { name: /うごくモード|Moving Mode/ })
     await expect(hardModeSwitch).toBeVisible()
   })
 
   test('should be keyboard navigable', async ({ page }) => {
-    // Tab through interactive elements
-    await page.keyboard.press('Tab')
-    
-    // Check if start button is focused
     const startButton = page.getByRole('button', { name: /はじめる|Start/ })
-    await expect(startButton).toBeFocused()
-    
-    // Tab to next elements
-    await page.keyboard.press('Tab')
-    await page.keyboard.press('Tab')
-    await page.keyboard.press('Tab')
+
+    // Tabを押していけば「はじめる」に到達できること。
+    // 何回目で到達するかはDOM順に依存するため、回数は固定しない
+    let reached = false
+    for (let i = 0; i < 15 && !reached; i++) {
+      await page.keyboard.press('Tab')
+      reached = await startButton.evaluate((el) => el === document.activeElement)
+    }
+    expect(reached).toBe(true)
     
     // Check if switches can be toggled with keyboard
-    const hardModeSwitch = page.getByRole('switch', { name: /むずかしいモード|Hard Mode/ })
+    const hardModeSwitch = page.getByRole('checkbox', { name: /うごくモード|Moving Mode/ })
     await hardModeSwitch.focus()
     await page.keyboard.press('Space')
     await expect(hardModeSwitch).toBeChecked()
@@ -55,7 +54,7 @@ test.describe('Accessibility Tests', () => {
     await page.getByRole('button', { name: /あそびかた|How to Play/ }).click()
     
     // Check dialog has proper heading
-    const dialogHeading = page.getByRole('heading', { name: /フルーツハーベストゲームのあそびかた|How to Play Fruit Harvest Game/ })
+    const dialogHeading = page.getByRole('heading', { name: /フルーツあつめゲームのあそびかた|How to Play Fruit Collecting Game/ })
     await expect(dialogHeading).toBeVisible()
     
     // Close dialog
@@ -67,7 +66,7 @@ test.describe('Accessibility Tests', () => {
     // For now, we'll check that text is visible
     
     // Check light mode
-    await expect(page.locator('.text-xl.font-bold')).toBeVisible()
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
     
     // Run accessibility check
     await checkA11y(page, null, {
@@ -91,13 +90,18 @@ test.describe('Accessibility Tests', () => {
 
   test('should have accessible form controls', async ({ page }) => {
     // Check that all form controls have labels
-    const switches = page.getByRole('switch')
-    const switchCount = await switches.count()
-    
-    for (let i = 0; i < switchCount; i++) {
-      const switchElement = switches.nth(i)
-      const label = await switchElement.getAttribute('aria-label')
-      expect(label).toBeTruthy()
+    // チェックボックスは label 要素（htmlFor）で名前を与えているため、
+    // aria-label ではなくアクセシブルネームで確認する
+    const checkboxes = page.getByRole('checkbox')
+    const checkboxCount = await checkboxes.count()
+
+    for (let i = 0; i < checkboxCount; i++) {
+      const name = await checkboxes.nth(i).evaluate((el) => {
+        const id = el.getAttribute('id')
+        const label = id ? document.querySelector(`label[for="${id}"]`) : null
+        return el.getAttribute('aria-label') || label?.textContent?.trim() || ''
+      })
+      expect(name).toBeTruthy()
     }
     
     // Check buttons have accessible names
@@ -120,7 +124,6 @@ test.describe('Accessibility Tests', () => {
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
     
     // Check if game area is distinguishable
-    const gameArea = page.locator('.bg-green-300')
-    await expect(gameArea).toBeVisible()
+    await expect(page.getByTestId('game-area')).toBeVisible()
   })
 })
