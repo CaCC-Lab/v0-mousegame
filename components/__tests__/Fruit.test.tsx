@@ -129,18 +129,7 @@ describe('Fruit', () => {
     expect(screen.getByText('🍉')).toBeInTheDocument()
   })
 
-  describe('Touch events', () => {
-    it('renders fruit with touch-friendly interactions', () => {
-      render(<Fruit fruit={mockFruit} {...mockHandlers} />)
-      
-      const fruitElement = screen.getByText('🍎')
-      
-      // Fruitコンポーネントはタッチイベントを内部でハンドリングしている
-      // 通常のクリックイベントで動作確認
-      fireEvent.click(fruitElement)
-      expect(mockHandlers.onClick).toHaveBeenCalled()
-    })
-
+  describe('フルーツ種類ごとの操作', () => {
     it('handles different fruit types with appropriate interactions', () => {
       const { rerender } = render(
         <Fruit fruit={mockFruit} {...mockHandlers} />

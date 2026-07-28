@@ -35,10 +35,9 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-    {
-      name: 'Mobile Chrome',
-      use: { ...devices['Pixel 5'] },
-    },
+    // Mobile Chrome プロジェクトは持たない。
+    // このゲームはマウス操作の練習ツールで、タッチのみの端末は対象外
+    // （マウスなし端末には TouchDeviceNotice が案内を表示する）
   ],
 
   webServer: {
