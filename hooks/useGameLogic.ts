@@ -109,6 +109,21 @@ export function useGameLogic() {
     setGameState(prevState => prevState === 'playing' ? 'paused' : 'playing')
   }, [])
 
+  // タブが隠れている間はゲームを止める。
+  // 子どもが席を離れている間もタイマーが減り続けると、
+  // 戻ったときには時間切れでスコアが不当に下がってしまう。
+  // 戻ったときの自動再開はしない（不意にゲームが動き出さないよう、再開は本人の操作に任せる）
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        setGameState(prevState => (prevState === 'playing' ? 'paused' : prevState))
+      }
+    }
+
+    document.addEventListener('visibilitychange', handleVisibilityChange)
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange)
+  }, [])
+
   const resetGame = useCallback(() => {
     setGameState('idle')
     setScore(0)
