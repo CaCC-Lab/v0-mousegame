@@ -43,7 +43,7 @@
       <td align="center">
         <img src="docs/screenshots/01-idle-screen.png" width="300" alt="ホーム画面"><br>
         <strong>ホーム画面</strong><br>
-        <em>きょうのれんしゅう・熟達レベル・バッジ進捗を一覧表示</em>
+        <em>プレイエリアが画面の主役。操作と設定は下部にまとまる</em>
       </td>
       <td align="center">
         <img src="docs/screenshots/02-playing.png" width="300" alt="プレイ中"><br>
@@ -153,6 +153,16 @@
 - 最初は「りんご」だけが登場し、クリックの練習から始められます
 - 慣れてきたら他のフルーツも登場し、段階的に難しい操作を学べます
 - 時間制限があるので、集中力とマウス操作の正確性が身につきます
+
+## 📷 スクリーンショットの撮り直し
+
+README とストアページ用の画像は、配布物と同じビルドから自動で撮影できます。
+
+```bash
+npm run build:itch
+node scripts/capture-screenshots.mjs   # docs/screenshots/ に7枚
+node scripts/render-cover.mjs          # docs/itch-io/cover.png (630x500)
+```
 
 ## 🎨 素材のクレジット
 
