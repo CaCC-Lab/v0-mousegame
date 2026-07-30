@@ -24,6 +24,7 @@ const customJestConfig = {
     '<rootDir>/.next/',
     '<rootDir>/e2e/',
     '<rootDir>/e2e-electron/',
+    '<rootDir>/e2e-perf/',
   ],
 }
 

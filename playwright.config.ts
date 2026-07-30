@@ -9,8 +9,14 @@ export default defineConfig({
   testDir: './e2e',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
-  retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
+  // フルーツのランダム配置・出現とタイマー駆動のため、
+  // 描画タイミング次第で稀に取りこぼす。1回だけ再試行する
+  // （繰り返し落ちるものは実際の不具合として検出できる）
+  retries: process.env.CI ? 2 : 1,
+  // 並列度を上げすぎると開発サーバーの応答が遅れ、
+  // 描画待ちに依存するテスト（axeの検査、ドラッグ操作）が不安定になる。
+  // CPU数任せ（12並列）では毎回どれかが落ちていたため上限を設ける
+  workers: process.env.CI ? 1 : 4,
   reporter: 'html',
   use: {
     baseURL: BASE_URL,

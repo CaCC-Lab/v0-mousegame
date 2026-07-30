@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test'
-import { startGame, clickFruit } from './helpers/test-utils'
+import { startGame, clickFruit } from '../e2e/helpers/test-utils'
 
 test.describe('Performance Tests', () => {
   test.beforeEach(async ({ page }) => {

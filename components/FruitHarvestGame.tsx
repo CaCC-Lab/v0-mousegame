@@ -1,7 +1,7 @@
 "use client"
 
 import React, { useState, useRef, useCallback, useEffect } from 'react'
-import { motion } from 'framer-motion'
+import { motion, MotionConfig } from 'framer-motion'
 import { useGameLogic } from '@/hooks/useGameLogic'
 import { useKeyboardControls } from '@/hooks/useKeyboardControls'
 import { useLanguage } from '@/hooks/useLanguage'
@@ -337,6 +337,10 @@ export function FruitHarvestGame(): React.ReactElement {
   }, [])
 
   return (
+    // reducedMotion="user": OSの「視差効果を減らす」設定を尊重し、
+    // 拡大縮小や移動のアニメーションを止める（globals.cssはCSSアニメーションのみ対象で、
+    // framer-motionがJSで書き込むtransformには効かないため、ここで面倒を見る）
+    <MotionConfig reducedMotion="user">
     <div
       ref={gameContainerRef as React.RefObject<HTMLDivElement>}
       className="min-h-screen p-2 md:p-3 bg-gradient-to-br from-[var(--color-cream)] via-[var(--color-cream-dark)] to-[var(--color-sky-light)]"
@@ -513,5 +517,6 @@ export function FruitHarvestGame(): React.ReactElement {
         t={t}
       />
     </div>
+    </MotionConfig>
   )
 }
