@@ -2,19 +2,12 @@
 
 import React from 'react'
 import type { CumulativeOperationStats, MasteryLevel, OperationMasteryData } from '@/types/gamification'
-import { MASTERY_THRESHOLDS } from '@/types/gamification'
+import { MASTERY_THRESHOLDS, OPERATION_LABELS } from '@/types/gamification'
 import type { InteractionType } from '@/types/game'
 
 const MASTERY_LABELS: Record<MasteryLevel, string> = Object.fromEntries(
   MASTERY_THRESHOLDS.map(t => [t.level, t.label])
 ) as Record<MasteryLevel, string>
-
-const OPERATIONS: { key: InteractionType; icon: string; name: string }[] = [
-  { key: 'click', icon: '🖱️', name: 'クリック' },
-  { key: 'doubleClick', icon: '⚡', name: 'ダブルクリック' },
-  { key: 'rightClick', icon: '🎯', name: '右クリック' },
-  { key: 'drop', icon: '🧲', name: 'ドラッグ' },
-]
 
 export interface MasteryDisplayProps {
   masteryLevels: OperationMasteryData
@@ -27,7 +20,7 @@ export interface MasteryDisplayProps {
 export function MasteryDisplay({ masteryLevels, masteryProgress, cumulativeStats }: MasteryDisplayProps): React.ReactElement {
   return (
     <div data-testid="mastery-display" className="grid gap-3">
-      {OPERATIONS.map(({ key, icon, name }) => {
+      {OPERATION_LABELS.map(({ key, icon, name }) => {
         const level = masteryLevels[key]
         const label = MASTERY_LABELS[level]
         const prog = masteryProgress[key]

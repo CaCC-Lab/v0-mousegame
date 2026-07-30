@@ -2,13 +2,7 @@
 
 import React from 'react'
 import type { DailyGoal } from '@/types/gamification'
-
-const OPERATIONS = [
-  { key: 'click' as const, icon: '🖱️', name: 'クリック' },
-  { key: 'doubleClick' as const, icon: '⚡', name: 'ダブルクリック' },
-  { key: 'rightClick' as const, icon: '🎯', name: '右クリック' },
-  { key: 'drop' as const, icon: '🧲', name: 'ドラッグ' },
-]
+import { OPERATION_LABELS } from '@/types/gamification'
 
 export interface DailyPracticeCardProps {
   todayGoals: DailyGoal
@@ -31,7 +25,7 @@ export function DailyPracticeCard({ todayGoals, isGoalComplete, practiceStreak }
         {isGoalComplete ? 'クリア！' : 'がんばろう！'}
       </div>
       <ul className="space-y-2">
-        {OPERATIONS.map(({ key, icon, name }) => (
+        {OPERATION_LABELS.map(({ key, icon, name }) => (
           <li
             key={key}
             data-testid={`daily-goal-${key}`}

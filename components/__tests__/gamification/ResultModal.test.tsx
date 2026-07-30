@@ -71,4 +71,79 @@ describe('ResultModal', () => {
     fireEvent.click(screen.getByRole('button', { name: /とじる/ }))
     expect(onClose).toHaveBeenCalled()
   })
+
+  describe('子どもに伝わる表示', () => {
+    it('操作名が日本語で表示される', () => {
+      const session = createEmptySessionStats()
+      render(
+        <ResultModal open sessionStats={session} starRating={1} lastSessionStats={null} onClose={() => {}} />
+      )
+
+      // click / doubleClick のような英語の識別子をそのまま見せない
+      expect(screen.getByText('クリック')).toBeInTheDocument()
+      expect(screen.getByText('ダブルクリック')).toBeInTheDocument()
+      expect(screen.getByText('右クリック')).toBeInTheDocument()
+      expect(screen.getByText('ドラッグ')).toBeInTheDocument()
+      expect(screen.queryByText(/doubleClick|rightClick/)).not.toBeInTheDocument()
+    })
+
+    it('成功回数に単位がつく', () => {
+      const session = createEmptySessionStats()
+      session.click.success = 5
+      render(
+        <ResultModal open sessionStats={session} starRating={1} lastSessionStats={null} onClose={() => {}} />
+      )
+
+      expect(screen.getByTestId('success-click')).toHaveTextContent('5かい')
+    })
+
+    it('前回比較は矢印だけでなく言葉でも伝える', () => {
+      const prev = createEmptySessionStats()
+      prev.click.success = 1
+      prev.doubleClick.success = 5
+      const cur = createEmptySessionStats()
+      cur.click.success = 4
+      cur.doubleClick.success = 2
+
+      render(
+        <ResultModal open sessionStats={cur} starRating={1} lastSessionStats={prev} onClose={() => {}} />
+      )
+
+      expect(screen.getByTestId('delta-click')).toHaveTextContent('ふえた')
+      expect(screen.getByTestId('delta-doubleClick')).toHaveTextContent('へった')
+      expect(screen.getByTestId('delta-rightClick')).toHaveTextContent('おなじ')
+    })
+
+    it('初回プレイでは前回比較を出さない', () => {
+      // 比べる相手がいないのに「おなじ」と出ると誤解を生む
+      render(
+        <ResultModal
+          open
+          sessionStats={createEmptySessionStats()}
+          starRating={1}
+          lastSessionStats={null}
+          onClose={() => {}}
+        />
+      )
+
+      expect(screen.queryByTestId('delta-click')).not.toBeInTheDocument()
+    })
+
+    it('星は獲得数にかかわらず3つ分の枠を見せる', () => {
+      render(
+        <ResultModal open sessionStats={base} starRating={1} lastSessionStats={null} onClose={() => {}} />
+      )
+
+      const stars = screen.getByTestId('star-rating-display').textContent ?? ''
+      expect(stars).toBe('★☆☆')
+    })
+
+    it('星0でも枠は3つ表示する', () => {
+      render(
+        <ResultModal open sessionStats={base} starRating={0} lastSessionStats={null} onClose={() => {}} />
+      )
+
+      expect(screen.getByTestId('star-rating-display')).toHaveTextContent('☆☆☆')
+    })
+  })
 })

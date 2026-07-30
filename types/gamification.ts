@@ -145,3 +145,17 @@ export interface DailyPracticeData {
 
 export const DAILY_PRACTICE_STORAGE_KEY = 'dailyPracticeData'
 export const DAILY_PRACTICE_VERSION = 1
+
+/**
+ * 4つのマウス操作の表示用ラベル。
+ *
+ * click / doubleClick のような識別子は画面に出さない。
+ * 小学生が読むので、名前は日本語、アイコンは一目で区別できるものにする。
+ * 熟達レベル・きょうのれんしゅう・結果画面で共通して使う。
+ */
+export const OPERATION_LABELS: { key: InteractionType; icon: string; name: string }[] = [
+  { key: 'click', icon: '🖱️', name: 'クリック' },
+  { key: 'doubleClick', icon: '⚡', name: 'ダブルクリック' },
+  { key: 'rightClick', icon: '🎯', name: '右クリック' },
+  { key: 'drop', icon: '🧲', name: 'ドラッグ' },
+]
