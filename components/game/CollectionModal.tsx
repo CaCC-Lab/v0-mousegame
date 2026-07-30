@@ -1,5 +1,6 @@
 'use client'
 
+import { FruitSprite } from './FruitSprite'
 import React, { useState } from 'react'
 import { BADGE_DEFINITIONS } from '@/types/gamification'
 import type { BadgeType, CumulativeOperationStats, DateString, OperationMasteryData } from '@/types/gamification'
@@ -11,10 +12,10 @@ type MasteryProgress = {
 }
 
 const FRUITS = [
-  { key: 'apple' as const, name: 'りんご', emoji: '🍎' },
-  { key: 'blueberry' as const, name: 'ブルーベリー', emoji: '🫐' },
-  { key: 'lemon' as const, name: 'レモン', emoji: '🍋' },
-  { key: 'watermelon' as const, name: 'スイカ', emoji: '🍉' },
+  { key: 'apple' as const, name: 'りんご' },
+  { key: 'blueberry' as const, name: 'ブルーベリー' },
+  { key: 'lemon' as const, name: 'レモン' },
+  { key: 'watermelon' as const, name: 'スイカ' },
 ] as const
 
 const OPERATIONS: { key: InteractionType; name: string }[] = [
@@ -99,7 +100,7 @@ export function CollectionModal({
           <div data-testid="collection-panel-fruits" role="tabpanel" className="space-y-3">
             {FRUITS.map(f => (
               <div key={f.key} data-testid={`collection-fruit-${f.key}`} data-harvest-count={resolvedFruits[f.key]} className="flex items-center gap-3 p-3 rounded border">
-                <span data-testid={`collection-fruit-emoji-${f.key}`} className="text-3xl">{f.emoji}</span>
+                <span data-testid={`collection-fruit-emoji-${f.key}`}><FruitSprite type={f.key} size={32} decorative /></span>
                 <span data-testid={`collection-fruit-name-${f.key}`} className="font-semibold">{f.name}</span>
                 <span data-testid={`collection-fruit-count-${f.key}`} className="ml-auto text-lg font-bold">{resolvedFruits[f.key]}</span>
               </div>

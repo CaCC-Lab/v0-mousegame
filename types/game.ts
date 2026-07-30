@@ -42,11 +42,16 @@ export interface GameConfig {
   gameDuration: 180 // seconds
 }
 
-export const FRUIT_EMOJI: Record<FruitType, string> = {
-  apple: '🍎',
-  blueberry: '🫐',
-  lemon: '🍋',
-  watermelon: '🍉',
+/**
+ * 画像の代替テキストや読み上げに使うフルーツの日本語名。
+ * フルーツの見た目は絵文字ではなく public/sprites/ のスプライト画像
+ * （components/game/FruitSprite.tsx）で描画する。
+ */
+export const FRUIT_NAME: Record<FruitType, string> = {
+  apple: 'りんご',
+  blueberry: 'ブルーベリー',
+  lemon: 'レモン',
+  watermelon: 'スイカ',
 }
 
 export const GAME_SCORES: GameScore = {

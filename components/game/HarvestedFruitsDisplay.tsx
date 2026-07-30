@@ -2,7 +2,8 @@
 
 import React from 'react'
 import { motion } from 'framer-motion'
-import { Fruit as FruitType, HarvestedFruits, FRUIT_EMOJI } from '@/types/game'
+import { Fruit as FruitType, HarvestedFruits } from '@/types/game'
+import { FruitSprite } from './FruitSprite'
 import { Stage } from '@/types/stage'
 
 interface HarvestedFruitsDisplayProps {
@@ -61,7 +62,7 @@ function FruitCounter({ fruit, count, index }: { fruit: string; count: number; i
       transition={{ delay: index * 0.05, type: 'spring', bounce: 0.5 }}
       className="flex items-center gap-1 bg-white/85 backdrop-blur-sm px-2 py-0.5 rounded-[var(--radius-full)] shadow-sm"
     >
-      <span className="text-lg leading-none">{FRUIT_EMOJI[fruit as FruitType['type']]}</span>
+      <FruitSprite type={fruit as FruitType['type']} size={18} />
       <span className="text-display text-sm font-bold" style={{ color: 'var(--color-purple)' }}>
         {count}
       </span>

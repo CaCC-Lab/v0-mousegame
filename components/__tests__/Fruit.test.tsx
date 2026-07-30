@@ -28,10 +28,14 @@ describe('Fruit', () => {
     jest.clearAllMocks()
   })
 
-  it('renders fruit with correct emoji', () => {
-    render(<Fruit fruit={mockFruit} {...mockHandlers} />)
-    
-    expect(screen.getByText('🍎')).toBeInTheDocument()
+  /** スプライト画像を種類で取得する（altは装飾用に空なのでsrcで判定） */
+  const spriteOf = (container: HTMLElement, type: string) =>
+    container.querySelector(`img[src*="${type}"]`)
+
+  it('renders fruit with correct sprite', () => {
+    const { container } = render(<Fruit fruit={mockFruit} {...mockHandlers} />)
+
+    expect(spriteOf(container, 'apple')).toBeInTheDocument()
   })
 
   it('applies correct size class', () => {
@@ -69,21 +73,21 @@ describe('Fruit', () => {
   it('handles click event', () => {
     render(<Fruit fruit={mockFruit} {...mockHandlers} />)
     
-    fireEvent.click(screen.getByText('🍎'))
+    fireEvent.click(screen.getByRole('button'))
     expect(mockHandlers.onClick).toHaveBeenCalledTimes(1)
   })
 
   it('handles double click event', () => {
     render(<Fruit fruit={mockFruit} {...mockHandlers} />)
     
-    fireEvent.doubleClick(screen.getByText('🍎'))
+    fireEvent.doubleClick(screen.getByRole('button'))
     expect(mockHandlers.onDoubleClick).toHaveBeenCalledTimes(1)
   })
 
   it('handles mouse down event', () => {
     render(<Fruit fruit={mockFruit} {...mockHandlers} />)
     
-    fireEvent.mouseDown(screen.getByText('🍎'))
+    fireEvent.mouseDown(screen.getByRole('button'))
     expect(mockHandlers.onMouseDown).toHaveBeenCalledWith(
       expect.objectContaining({
         type: 'mousedown'
@@ -105,28 +109,28 @@ describe('Fruit', () => {
     expect(container.innerHTML).toBe(firstRender)
   })
 
-  it('renders different emojis for different fruit types', () => {
-    const { rerender } = render(
+  it('renders different sprites for different fruit types', () => {
+    const { container, rerender } = render(
       <Fruit fruit={mockFruit} {...mockHandlers} />
     )
-    
-    expect(screen.getByText('🍎')).toBeInTheDocument()
+
+    expect(spriteOf(container, 'apple')).toBeInTheDocument()
 
     // IDを変更して再レンダリングを強制
     rerender(
       <Fruit fruit={{ ...mockFruit, id: 2, type: 'blueberry' }} {...mockHandlers} />
     )
-    expect(screen.getByText('🫐')).toBeInTheDocument()
+    expect(spriteOf(container, 'blueberry')).toBeInTheDocument()
 
     rerender(
       <Fruit fruit={{ ...mockFruit, id: 3, type: 'lemon' }} {...mockHandlers} />
     )
-    expect(screen.getByText('🍋')).toBeInTheDocument()
+    expect(spriteOf(container, 'lemon')).toBeInTheDocument()
 
     rerender(
       <Fruit fruit={{ ...mockFruit, id: 4, type: 'watermelon' }} {...mockHandlers} />
     )
-    expect(screen.getByText('🍉')).toBeInTheDocument()
+    expect(spriteOf(container, 'watermelon')).toBeInTheDocument()
   })
 
   describe('フルーツ種類ごとの操作', () => {
@@ -136,28 +140,28 @@ describe('Fruit', () => {
       )
       
       // りんご - 通常のクリック
-      fireEvent.click(screen.getByText('🍎'))
+      fireEvent.click(screen.getByRole('button'))
       expect(mockHandlers.onClick).toHaveBeenCalled()
       
       // ブルーベリー - ダブルクリック
       rerender(
         <Fruit fruit={{ ...mockFruit, id: 2, type: 'blueberry' }} {...mockHandlers} />
       )
-      fireEvent.doubleClick(screen.getByText('🫐'))
+      fireEvent.doubleClick(screen.getByRole('button'))
       expect(mockHandlers.onDoubleClick).toHaveBeenCalled()
       
       // レモン - マウスダウン（長押しシミュレート）
       rerender(
         <Fruit fruit={{ ...mockFruit, id: 3, type: 'lemon' }} {...mockHandlers} />
       )
-      fireEvent.mouseDown(screen.getByText('🍋'))
+      fireEvent.mouseDown(screen.getByRole('button'))
       expect(mockHandlers.onMouseDown).toHaveBeenCalled()
       
       // スイカ - マウスダウン（ドラッグ開始）
       rerender(
         <Fruit fruit={{ ...mockFruit, id: 4, type: 'watermelon' }} {...mockHandlers} />
       )
-      fireEvent.mouseDown(screen.getByText('🍉'))
+      fireEvent.mouseDown(screen.getByRole('button'))
       expect(mockHandlers.onMouseDown).toHaveBeenCalled()
     })
   })
@@ -172,14 +176,12 @@ describe('Fruit', () => {
     // キーボードとスクリーンリーダーから操作できること
     expect(rootElement).toHaveAttribute('role', 'button')
     expect(rootElement).toHaveAttribute('tabindex', '0')
-    expect(rootElement).toHaveAttribute(
-      'aria-label',
-      `${mockFruit.type} fruit, size ${mockFruit.size}`
-    )
+    // 支援技術には日本語の名前が伝わること
+    expect(rootElement.getAttribute('aria-label')).toContain('りんご')
 
-    // The emoji should be inside a nested div
-    const fruitElement = screen.getByText('🍎')
-    expect(fruitElement.tagName).toBe('DIV')
+    // スプライト画像は装飾扱い（ルートのaria-labelと二重に読ませない）
+    const sprite = spriteOf(container, 'apple')
+    expect(sprite).toHaveAttribute('alt', '')
   })
 
   it('updates position when fruit moves', () => {

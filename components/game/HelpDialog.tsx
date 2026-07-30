@@ -13,6 +13,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import type { translations } from '@/lib/i18n/translations'
+import type { Fruit as FruitType } from '@/types/game'
+import { FruitSprite } from './FruitSprite'
 
 interface HelpDialogProps {
   /** 現在の言語の翻訳データ（lib/i18n/translations.ts） */
@@ -20,8 +22,7 @@ interface HelpDialogProps {
 }
 
 interface FruitHelpInfo {
-  type: string
-  emoji: string
+  type: FruitType['type']
   points: number
   /**
    * Tailwindはソース中に現れる完全なクラス名しか拾わないため、
@@ -36,7 +37,6 @@ interface FruitHelpInfo {
 const FRUIT_HELP_DATA: FruitHelpInfo[] = [
   {
     type: 'apple',
-    emoji: '🍎',
     points: 10,
     cardClass: 'bg-red-50 border-red-200 hover:border-red-400',
     nameClass: 'text-red-700',
@@ -44,7 +44,6 @@ const FRUIT_HELP_DATA: FruitHelpInfo[] = [
   },
   {
     type: 'blueberry',
-    emoji: '🫐',
     points: 20,
     cardClass: 'bg-blue-50 border-blue-200 hover:border-blue-400',
     nameClass: 'text-blue-700',
@@ -52,7 +51,6 @@ const FRUIT_HELP_DATA: FruitHelpInfo[] = [
   },
   {
     type: 'lemon',
-    emoji: '🍋',
     points: 15,
     cardClass: 'bg-yellow-50 border-yellow-200 hover:border-yellow-400',
     nameClass: 'text-yellow-700',
@@ -60,7 +58,6 @@ const FRUIT_HELP_DATA: FruitHelpInfo[] = [
   },
   {
     type: 'watermelon',
-    emoji: '🍉',
     points: 25,
     cardClass: 'bg-green-50 border-green-200 hover:border-green-400',
     nameClass: 'text-green-700',
@@ -98,7 +95,7 @@ function FruitHelpCard({ info, t }: { info: FruitHelpInfo; t: HelpDialogProps['t
       whileHover={{ scale: 1.05 }}
     >
       <div className="flex items-center mb-2">
-        <span className="text-4xl mr-3">{info.emoji}</span>
+        <FruitSprite type={info.type} size={40} className="mr-3" decorative />
         <span className={`text-display text-xl font-bold ${info.nameClass}`}>
           {fruitName}
         </span>

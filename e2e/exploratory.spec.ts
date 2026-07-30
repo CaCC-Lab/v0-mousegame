@@ -23,6 +23,12 @@ async function startGame(page: Page) {
   }
 }
 
+// ヘルパー: 種類ごとのフルーツ要素を取得する
+// フルーツはスプライト画像で描画されるため、画像から操作対象のラッパーを辿る
+function fruitsOfType(page: Page, type: 'apple' | 'blueberry' | 'lemon' | 'watermelon') {
+  return page.locator(`[data-testid="game-area"] [role="button"]:has(img[src*="${type}"])`)
+}
+
 // ヘルパー: ゲームエリア内のフルーツ要素を取得
 async function getFruits(page: Page) {
   return page.locator('[data-fruit-id]').all()
@@ -169,7 +175,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
     await page.waitForTimeout(1000)
 
     const gameArea = page.getByTestId('game-area')
-    const apples = gameArea.locator('text=🍎')
+    const apples = fruitsOfType(page, 'apple')
 
     const count = await apples.count()
     for (let i = 0; i < Math.min(count, 5); i++) {
@@ -191,21 +197,21 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
     const gameArea = page.getByTestId('game-area')
 
     // 単クリック（失敗のはず）
-    const blueberry1 = gameArea.locator('text=🫐').first()
+    const blueberry1 = fruitsOfType(page, 'blueberry').first()
     if (await blueberry1.isVisible({ timeout: 1000 }).catch(() => false)) {
       await blueberry1.click({ force: true })
       await page.waitForTimeout(500)
     }
 
     // ダブルクリック（成功のはず）
-    const blueberry2 = gameArea.locator('text=🫐').first()
+    const blueberry2 = fruitsOfType(page, 'blueberry').first()
     if (await blueberry2.isVisible({ timeout: 1000 }).catch(() => false)) {
       await blueberry2.dblclick({ force: true })
       await page.waitForTimeout(500)
     }
 
     // 3連打
-    const blueberry3 = gameArea.locator('text=🫐').first()
+    const blueberry3 = fruitsOfType(page, 'blueberry').first()
     if (await blueberry3.isVisible({ timeout: 1000 }).catch(() => false)) {
       await blueberry3.click({ force: true })
       await blueberry3.click({ force: true })
@@ -225,14 +231,14 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
     const gameArea = page.getByTestId('game-area')
 
     // 左クリック（失敗のはず）
-    const lemon1 = gameArea.locator('text=🍋').first()
+    const lemon1 = fruitsOfType(page, 'lemon').first()
     if (await lemon1.isVisible({ timeout: 1000 }).catch(() => false)) {
       await lemon1.click({ force: true })
       await page.waitForTimeout(300)
     }
 
     // 右クリック（成功のはず）
-    const lemon2 = gameArea.locator('text=🍋').first()
+    const lemon2 = fruitsOfType(page, 'lemon').first()
     if (await lemon2.isVisible({ timeout: 1000 }).catch(() => false)) {
       await lemon2.click({ button: 'right', force: true })
       await page.waitForTimeout(300)
@@ -250,7 +256,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
     await page.waitForTimeout(1000)
 
     const gameArea = page.getByTestId('game-area')
-    const watermelon = gameArea.locator('text=🍉').first()
+    const watermelon = fruitsOfType(page, 'watermelon').first()
 
     if (await watermelon.isVisible({ timeout: 2000 }).catch(() => false)) {
       const wmBox = await watermelon.boundingBox()
@@ -265,7 +271,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
         await page.waitForTimeout(500)
 
         // エリア外で離す
-        const wm2 = gameArea.locator('text=🍉').first()
+        const wm2 = fruitsOfType(page, 'watermelon').first()
         if (await wm2.isVisible({ timeout: 1000 }).catch(() => false)) {
           const wm2Box = await wm2.boundingBox()
           if (wm2Box) {
@@ -318,7 +324,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
 
     for (let i = 0; i < 20; i++) {
       // りんごをクリック
-      const apple = gameArea.locator('text=🍎').first()
+      const apple = fruitsOfType(page, 'apple').first()
       if (await apple.isVisible({ timeout: 300 }).catch(() => false)) {
         try {
           await apple.click({ timeout: 300 })
@@ -358,7 +364,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
     // 残り数秒で連打
     const gameArea = page.getByTestId('game-area')
     for (let i = 0; i < 30; i++) {
-      const apple = gameArea.locator('text=🍎').first()
+      const apple = fruitsOfType(page, 'apple').first()
       if (await apple.isVisible({ timeout: 100 }).catch(() => false)) {
         await apple.click({ force: true }).catch(() => {})
       }
@@ -457,7 +463,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
       await page.setViewportSize({ width: 320, height: 568 }) // iPhone SE
       await page.waitForTimeout(200)
 
-      const apple = page.getByTestId('game-area').locator('text=🍎').first()
+      const apple = fruitsOfType(page, 'apple').first()
       if (await apple.isVisible({ timeout: 300 }).catch(() => false)) {
         // 狭い幅ではドロップエリアに遮られる個体があり、タイムアウトなしの
         // クリックは無期限に再試行してテストごと固まる。
@@ -486,7 +492,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
     // りんごを何回かクリック
     const gameArea = page.getByTestId('game-area')
     for (let i = 0; i < 3; i++) {
-      const apple = gameArea.locator('text=🍎').first()
+      const apple = fruitsOfType(page, 'apple').first()
       if (await apple.isVisible({ timeout: 500 }).catch(() => false)) {
         await apple.click().catch(() => {})
         await page.waitForTimeout(300)
