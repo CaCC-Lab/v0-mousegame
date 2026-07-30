@@ -154,6 +154,14 @@
 - 慣れてきたら他のフルーツも登場し、段階的に難しい操作を学べます
 - 時間制限があるので、集中力とマウス操作の正確性が身につきます
 
+## 🎨 素材のクレジット
+
+フルーツの絵柄には [Noto Color Emoji](https://fonts.google.com/noto/specimen/Noto+Color+Emoji)（Copyright 2022 Google Inc.／SIL Open Font License 1.1）を、
+このゲームで使う4文字だけサブセット化して同梱しています（11MB → 7.8KB）。
+
+絵文字はOSごとに絵柄が異なるため、同梱することでどの環境でも同じフルーツが表示されます。
+ライセンス全文は [`app/fonts/FRUIT-EMOJI-LICENSE.txt`](app/fonts/FRUIT-EMOJI-LICENSE.txt) を参照してください。
+
 ## 🔧 技術スタック
 
 <div align="center">

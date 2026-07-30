@@ -5,7 +5,7 @@ test.describe('Fruit Harvest Game Flow', () => {
     await page.goto('/')
     // Reactのハイドレーション完了を待つ。
     // 待たずに操作するとイベントハンドラが未登録で反応せず、実行タイミング次第で落ちる
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(500)
   })
 

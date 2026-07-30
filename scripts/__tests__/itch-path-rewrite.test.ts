@@ -1,6 +1,8 @@
 import {
   rewriteToRelativePaths,
   findRemainingAbsolutePaths,
+  rewriteCssToRelativePaths,
+  findRemainingAbsolutePathsInCss,
 } from '../itch-path-rewrite.mjs'
 
 /**
@@ -117,5 +119,62 @@ describe('findRemainingAbsolutePaths', () => {
     const html = '<script src="//cdn.example.com/script.js"></script>'
 
     expect(findRemainingAbsolutePaths(html)).toEqual([])
+  })
+})
+
+describe('rewriteCssToRelativePaths', () => {
+  it('CSS内のフォント参照を相対パスに書き換える', () => {
+    // CSSは _next/static/css/ にあるので、_next/static/media/ へは ../media/ で届く
+    const css = '@font-face{src:url(/_next/static/media/font.woff) format("woff")}'
+
+    expect(rewriteCssToRelativePaths(css)).toBe(
+      '@font-face{src:url(../media/font.woff) format("woff")}'
+    )
+  })
+
+  it('クォート付きのurlも書き換える', () => {
+    expect(rewriteCssToRelativePaths(`src:url("/_next/static/media/a.woff")`)).toBe(
+      `src:url("../media/a.woff")`
+    )
+    expect(rewriteCssToRelativePaths(`src:url('/_next/static/media/a.woff')`)).toBe(
+      `src:url('../media/a.woff')`
+    )
+  })
+
+  it('chunks配下の参照も書き換える', () => {
+    expect(rewriteCssToRelativePaths('background:url(/_next/static/chunks/bg.png)')).toBe(
+      'background:url(../chunks/bg.png)'
+    )
+  })
+
+  it('外部URLには手を加えない', () => {
+    const css = "@import url('https://fonts.googleapis.com/css2?family=Nunito');"
+    expect(rewriteCssToRelativePaths(css)).toBe(css)
+  })
+
+  it('data URIには手を加えない', () => {
+    const css = 'src:url(data:font/woff2;base64,AAAA)'
+    expect(rewriteCssToRelativePaths(css)).toBe(css)
+  })
+
+  it('すでに相対パスのものを二重に書き換えない', () => {
+    const css = 'src:url(../media/font.woff)'
+    expect(rewriteCssToRelativePaths(css)).toBe(css)
+  })
+})
+
+describe('findRemainingAbsolutePathsInCss', () => {
+  it('書き換え後のCSSには絶対パスが残らない', () => {
+    const css = 'src:url(/_next/static/media/a.woff),url("/_next/static/media/b.ttf")'
+    expect(findRemainingAbsolutePathsInCss(rewriteCssToRelativePaths(css))).toEqual([])
+  })
+
+  it('相対化されていない参照を検出する', () => {
+    expect(findRemainingAbsolutePathsInCss('src:url(/fonts/a.woff)')).toEqual(['url(/fonts/a.woff)'])
+  })
+
+  it('外部URLとdata URIは報告しない', () => {
+    const css = "@import url('https://example.com/a.css');src:url(data:font/woff2;base64,AA)"
+    expect(findRemainingAbsolutePathsInCss(css)).toEqual([])
   })
 })

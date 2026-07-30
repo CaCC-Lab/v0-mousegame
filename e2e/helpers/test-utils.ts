@@ -52,5 +52,5 @@ export async function clickFruit(page: Page, index: number = 0) {
 
 export async function waitForGameToLoad(page: Page) {
   await page.waitForSelector('[role="application"]')
-  await page.waitForLoadState('networkidle')
+  await page.waitForLoadState('domcontentloaded')
 }

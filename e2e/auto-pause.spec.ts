@@ -10,7 +10,7 @@ import { test, expect } from '@playwright/test'
 test.describe('フォーカスが外れたときの挙動', () => {
   test('タブが隠れるとゲームが自動で一時停止する', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(800)
 
     await page.getByRole('button', { name: /はじめる|Start/ }).click()
@@ -36,7 +36,7 @@ test.describe('フォーカスが外れたときの挙動', () => {
 
   test('タブに戻っても自動では再開せず、プレイヤーの操作を待つ', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(800)
 
     await page.getByRole('button', { name: /はじめる|Start/ }).click()
