@@ -154,6 +154,21 @@
 - 慣れてきたら他のフルーツも登場し、段階的に難しい操作を学べます
 - 時間制限があるので、集中力とマウス操作の正確性が身につきます
 
+## 🚀 公開
+
+| 公開先 | 手順書 | 想定利用者 |
+| --- | --- | --- |
+| [itch.io](https://itch.io/) | [docs/itch-io-release.md](docs/itch-io-release.md) | 英語圏のインディーゲーム利用者 |
+| [PLiCy](https://plicy.net/) | [docs/plicy-release.md](docs/plicy-release.md) | 日本語の利用者（小学生・保護者・先生） |
+
+配布ファイルは共通です。
+
+```bash
+npm run build:itch   # dist-itch/fruit-harvest-itch.zip
+```
+
+すべての参照を相対パスに書き換えているため、配信パスの形（ルート直下／サブパス）に依存しません。
+
 ## 📷 スクリーンショットの撮り直し
 
 README とストアページ用の画像は、配布物と同じビルドから自動で撮影できます。
