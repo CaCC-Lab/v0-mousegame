@@ -137,6 +137,8 @@ For right-click practice, the fullscreen button (bottom right) works best.
 ソースコードは MIT ライセンスで公開しています。
 GitHub: https://github.com/CaCC-Lab/v0-mousegame
 
+フルーツの絵柄には Noto Color Emoji（SIL Open Font License 1.1）を使用しています。
+
 This game is free to play. If you find it useful, an optional tip helps
 support further development — you choose the amount.
 

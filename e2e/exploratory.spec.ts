@@ -34,7 +34,7 @@ test.setTimeout(90_000)
 test.describe('探索的テスト: フルーツハーベストゲーム', () => {
   test.beforeEach(async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
   })
 
   // === 1. 基本操作確認 ===
@@ -502,7 +502,7 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
 
     // リロード
     await page.reload()
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(1000)
 
     // localStorage が復元されているか

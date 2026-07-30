@@ -19,7 +19,12 @@ import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { rewriteToRelativePaths, findRemainingAbsolutePaths } from './itch-path-rewrite.mjs'
+import {
+  rewriteToRelativePaths,
+  findRemainingAbsolutePaths,
+  rewriteCssToRelativePaths,
+  findRemainingAbsolutePathsInCss,
+} from './itch-path-rewrite.mjs'
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const sourceDir = path.join(projectRoot, 'out')
@@ -119,6 +124,21 @@ function main() {
     console.log(`   相対化: ${path.relative(stagingDir, file)}`)
   }
 
+  // CSS内の url() も相対化する。
+  // HTMLだけ直しても、preloadされないフォントや画像はサブパス配信で404になる
+  const cssFiles = collectFiles(stagingDir).filter((file) => file.endsWith('.css'))
+  for (const file of cssFiles) {
+    const original = fs.readFileSync(file, 'utf8')
+    const rewritten = rewriteCssToRelativePaths(original)
+    fs.writeFileSync(file, rewritten)
+
+    const remaining = findRemainingAbsolutePathsInCss(rewritten)
+    if (remaining.length > 0) {
+      problems.push({ file: path.relative(stagingDir, file), remaining })
+    }
+    console.log(`   相対化: ${path.relative(stagingDir, file)}`)
+  }
+
   if (problems.length > 0) {
     for (const problem of problems) {
       console.error(`   ⚠️ ${problem.file} に絶対パスが残っています:`)
@@ -127,7 +147,7 @@ function main() {
     fail(
       '絶対パスを相対化しきれませんでした',
       'itch.ioのサブパス配信ではこれらの参照が404になります',
-      'scripts/build-itch.mjs の rewriteToRelativePaths を上記パターンに対応させてください'
+      'scripts/itch-path-rewrite.mjs の書き換え関数を上記パターンに対応させてください'
     )
   }
 

@@ -38,3 +38,34 @@ export function findRemainingAbsolutePaths(html) {
   const matches = html.match(/(?:href|src)=["']\/(?!\/)[^"']*/g) ?? []
   return [...new Set(matches)]
 }
+
+/**
+ * CSS内の url() を相対パスへ書き換える。
+ *
+ * CSSは `_next/static/css/` に出力され、参照先のフォントや画像は
+ * `_next/static/media/` にある。したがって `/_next/static/media/x`
+ * への参照は、CSSから見て `../media/x` になる。
+ *
+ * HTMLの相対化だけでは足りない。HTMLに preload がある分（Geistフォント等）は
+ * たまたま読めてしまうが、preload されない参照（同梱の絵文字フォント）は
+ * サブパス配信で404になる。
+ *
+ * 外部URL（https://...）とdata URIには手を加えない。
+ *
+ * @param {string} css
+ * @returns {string}
+ */
+export function rewriteCssToRelativePaths(css) {
+  return css.replace(/url\((["']?)\/_next\/static\//g, 'url($1../')
+}
+
+/**
+ * CSS内で相対化しきれなかった絶対パス参照を列挙する。
+ *
+ * @param {string} css
+ * @returns {string[]} 重複を除いた検出結果
+ */
+export function findRemainingAbsolutePathsInCss(css) {
+  const matches = css.match(/url\(["']?\/(?!\/)[^)"']*["']?\)/g) ?? []
+  return [...new Set(matches)]
+}

@@ -13,7 +13,7 @@ test.use({ ...devices['iPhone 12'] })
 test.describe('タッチ専用端末への案内', () => {
   test('マウスがない端末では案内バナーを表示する', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
 
     const note = page.getByRole('note')
     await expect(note).toBeVisible()
@@ -22,7 +22,7 @@ test.describe('タッチ専用端末への案内', () => {
 
   test('バナーは閉じられ、ゲーム自体は操作できる', async ({ page }) => {
     await page.goto('/')
-    await page.waitForLoadState('networkidle')
+    await page.waitForLoadState('domcontentloaded')
     await page.waitForTimeout(800)
 
     await page.getByRole('note').getByRole('button').tap()
