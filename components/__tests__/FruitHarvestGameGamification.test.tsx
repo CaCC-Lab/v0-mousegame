@@ -133,12 +133,19 @@ describe('FruitHarvestGame gamification (Task 8)', () => {
         expect(screen.getByTestId('game-area').querySelector('[data-fruit-id]')).toBeInTheDocument()
       })
 
+      // フルーツは種類ごとのスプライト画像で描画されるため、
+      // 画像から操作対象（role=buttonのラッパー）を辿る
       const gameArea = screen.getByTestId('game-area')
-      const apples = within(gameArea).queryAllByText('🍎')
+      const fruitByType = (type: string) =>
+        Array.from(gameArea.querySelectorAll(`img[src*="${type}"]`))
+          .map((img) => img.closest('[role="button"]'))
+          .filter((el): el is HTMLElement => el !== null)
+
+      const apples = fruitByType('apple')
       if (apples.length > 0) {
         await user.click(apples[0])
       } else {
-        const blueberries = within(gameArea).queryAllByText('🫐')
+        const blueberries = fruitByType('blueberry')
         expect(blueberries.length).toBeGreaterThan(0)
         await user.dblClick(blueberries[0])
       }

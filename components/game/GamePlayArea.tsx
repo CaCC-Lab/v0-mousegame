@@ -5,7 +5,8 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Fruit as FruitComponent } from '../Fruit'
 import { PowerUp } from '../PowerUp'
 import { ParticleContainer } from '../ParticleContainer'
-import { Fruit as FruitType, HarvestAnimation, InteractionType, FRUIT_EMOJI } from '@/types/game'
+import { Fruit as FruitType, HarvestAnimation, InteractionType } from '@/types/game'
+import { FruitSprite } from './FruitSprite'
 import { PowerUp as PowerUpType } from '@/types/powerup'
 import { ParticleEffect } from '@/types/animation'
 import type { StreakBonus } from '@/types/gamification'
@@ -55,7 +56,7 @@ function DraggedFruitOverlay({
         filter: 'drop-shadow(0 4px 12px rgba(0,0,0,0.3))',
       }}
     >
-      {FRUIT_EMOJI[draggedFruit.type]}
+      <FruitSprite type={draggedFruit.type} decorative />
     </div>
   )
 }
@@ -93,7 +94,7 @@ function HarvestAnimations({
           transition={{ duration: 0.8, ease: 'easeOut' }}
           onAnimationComplete={() => onAnimationComplete(animation.id)}
         >
-          {FRUIT_EMOJI[animation.type]}
+          <FruitSprite type={animation.type} decorative />
         </motion.div>
       ))}
     </AnimatePresence>

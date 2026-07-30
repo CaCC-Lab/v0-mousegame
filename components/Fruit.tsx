@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react'
 import { motion } from 'framer-motion'
-import { Fruit as FruitType, FRUIT_EMOJI } from '@/types/game'
+import { Fruit as FruitType, FRUIT_NAME } from '@/types/game'
+import { FruitSprite } from './game/FruitSprite'
 
 interface FruitProps {
   fruit: FruitType
@@ -202,13 +203,14 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
       whileHover={{ scale: 1.1 }}
       whileTap={{ scale: 0.95 }}
       role="button"
-      aria-label={`${fruit.type} fruit, size ${fruit.size}`}
+      aria-label={`${FRUIT_NAME[fruit.type]}（${fruit.type} fruit, size ${fruit.size}）`}
       tabIndex={0}
     >
       <BackgroundCircle fruitStyle={fruitStyle} />
 
       <div className="relative z-10 p-2 -m-2">
-        {FRUIT_EMOJI[fruit.type]}
+        {/* サイズは親のfont-size（text-3xl等）に追従させる */}
+        <FruitSprite type={fruit.type} decorative />
       </div>
 
       <SparkleEffect isVisible={isHovered} />

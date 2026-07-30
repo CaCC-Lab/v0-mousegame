@@ -1,5 +1,6 @@
 import React from 'react'
 import { Stage } from '../types/stage'
+import { FRUIT_NAME } from '../types/game'
 import { Button } from './ui/button'
 import { X, Lock, CheckCircle, Star } from 'lucide-react'
 import { useLanguage } from '../hooks/useLanguage'
@@ -47,10 +48,11 @@ export function StageSelector({
     }
     
     const targets = []
-    if (targetFruits.apple) targets.push(`🍎 ${targetFruits.apple}`)
-    if (targetFruits.blueberry) targets.push(`🫐 ${targetFruits.blueberry}`)
-    if (targetFruits.lemon) targets.push(`🍋 ${targetFruits.lemon}`)
-    if (targetFruits.watermelon) targets.push(`🍉 ${targetFruits.watermelon}`)
+    // ここは文字列を組み立てて表示するため、画像ではなく名前で表す
+    if (targetFruits.apple) targets.push(`${FRUIT_NAME.apple} ${targetFruits.apple}`)
+    if (targetFruits.blueberry) targets.push(`${FRUIT_NAME.blueberry} ${targetFruits.blueberry}`)
+    if (targetFruits.lemon) targets.push(`${FRUIT_NAME.lemon} ${targetFruits.lemon}`)
+    if (targetFruits.watermelon) targets.push(`${FRUIT_NAME.watermelon} ${targetFruits.watermelon}`)
     
     return targets.join(', ')
   }

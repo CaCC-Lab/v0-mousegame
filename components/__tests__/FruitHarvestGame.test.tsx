@@ -29,13 +29,13 @@ describe('FruitHarvestGame', () => {
     })
 
     it('renders all fruits counters', () => {
-      render(<FruitHarvestGame />)
-      // フルーツカウンターの絵文字が表示されていることを確認
-      const fruitEmojis = ['🍎', '🫐', '🍋', '🍉']
-      
-      fruitEmojis.forEach(emoji => {
-        const elements = screen.getAllByText(emoji)
-        expect(elements.length).toBeGreaterThan(0)
+      const { container } = render(<FruitHarvestGame />)
+      // フルーツカウンターのスプライトが表示されていることを確認
+      const fruitTypes = ['apple', 'blueberry', 'lemon', 'watermelon']
+
+      fruitTypes.forEach(type => {
+        const sprites = container.querySelectorAll(`img[src*="${type}"]`)
+        expect(sprites.length).toBeGreaterThan(0)
       })
     })
 
