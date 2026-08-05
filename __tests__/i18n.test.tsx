@@ -249,4 +249,47 @@ describe('Internationalization (i18n)', () => {
       expect(screen.getAllByText(/得点:/).length).toBeGreaterThan(0)
     })
   })
+
+  describe('URL language parameter (?lang=)', () => {
+    const setSearch = (search: string) => {
+      const url = new URL(window.location.href)
+      url.search = search
+      window.history.replaceState({}, '', url.toString())
+    }
+
+    afterEach(() => {
+      setSearch('')
+    })
+
+    test('?lang=en forces English even on a Japanese browser', async () => {
+      Object.defineProperty(window.navigator, 'language', {
+        value: 'ja-JP',
+        configurable: true,
+      })
+      setSearch('?lang=en')
+      render(<FruitHarvestGame />)
+      const languageButton = await screen.findByRole('button', { name: /language/i })
+      await waitFor(() => expect(languageButton).toHaveTextContent('English'))
+    })
+
+    test('?lang=en overrides a saved Japanese preference and persists it', async () => {
+      window.localStorage.setItem('fruitHarvestLanguage', JSON.stringify('ja'))
+      setSearch('?lang=en')
+      render(<FruitHarvestGame />)
+      await waitFor(() =>
+        expect(JSON.parse(window.localStorage.getItem('fruitHarvestLanguage') || '""')).toBe('en')
+      )
+    })
+
+    test('invalid ?lang value is ignored', async () => {
+      Object.defineProperty(window.navigator, 'language', {
+        value: 'ja-JP',
+        configurable: true,
+      })
+      setSearch('?lang=fr')
+      render(<FruitHarvestGame />)
+      const languageButton = await screen.findByRole('button', { name: /language/i })
+      await waitFor(() => expect(languageButton).toHaveTextContent('日本語'))
+    })
+  })
 })
