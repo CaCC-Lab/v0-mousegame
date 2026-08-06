@@ -25,11 +25,26 @@ async function harvestApples(page: Page, count: number): Promise<void> {
   }
 }
 
+/**
+ * 得点だけを読む。
+ * 画面の文字列は「得点:10」と「0分59秒」が地続きになるため、
+ * まとめて読むと桁が混ざる（例: 100分59秒）。専用の目印から読む。
+ */
 async function readScore(page: Page): Promise<number> {
+  const text = await page.getByTestId('score-value').innerText()
+  return Number(text.replace(/[^\d]/g, '')) || 0
+}
+
+/** 残り時間（秒）。表示は「0分59秒」または「0:59」 */
+async function readRemainingSeconds(page: Page): Promise<number> {
   const text = await page.getByRole('application').innerText()
-  const match = text.match(/得点:\s*([\d,]+)|Score:\s*([\d,]+)/)
-  const value = match?.[1] ?? match?.[2] ?? '0'
-  return Number(value.replace(/,/g, ''))
+  const jp = text.match(/(\d+)分(\d\d)秒/)
+  if (jp) return Number(jp[1]) * 60 + Number(jp[2])
+
+  const en = text.match(/(\d+):(\d\d)/)
+  if (en) return Number(en[1]) * 60 + Number(en[2])
+
+  throw new Error('残り時間の表示が見つかりませんでした')
 }
 
 test.describe('アーケードモード', () => {
@@ -46,7 +61,12 @@ test.describe('アーケードモード', () => {
     await page.getByTestId('mode-select-arcade').click()
 
     await expect(page.getByTestId('arcade-fever-gauge')).toBeVisible()
-    await expect(page.getByRole('application')).toContainText(/1分00秒|1:00/)
+
+    // 60秒から数え始めていること。
+    // ブラウザによっては検証に入るまでに数秒進むため、上限で見る
+    const remaining = await readRemainingSeconds(page)
+    expect(remaining).toBeLessThanOrEqual(60)
+    expect(remaining).toBeGreaterThan(45)
   })
 
   test('連続で収穫するとコンボ倍率がつく', async ({ page }) => {

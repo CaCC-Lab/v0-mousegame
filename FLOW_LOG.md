@@ -222,3 +222,47 @@
 - Codexが左クリックドラッグの回帰バグを検出（テストでは見つけられなかった）
 - 補完レビューがパス間の不整合を検出（Codexが見逃した領域）
 - steering/tech.mdにReact state更新ルールを追記し、知見を構造化
+
+---
+
+## PR#4: Issue #42 CrazyGames 提出に向けたアップデート（アーケードモード新設）
+
+### 背景
+CrazyGames 4本作戦の3番手。最大の壁は「マウス練習ツールは CrazyGames 的にはゲームではない」こと。
+**教育モードを消さず、ゲームモードを足す**方針で、競って遊べる遊び方を追加する。
+
+### 実施フェーズ
+- [x] Phase 3: テスト作成（先行）— lib/hooks/components/e2e で計150テスト追加
+- [x] Phase 4: 実装 — アーケードモード（60秒・コンボ・フィーバー・段位）
+- [x] Phase 4.6: Runtime Verification — 実ブラウザ（Playwright MCP）で1プレイ通し確認
+- [x] Phase 5: ビルド成功 / lint 既存warningのみ
+- [ ] Phase 6: PR作成 → CI
+- [ ] Phase 7以降: 自動レビュー
+
+### 実装したもの
+| 対象 | 内容 |
+| --- | --- |
+| `types/arcade.ts` | 60秒固定・コンボ倍率のしきい値・段位（Bronze〜Diamond） |
+| `lib/arcadeManager.ts` | コンボ倍率／フィーバーゲージ／段位判定の純粋関数 |
+| `hooks/useArcadeMode.ts` | コンボ・フィーバー・自己ベストの状態管理（ポーズ中は時間が進まない） |
+| `hooks/useGameLogic.ts` | `startGame(mode)` でモード切替。アーケードはステージ・難易度から独立 |
+| `components/game/ModeSelector.tsx` | 待機中のプレイエリアをそのまま入口にする |
+| `components/game/ArcadeHUD.tsx` | コンボ数・倍率・フィーバーゲージ |
+| `components/game/ArcadeResultModal.tsx` | スコア・自己ベスト更新演出・段位・再挑戦 |
+| `lib/touchGestures.ts` + `Fruit.tsx` / `GamePlayArea.tsx` | タッチ4操作（長押し＝右クリック相当） |
+| `lib/ads/rewardedBoost.ts` | リワード広告の差し込み口（SDK導入前は無効） |
+| `docs/crazygames-store-copy.md` | ストア文言の転換（itch は教育路線のまま） |
+
+### 発見・詰まり
+| フェーズ | 内容 | 対処 | 再発防止 |
+|----------|------|------|---------|
+| Phase 4.6 | 初回プレイなのに「じこベストこうしん！」が出ない | 終了処理が `setTimeLeft` の更新関数の中にあり、StrictMode の二重呼び出しで2回実行されていた。`finishGame` として外に出す | 状態更新関数の中に副作用を書かない。StrictMode を有効にした回帰テストを追加 |
+| Phase 4.6 | 苦手な操作のフルーツが畑を埋め尽くし手が止まる | アーケードでは「いちばん少ない種類」を補充し、開始時の畑も4種類そろえる | 補充ロジックは畑の状態を見る |
+| Phase 4.6 | タッチのタップが2回数えられることがある | 合成マウスイベントの抑止を時間窓だけに頼っていた。`touchend` の既定動作も止める | 時間に依存する抑止は端末負荷ですり抜ける前提で二重化する |
+| E2E | フルーツの重なりでタップが成立せず不安定 | `elementFromPoint` で実際に触れる個体を選ぶヘルパーを追加 | ランダム配置の要素は「触れるもの」を選んでから操作する |
+
+### 判断の記録
+- アーケードは**難易度設定・ステージの制限時間から独立**させた（記録を比べる遊びのため）。
+- 段位は Issue の「Bronze→Silver→Gold」を骨格に、上手い人が数回で頭打ちにならないよう **Platinum / Diamond まで拡張**。
+- アーケードのプレイも**累積統計・習熟度・バッジには反映**する（星は0で渡すためステージの星評価は動かない）。
+- うごくモードの強制はしない（プレイヤーの設定を尊重）。

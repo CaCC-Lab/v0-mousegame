@@ -47,10 +47,14 @@ async function hittableFruit(page: Page, name: string): Promise<Locator> {
   return page.locator(`[data-fruit-id="${id}"]`)
 }
 
+/**
+ * 得点だけを読む。
+ * 画面の文字列は「得点:10」と「0分59秒」が地続きになるため、
+ * まとめて読むと桁が混ざる（例: 100分59秒）。専用の目印から読む。
+ */
 async function readScore(page: Page): Promise<number> {
-  const text = await page.getByRole('application').innerText()
-  const match = text.match(/得点:\s*([\d,]+)/)
-  return match ? Number(match[1].replace(/,/g, '')) : 0
+  const text = await page.getByTestId('score-value').innerText()
+  return Number(text.replace(/[^\d]/g, '')) || 0
 }
 
 async function centerOf(locator: Locator): Promise<{ x: number; y: number }> {
