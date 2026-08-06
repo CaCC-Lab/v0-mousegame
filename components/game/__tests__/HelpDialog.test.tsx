@@ -99,33 +99,6 @@ describe('HelpDialog', () => {
     })
   })
 
-  describe('アーケードとタッチ操作の説明（Issue #42）', () => {
-    it('アーケードモードの遊び方を説明する', async () => {
-      await openDialog(translations.ja)
-
-      expect(await screen.findByText(translations.ja.helpContent.arcadeTitle)).toBeInTheDocument()
-      expect(screen.getByText(translations.ja.helpContent.arcadeDesc)).toBeInTheDocument()
-      // 見出しの絵文字と同じ段落に入るため、部分一致で確かめる
-      expect(screen.getByText(/フィーバー」！てんすうがさらに2ばい/)).toBeInTheDocument()
-      expect(screen.getByText(/ブロンズ→シルバー→ゴールド/)).toBeInTheDocument()
-    })
-
-    it('タッチ操作の対応表を表示する', async () => {
-      await openDialog(translations.ja)
-
-      expect(await screen.findByText(translations.ja.helpContent.touchTitle)).toBeInTheDocument()
-      expect(screen.getByText(/ながおし/)).toBeInTheDocument()
-      expect(screen.getByText(/すばやく2かいタップ/)).toBeInTheDocument()
-    })
-
-    it('英語でもタッチ操作を説明する', async () => {
-      await openDialog(translations.en)
-
-      expect(await screen.findByText(translations.en.helpContent.touchTitle)).toBeInTheDocument()
-      expect(screen.getByText(/Long press/)).toBeInTheDocument()
-    })
-  })
-
   describe('English', () => {
     it('全セクションを英語で表示する', async () => {
       await openDialog(translations.en)

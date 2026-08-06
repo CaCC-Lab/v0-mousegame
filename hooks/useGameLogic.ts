@@ -114,6 +114,7 @@ export function useGameLogic() {
     setGameState('playing')
     setScore(0)
     scoreRef.current = 0
+    resetPowerUps()
 
     if (nextMode === 'arcade') {
       setArcadeResult(null)
@@ -139,9 +140,11 @@ export function useGameLogic() {
     setHarvestedFruits(createInitialHarvestedFruits())
     harvestedFruitsRef.current = createInitialHarvestedFruits()
     operationStats.resetSession()
-    startSpawning()
+    if (nextMode === 'practice') {
+      startSpawning()
+    }
     soundEffects.playGameStartSound()
-  }, [soundEffects, difficulty, startSpawning, stage, operationStats, arcade])
+  }, [soundEffects, difficulty, resetPowerUps, startSpawning, stage, operationStats, arcade])
 
   const pauseGame = useCallback(() => {
     setGameState(prevState => prevState === 'playing' ? 'paused' : 'playing')

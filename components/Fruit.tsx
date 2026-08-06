@@ -168,6 +168,7 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
   const lastTapAtRef = useRef(0)
   const pointerStartRef = useRef<{ x: number; y: number } | null>(null)
   const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const pendingTapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   /** 長押し・なぞりでジェスチャーが消費済み（＝指を離してもタップにしない） */
   const gestureConsumedRef = useRef(false)
 
@@ -185,7 +186,19 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
     }
   }, [])
 
-  useEffect(() => clearLongPressTimer, [clearLongPressTimer])
+  const clearPendingTapTimer = useCallback(() => {
+    if (pendingTapTimerRef.current !== null) {
+      clearTimeout(pendingTapTimerRef.current)
+      pendingTapTimerRef.current = null
+    }
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      clearLongPressTimer()
+      clearPendingTapTimer()
+    }
+  }, [clearLongPressTimer, clearPendingTapTimer])
 
   /** タッチ直後にブラウザが合成するマウスイベントを弾く */
   const shouldIgnoreMouseEvent = useCallback(
@@ -241,15 +254,28 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
     }
 
     const now = Date.now()
-    const kind = classifyTap(lastTapAtRef.current, now)
-    lastTapAtRef.current = now
+    if (fruit.type === 'blueberry') {
+      const kind = classifyTap(lastTapAtRef.current, now)
 
-    // マウスと同じ順序（click → click → dblclick）で通知し、上位の判定を共通化する
-    onClick()
-    if (kind === 'double') {
-      onDoubleClick()
+      if (kind === 'double') {
+        clearPendingTapTimer()
+        lastTapAtRef.current = 0
+        onDoubleClick()
+        return
+      }
+
+      lastTapAtRef.current = now
+      clearPendingTapTimer()
+      pendingTapTimerRef.current = setTimeout(() => {
+        pendingTapTimerRef.current = null
+        lastTapAtRef.current = 0
+        onClick()
+      }, TOUCH_CONFIG.doubleTapMs)
+      return
     }
-  }, [clearLongPressTimer, onClick, onDoubleClick])
+
+    onClick()
+  }, [clearLongPressTimer, clearPendingTapTimer, fruit.type, onClick, onDoubleClick])
 
   /**
    * タッチ操作のあとにブラウザが合成するマウスイベントを、仕様どおり抑止する。
@@ -263,10 +289,12 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
 
   const handlePointerCancel = useCallback(() => {
     clearLongPressTimer()
+    clearPendingTapTimer()
     setIsPressed(false)
     pointerStartRef.current = null
     gestureConsumedRef.current = false
-  }, [clearLongPressTimer])
+    lastTapAtRef.current = 0
+  }, [clearLongPressTimer, clearPendingTapTimer])
 
   const handleClick = useCallback(() => {
     if (shouldIgnoreMouseEvent()) return
