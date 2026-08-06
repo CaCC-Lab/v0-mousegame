@@ -9,6 +9,8 @@ import {
 import {
   generateFruit,
   generateFruits,
+  generateFruitForField,
+  generateBalancedFruits,
   calculateScore,
   updateFruitPosition,
 } from '@/lib/gameLogic'
@@ -51,6 +53,7 @@ export function useGameLogic() {
   const animationFrameRef = useRef<number>()
   const lastUpdateTimeRef = useRef<number>(0)
   const scoreRef = useRef<number>(0)
+  const timeLeftRef = useRef<number>(60)
   const harvestedFruitsRef = useRef<HarvestedFruits>(createInitialHarvestedFruits())
 
   const soundEffects = useSoundEffects()
@@ -85,6 +88,7 @@ export function useGameLogic() {
 
   // Sync refs with state
   useEffect(() => { scoreRef.current = score }, [score])
+  useEffect(() => { timeLeftRef.current = timeLeft }, [timeLeft])
   useEffect(() => { harvestedFruitsRef.current = harvestedFruits }, [harvestedFruits])
   useEffect(() => { isEffectActiveRef.current = isEffectActive }, [isEffectActive])
   useEffect(() => { stopSpawningRef.current = stopSpawning }, [stopSpawning])
@@ -115,15 +119,19 @@ export function useGameLogic() {
       setArcadeResult(null)
       arcade.reset()
       setTimeLeft(ARCADE_CONFIG.duration)
-      setFruits(generateFruits(ARCADE_CONFIG.fruitCount))
+      timeLeftRef.current = ARCADE_CONFIG.duration
+      // 最初の畑から4種類そろえて、どの操作でもすぐ点を取れるようにする
+      setFruits(generateBalancedFruits(ARCADE_CONFIG.fruitCount))
     } else {
       const currentStageInfo = stage.currentStageInfo
       if (currentStageInfo) {
         setTimeLeft(currentStageInfo.timeLimit)
+        timeLeftRef.current = currentStageInfo.timeLimit
         setFruits(generateFruits(currentStageInfo.difficulty.fruitCount))
       } else {
         const adjustedTime = difficulty.getAdjustedGameTime(GAME_CONFIG.gameDuration)
         setTimeLeft(adjustedTime)
+        timeLeftRef.current = adjustedTime
         setFruits(generateFruits(difficulty.currentConfig.fruitCount))
       }
     }
@@ -163,6 +171,7 @@ export function useGameLogic() {
     arcade.reset()
     setScore(0)
     setTimeLeft(60)
+    timeLeftRef.current = 60
     setFruits([])
     setHarvestedFruits(createInitialHarvestedFruits())
 
@@ -207,14 +216,17 @@ export function useGameLogic() {
 
     setFruits(prevFruits => {
       const updatedFruits = prevFruits.filter(f => f.id !== fruit.id)
-      const newFruits = [...updatedFruits, generateFruit()]
+      // アーケードは4種類が畑に揃い続けるように補充する（手が止まらないようにするため）
+      const spawn = (field: Fruit[]) => (isArcade ? generateFruitForField(field) : generateFruit())
+
+      const newFruits = [...updatedFruits, spawn(updatedFruits)]
       // Task 7.3: 5回連続成功時にボーナスフルーツ追加
       if (newStreak === 5) {
-        newFruits.push(generateFruit())
+        newFruits.push(spawn(newFruits))
       }
       // フィーバー中は畑が実りに埋まる（上限まで）
       if (bonus?.isFever) {
-        newFruits.push(generateFruit())
+        newFruits.push(spawn(newFruits))
       }
       return isArcade ? newFruits.slice(0, ARCADE_CONFIG.maxFruits) : newFruits
     })
@@ -259,6 +271,64 @@ export function useGameLogic() {
     animationFrameRef.current = requestAnimationFrame(moveFruits)
   }, [gameState, isHardMode, getEffectValue])
 
+  /**
+   * 時間切れの後始末。
+   *
+   * setTimeLeft の更新関数の中には置かない。
+   * React の StrictMode（開発時）は更新関数を2回呼ぶため、そこに副作用を書くと
+   * 「自己ベスト更新」の判定や commitSession が二重に走ってしまう。
+   */
+  const finishGame = useCallback((remainingTime: number) => {
+    setGameState('idle')
+    stopSpawningRef.current()
+
+    if (modeRef.current === 'arcade') {
+      const outcome = arcadeRef.current.commitResult(scoreRef.current)
+      setArcadeResult(outcome)
+
+      // アーケードもマウス操作の練習には違いないので、累積統計・習熟度・バッジには反映する。
+      // 星は0で渡すため（mergeStageStarsMonotonicがmaxを取る）ステージの星評価は動かない。
+      gamificationRef.current.commitSession(
+        stageRef.current.currentStage,
+        0,
+        operationStatsRef.current.getLatestSessionStats()
+      )
+
+      if (outcome.isNewBest) {
+        soundEffectsRef.current.playHighScoreSound()
+      } else {
+        soundEffectsRef.current.playGameOverSound()
+      }
+      return
+    }
+
+    const isStageCompleted = stageRef.current.checkStageCompletion(
+      scoreRef.current,
+      harvestedFruitsRef.current
+    )
+
+    if (isStageCompleted) {
+      soundEffectsRef.current.playHighScoreSound()
+    } else {
+      soundEffectsRef.current.playGameOverSound()
+    }
+
+    // Task 7.2: 星評価算出・commitSession
+    const gamification = gamificationRef.current
+    const stats = operationStatsRef.current
+    const stageNum = stageRef.current.currentStage
+    const stageInfo = stageRef.current.currentStageInfo
+    const timeLimit = stageInfo?.timeLimit ?? 60
+    const latestSessionStats = stats.getLatestSessionStats()
+    const starRating = gamification.calculateStarRating(stageNum, isStageCompleted, remainingTime, timeLimit, latestSessionStats)
+    gamification.commitSession(stageNum, starRating, latestSessionStats)
+    setLastStarRating(starRating)
+
+    if (scoreRef.current > highScoreRef.current) {
+      setHighScore(scoreRef.current)
+    }
+  }, [setHighScore])
+
   // Timer effect
   useEffect(() => {
     if (gameState !== 'playing') return
@@ -267,65 +337,18 @@ export function useGameLogic() {
       const isTimeFrozen = isEffectActiveRef.current('freezeTime')
       if (isTimeFrozen) return
 
-      setTimeLeft(prevTime => {
-        const newTime = prevTime - 1
-        if (newTime <= 0) {
-          setGameState('idle')
-          stopSpawningRef.current()
+      const prevTime = timeLeftRef.current
+      const newTime = prevTime - 1
+      timeLeftRef.current = Math.max(0, newTime)
+      setTimeLeft(timeLeftRef.current)
 
-          if (modeRef.current === 'arcade') {
-            const outcome = arcadeRef.current.commitResult(scoreRef.current)
-            setArcadeResult(outcome)
-
-            // アーケードもマウス操作の練習には違いないので、累積統計・習熟度・バッジには反映する。
-            // 星は0で渡すため（mergeStageStarsMonotonicがmaxを取る）ステージの星評価は動かない。
-            gamificationRef.current.commitSession(
-              stageRef.current.currentStage,
-              0,
-              operationStatsRef.current.getLatestSessionStats()
-            )
-
-            if (outcome.isNewBest) {
-              soundEffectsRef.current.playHighScoreSound()
-            } else {
-              soundEffectsRef.current.playGameOverSound()
-            }
-            return 0
-          }
-
-          const isStageCompleted = stageRef.current.checkStageCompletion(
-            scoreRef.current,
-            harvestedFruitsRef.current
-          )
-
-          if (isStageCompleted) {
-            soundEffectsRef.current.playHighScoreSound()
-          } else {
-            soundEffectsRef.current.playGameOverSound()
-          }
-
-          // Task 7.2: 星評価算出・commitSession
-          const gamification = gamificationRef.current
-          const stats = operationStatsRef.current
-          const stageNum = stageRef.current.currentStage
-          const stageInfo = stageRef.current.currentStageInfo
-          const timeLimit = stageInfo?.timeLimit ?? 60
-          const latestSessionStats = stats.getLatestSessionStats()
-          const starRating = gamification.calculateStarRating(stageNum, isStageCompleted, prevTime, timeLimit, latestSessionStats)
-          gamification.commitSession(stageNum, starRating, latestSessionStats)
-          setLastStarRating(starRating)
-
-          if (scoreRef.current > highScoreRef.current) {
-            setHighScore(scoreRef.current)
-          }
-          return 0
-        }
-        return newTime
-      })
+      if (newTime <= 0) {
+        finishGame(prevTime)
+      }
     }, 1000)
 
     return () => clearInterval(timer)
-  }, [gameState, setHighScore])
+  }, [gameState, finishGame])
 
   // Animation effect for hard mode
   useEffect(() => {

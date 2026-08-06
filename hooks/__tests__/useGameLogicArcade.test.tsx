@@ -14,6 +14,7 @@
  * | A-7 | 練習モード | 従来どおり倍率は乗らない |
  */
 
+import React from 'react'
 import { renderHook, act } from '@testing-library/react'
 import type { Fruit } from '@/types/game'
 import { ARCADE_CONFIG } from '@/types/arcade'
@@ -34,7 +35,11 @@ jest.mock('@/lib/gameLogic', () => {
   return {
     ...actual,
     generateFruits: (count: number) => Array.from({ length: count }, () => makeApple()),
+    generateBalancedFruits: (count: number) => Array.from({ length: count }, () => makeApple()),
     generateFruit: () => makeApple(),
+    // 補充の「種類をならす」挙動は lib/__tests__/gameLogic.test.ts が担当する。
+    // ここでは操作の成否を決定的にするため、りんごだけを補充する。
+    generateFruitForField: () => makeApple(),
   }
 })
 
@@ -225,6 +230,23 @@ describe('useGameLogic - アーケードモード', () => {
     expect(result.current.arcade.isFever).toBe(true)
     expect(result.current.fruits.length).toBeLessThanOrEqual(ARCADE_CONFIG.maxFruits)
     expect(result.current.fruits.length).toBeGreaterThan(ARCADE_CONFIG.fruitCount)
+  })
+
+  it('A-10: StrictMode（開発時の二重実行）でも自己ベスト更新の判定が壊れない', () => {
+    // React の StrictMode は state 更新関数を2回呼ぶ。
+    // 終了処理を state 更新関数の中に置くと、2回目には「すでにベストを更新済み」と
+    // 見えてしまい、更新演出が出なくなる。終了処理は更新関数の外で1度だけ走らせる。
+    const { result } = renderHook(() => useGameLogic(), {
+      wrapper: ({ children }) => <React.StrictMode>{children}</React.StrictMode>,
+    })
+
+    act(() => { result.current.startGame('arcade') })
+    const apple = result.current.fruits[0]
+    act(() => { result.current.handleFruitInteraction(apple, 'click') })
+    act(() => { jest.advanceTimersByTime(ARCADE_CONFIG.duration * 1000) })
+
+    expect(result.current.arcadeResult?.score).toBe(10)
+    expect(result.current.arcadeResult?.isNewBest).toBe(true)
   })
 
   it('A-9: アーケードのスコアは難易度設定に左右されない（記録の公平性）', () => {

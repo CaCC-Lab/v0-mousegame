@@ -464,11 +464,14 @@ export function FruitHarvestGame(): React.ReactElement {
                 aria-hidden
                 className="absolute inset-0 z-10 pointer-events-none"
                 initial={{ opacity: 0 }}
-                animate={{ opacity: [0.45, 0.75, 0.45] }}
+                animate={{ opacity: [0.6, 1, 0.6] }}
                 transition={{ duration: 0.9, repeat: Infinity }}
                 style={{
+                  // 中央は透かしてフルーツを見やすく保ち、縁だけを熱くする。
+                  // screen 合成にすることで、半透明を重ねたときのくすみを避ける
                   background:
-                    'radial-gradient(circle at 50% 50%, rgba(255,210,63,0) 45%, rgba(255,107,107,0.55) 100%)',
+                    'radial-gradient(ellipse at center, rgba(255,140,0,0) 52%, rgba(255,120,0,0.9) 100%)',
+                  mixBlendMode: 'screen',
                 }}
               />
             )}

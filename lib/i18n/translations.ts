@@ -82,7 +82,7 @@ export const translations = {
     fever: 'フィーバー',
     feverGauge: 'フィーバーゲージ',
     maxCombo: 'さいだいコンボ',
-    feverCount: 'フィーバーかいすう',
+    feverCount: 'フィーバー',
     times: 'かい',
     retry: 'もういちど',
     backToMenu: 'メニューへ',

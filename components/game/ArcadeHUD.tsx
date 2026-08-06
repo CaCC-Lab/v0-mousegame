@@ -56,9 +56,9 @@ export function ArcadeHUD({
         </motion.div>
       )}
 
-      <div className="flex items-center gap-1.5 min-w-[80px] max-w-[160px] flex-1">
+      <div className="flex items-center gap-1.5 w-[140px] md:w-[180px] rounded-[var(--radius-md)] bg-black/15 px-2 py-1">
         <Flame
-          className={`w-4 h-4 shrink-0 ${isFever ? 'text-yellow-300' : 'text-white/70'}`}
+          className={`w-4 h-4 shrink-0 ${isFever ? 'text-yellow-300' : 'text-white'}`}
           aria-hidden
         />
         <div
@@ -68,7 +68,7 @@ export function ArcadeHUD({
           aria-valuenow={gaugeValue}
           aria-valuemin={0}
           aria-valuemax={ARCADE_CONFIG.feverGaugeMax}
-          className="h-2.5 flex-1 rounded-full bg-white/25 overflow-hidden"
+          className="h-3 flex-1 rounded-full bg-white/40 overflow-hidden border border-white/50"
         >
           <div
             className="h-full rounded-full transition-[width] duration-100 ease-linear"

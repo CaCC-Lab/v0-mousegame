@@ -41,9 +41,11 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-    // Mobile Chrome プロジェクトは持たない。
-    // このゲームはマウス操作の練習ツールで、タッチのみの端末は対象外
-    // （マウスなし端末には TouchDeviceNotice が案内を表示する）
+    // モバイル専用プロジェクトは持たない。
+    // Issue #42 でタッチ操作（タップ／2回タップ／長押し／なぞる）に対応したが、
+    // モバイルの検証は spec 側で test.use({ ...devices[...] }) を宣言する方式に統一している
+    // （e2e/touch-controls.spec.ts, e2e/touch-notice.spec.ts）。
+    // 全 spec をモバイルでも走らせると、ホバー前提の検証が意味を失うため。
   ],
 
   webServer: {

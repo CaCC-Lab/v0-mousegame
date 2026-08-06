@@ -251,6 +251,16 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
     }
   }, [clearLongPressTimer, onClick, onDoubleClick])
 
+  /**
+   * タッチ操作のあとにブラウザが合成するマウスイベントを、仕様どおり抑止する。
+   *
+   * 時間窓（isGhostClick）だけに頼ると、端末が重くて合成クリックが遅れて届いたときに
+   * 同じ1回のタップを2回数えてしまう。touchend の既定動作を止めるのが確実な手段。
+   */
+  const handleTouchEnd = useCallback((e: React.TouchEvent) => {
+    e.preventDefault()
+  }, [])
+
   const handlePointerCancel = useCallback(() => {
     clearLongPressTimer()
     setIsPressed(false)
@@ -320,6 +330,7 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
+      onTouchEnd={handleTouchEnd}
       data-selected={isSelected}
       data-fruit-id={fruit.id}
       whileHover={{ scale: 1.1 }}

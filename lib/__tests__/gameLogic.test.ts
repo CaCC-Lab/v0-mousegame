@@ -150,3 +150,73 @@ describe('gameLogic', () => {
     })
   })
 })
+describe('generateFruitForField - 種類の偏りをならす補充（Issue #42 アーケード）', () => {
+  const { generateFruitForField } = jest.requireActual<typeof import('@/lib/gameLogic')>('@/lib/gameLogic')
+
+  function makeFruits(types: Array<'apple' | 'blueberry' | 'lemon' | 'watermelon'>) {
+    return types.map((type, i) => ({
+      id: i,
+      type,
+      size: 'medium' as const,
+      x: 10,
+      y: 10,
+      dx: 0,
+      dy: 0,
+    }))
+  }
+
+  it('畑にいちばん少ない種類を補充する', () => {
+    const field = makeFruits(['watermelon', 'watermelon', 'watermelon', 'apple', 'apple', 'lemon'])
+    // ブルーベリーが0個なので必ずブルーベリーが出る
+    expect(generateFruitForField(field).type).toBe('blueberry')
+  })
+
+  it('畑が空のときも有効なフルーツを返す', () => {
+    const fruit = generateFruitForField([])
+    expect(['apple', 'blueberry', 'lemon', 'watermelon']).toContain(fruit.type)
+  })
+
+  it('同数のときは偏らないよう散らす', () => {
+    const field = makeFruits(['apple', 'blueberry', 'lemon', 'watermelon'])
+    const seen = new Set(Array.from({ length: 60 }, () => generateFruitForField(field).type))
+    expect(seen.size).toBeGreaterThan(1)
+  })
+
+  it('位置や速度は通常の生成と同じ範囲に収まる', () => {
+    const fruit = generateFruitForField([])
+    expect(fruit.x).toBeGreaterThanOrEqual(0)
+    expect(fruit.y).toBeGreaterThanOrEqual(0)
+    expect(['small', 'medium', 'large']).toContain(fruit.size)
+  })
+
+  it('一種類だけ大量にある畑では、その種類は補充されない', () => {
+    const field = makeFruits(Array(15).fill('watermelon'))
+    const types = Array.from({ length: 30 }, () => generateFruitForField(field).type)
+    expect(types).not.toContain('watermelon')
+  })
+})
+
+describe('generateBalancedFruits - 4種類そろった初期配置（Issue #42 アーケード）', () => {
+  const { generateBalancedFruits } = jest.requireActual<typeof import('@/lib/gameLogic')>('@/lib/gameLogic')
+
+  it('指定した数のフルーツを作る', () => {
+    expect(generateBalancedFruits(12)).toHaveLength(12)
+  })
+
+  it('4個以上なら4種類すべてが畑にある', () => {
+    const types = new Set(generateBalancedFruits(12).map(f => f.type))
+    expect(types.size).toBe(4)
+  })
+
+  it('種類の数がなるべく均等になる', () => {
+    const fruits = generateBalancedFruits(12)
+    const counts = ['apple', 'blueberry', 'lemon', 'watermelon'].map(
+      type => fruits.filter(f => f.type === type).length
+    )
+    expect(Math.max(...counts) - Math.min(...counts)).toBeLessThanOrEqual(1)
+  })
+
+  it('0個の指定でも壊れない', () => {
+    expect(generateBalancedFruits(0)).toEqual([])
+  })
+})

@@ -36,11 +36,13 @@ function randomElement<T>(array: T[]): T {
 
 /**
  * Generates a single fruit with random properties.
+ *
+ * @param type 種類を指定する場合に渡す（省略時はランダム）
  */
-export function generateFruit(): Fruit {
+export function generateFruit(type?: FruitType): Fruit {
   return {
     id: Math.random(),
-    type: randomElement(FRUIT_TYPES),
+    type: type ?? randomElement(FRUIT_TYPES),
     size: randomElement(FRUIT_SIZES),
     x: randomInRange(PLAY_AREA_WIDTH - 10) + 5,
     y: randomInRange(GAME_CONFIG.gameHeight - 10) + 5,
@@ -50,10 +52,44 @@ export function generateFruit(): Fruit {
 }
 
 /**
+ * 畑にいまいちばん少ない種類を補充する。
+ *
+ * 補充を完全なランダムにすると、苦手な操作のフルーツ（例: ドラッグのスイカ）が
+ * 取り残されて畑を埋め尽くし、手が止まってしまう。
+ * 4種類がいつも畑に揃っているほうが、テンポよく取り続けられる。
+ */
+export function generateFruitForField(existing: Fruit[]): Fruit {
+  const counts = new Map<FruitType, number>(FRUIT_TYPES.map(type => [type, 0]))
+
+  for (const fruit of existing) {
+    counts.set(fruit.type, (counts.get(fruit.type) ?? 0) + 1)
+  }
+
+  const fewest = Math.min(...FRUIT_TYPES.map(type => counts.get(type) ?? 0))
+  const candidates = FRUIT_TYPES.filter(type => (counts.get(type) ?? 0) === fewest)
+
+  return generateFruit(randomElement(candidates))
+}
+
+/**
  * Generates multiple fruits.
  */
 export function generateFruits(count: number): Fruit[] {
   return Array.from({ length: count }, generateFruit)
+}
+
+/**
+ * 4種類が均等に並ぶ畑を作る。
+ * 最初の畑から全部の操作を試せるようにするため、アーケードの開始時に使う。
+ */
+export function generateBalancedFruits(count: number): Fruit[] {
+  const fruits: Fruit[] = []
+
+  for (let i = 0; i < count; i++) {
+    fruits.push(generateFruitForField(fruits))
+  }
+
+  return fruits
 }
 
 /**

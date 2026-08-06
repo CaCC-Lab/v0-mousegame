@@ -10,7 +10,7 @@
  */
 
 import React from 'react'
-import { render, screen, fireEvent, act } from '@testing-library/react'
+import { render, screen, fireEvent, createEvent, act } from '@testing-library/react'
 import { Fruit } from '../Fruit'
 import { TOUCH_CONFIG } from '@/lib/touchGestures'
 import type { Fruit as FruitType } from '@/types/game'
@@ -157,6 +157,16 @@ describe('Fruit - タッチ操作', () => {
     fireEvent.click(element)
 
     expect(onClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('touchend の既定動作を止めて、合成マウスイベント自体を発生させない', () => {
+    // 時間窓による抑止は端末が重いとすり抜けるため、既定動作の抑止で確実に止める
+    const { element } = setup('apple')
+
+    const touchEnd = createEvent.touchEnd(element)
+    fireEvent(element, touchEnd)
+
+    expect(touchEnd.defaultPrevented).toBe(true)
   })
 
   it('マウス操作は従来どおり通知される', () => {
