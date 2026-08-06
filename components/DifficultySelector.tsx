@@ -29,7 +29,10 @@ export function DifficultySelector({
 }: DifficultySelectorProps) {
   // Ensure we have translations
   if (!t || !t.difficulty) {
-    console.error('DifficultySelector: Missing translations', { language, t })
+    // 本番のコンソールは静かに保つ（審査で開発者ツールを開かれても余計な出力を出さない）
+    if (process.env.NODE_ENV !== 'production') {
+      console.error('DifficultySelector: Missing translations', { language, t })
+    }
     return null
   }
 

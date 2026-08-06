@@ -6,10 +6,10 @@ import { translations } from '@/lib/i18n/translations'
 /**
  * TouchDeviceNoticeの実装テスト（モックなし・matchMediaのみ環境差し替え）
  *
- * このゲームはマウス操作の練習ツールなので、マウスのない端末
- * （タッチのみ: hover:none かつ pointer:coarse）で開いた人には
- * 「マウスのあるパソコンで開いてね」と案内する。
- * iPad+マウスやChromebookのようにポインタがある端末には表示しない。
+ * Issue #42 でタッチ操作（タップ／ダブルタップ／長押し／なぞる）に対応したため、
+ * この案内は「マウスのあるパソコンで開いてね」という排除の案内ではなく、
+ * タッチのみの端末（hover:none かつ pointer:coarse）で開いた人への
+ * 操作ヒントとして出す。ポインタのある端末には出さない。
  */
 
 /** matchMedia を任意の判定結果に差し替える */
@@ -27,12 +27,19 @@ function setMatchMedia(matchesTouchOnly: boolean) {
 }
 
 describe('TouchDeviceNotice', () => {
-  it('マウスのない端末では案内を表示する', () => {
+  it('タッチのみの端末では操作ヒントを表示する', () => {
     setMatchMedia(true)
     render(<TouchDeviceNotice t={translations.ja} />)
 
     expect(screen.getByRole('note')).toBeInTheDocument()
-    expect(screen.getByText(/マウス/)).toBeInTheDocument()
+    expect(screen.getByText(translations.ja.touchDeviceNotice)).toBeInTheDocument()
+  })
+
+  it('ヒントには長押し（右クリックの代わり）が含まれる', () => {
+    setMatchMedia(true)
+    render(<TouchDeviceNotice t={translations.ja} />)
+
+    expect(screen.getByRole('note')).toHaveTextContent(/ながおし/)
   })
 
   it('マウスのある端末では何も表示しない', () => {
@@ -55,6 +62,6 @@ describe('TouchDeviceNotice', () => {
     setMatchMedia(true)
     render(<TouchDeviceNotice t={translations.en} />)
 
-    expect(screen.getByText(/mouse/i)).toBeInTheDocument()
+    expect(screen.getByRole('note')).toHaveTextContent(/long-press/i)
   })
 })

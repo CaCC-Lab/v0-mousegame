@@ -144,6 +144,18 @@ export function HelpDialog({ t }: HelpDialogProps): React.ReactElement {
             <DialogDescription className="sr-only">{t.helpDescription}</DialogDescription>
           </DialogHeader>
           <div className="mt-6 text-left text-gray-700">
+            {/* アーケードモード（競って遊ぶ側の主役） */}
+            <section className="mb-6 p-4 bg-rose-50 rounded-[var(--radius-lg)] border-2 border-rose-200">
+              <h4 className="text-display font-bold text-lg text-rose-700 mb-3 text-center">
+                {t.helpContent.arcadeTitle}
+              </h4>
+              <div className="space-y-2 text-base">
+                <p>{t.helpContent.arcadeDesc}</p>
+                <p>🔥 {t.helpContent.arcadeFever}</p>
+                <p>🥇 {t.helpContent.arcadeRank}</p>
+              </div>
+            </section>
+
             {/* フルーツの取り方 */}
             <h3 className="text-display text-2xl font-bold mb-4 text-center" style={{ color: 'var(--color-secondary)' }}>
               {t.fruitSection}
@@ -176,6 +188,20 @@ export function HelpDialog({ t }: HelpDialogProps): React.ReactElement {
               <div className="text-center space-y-2">
                 <div className="text-lg">⏱️ {t.helpContent.timeLimit}</div>
                 <div className="text-lg font-semibold">🎯 {t.helpContent.goal}</div>
+              </div>
+            </section>
+
+            {/* タッチ操作（スマホ・タブレット） */}
+            <section className="mb-6 p-4 bg-teal-50 rounded-[var(--radius-lg)] border-2 border-teal-200">
+              <h4 className="text-display font-bold text-lg text-teal-700 mb-3 text-center">
+                {t.helpContent.touchTitle}
+              </h4>
+              <div className="space-y-2">
+                {[t.helpContent.touchTap, t.helpContent.touchDoubleTap, t.helpContent.touchLongPress, t.helpContent.touchDrag].map((line) => (
+                  <div key={line} className="p-2 bg-white rounded-[var(--radius-lg)] text-base">
+                    {line}
+                  </div>
+                ))}
               </div>
             </section>
 

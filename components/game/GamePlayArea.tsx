@@ -151,6 +151,59 @@ export function GamePlayArea({
     onPowerUpCollect(powerUpId)
   }, [onPowerUpCollect, onTriggerAnimation, gameAreaRef])
 
+  /**
+   * ドロップの成否を判定して通知する。マウスとタッチで共通。
+   * 領域外で離した場合も 'drop' で通知し、成否（得点0）の判断は上位に任せる。
+   */
+  const resolveDrop = useCallback((fruit: FruitType, clientX: number, clientY: number) => {
+    const dropArea = gameAreaRef.current?.querySelector('.drop-area')
+    if (!dropArea) return
+
+    const rect = dropArea.getBoundingClientRect()
+    const isInDropArea = clientX >= rect.left
+      && clientX <= rect.right
+      && clientY >= rect.top
+      && clientY <= rect.bottom
+
+    if (isInDropArea) {
+      handleFruitClickWithAnimation(fruit, 'drop')
+    } else {
+      // AC-5.2a: ドロップ領域外リリースは失敗記録
+      onFruitClick(fruit, 'drop')
+    }
+  }, [gameAreaRef, handleFruitClickWithAnimation, onFruitClick])
+
+  /** タッチの長押し ＝ 右クリック相当 */
+  const handleLongPress = useCallback((fruit: FruitType) => {
+    if (fruit.type === 'lemon') {
+      handleFruitClickWithAnimation(fruit, 'rightClick')
+    } else {
+      onFruitClick(fruit, 'rightClick')
+    }
+  }, [handleFruitClickWithAnimation, onFruitClick])
+
+  /** タッチでスイカを持ち上げる */
+  const handleTouchDragStart = useCallback((e: React.PointerEvent, fruit: FruitType) => {
+    setDraggedFruit(fruit)
+    setMousePosition({ x: e.clientX, y: e.clientY })
+  }, [])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch' || !draggedFruit) return
+    setMousePosition({ x: e.clientX, y: e.clientY })
+  }, [draggedFruit])
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch' || !draggedFruit) return
+
+    resolveDrop(draggedFruit, e.clientX, e.clientY)
+    setDraggedFruit(null)
+  }, [draggedFruit, resolveDrop])
+
+  const handlePointerCancel = useCallback(() => {
+    setDraggedFruit(null)
+  }, [])
+
   const handleMouseDown = useCallback((e: React.MouseEvent, fruit: FruitType) => {
     if (e.button === 2) {
       e.preventDefault()
@@ -175,24 +228,10 @@ export function GamePlayArea({
 
   const handleMouseUp = useCallback((e: React.MouseEvent) => {
     if (draggedFruit) {
-      const dropArea = gameAreaRef.current?.querySelector('.drop-area')
-      if (dropArea) {
-        const rect = dropArea.getBoundingClientRect()
-        const isInDropArea = e.clientX >= rect.left
-          && e.clientX <= rect.right
-          && e.clientY >= rect.top
-          && e.clientY <= rect.bottom
-
-        if (isInDropArea) {
-          handleFruitClickWithAnimation(draggedFruit, 'drop')
-        } else {
-          // AC-5.2a: ドロップ領域外リリースは失敗記録
-          onFruitClick(draggedFruit, 'drop')
-        }
-      }
+      resolveDrop(draggedFruit, e.clientX, e.clientY)
       setDraggedFruit(null)
     }
-  }, [draggedFruit, handleFruitClickWithAnimation, gameAreaRef])
+  }, [draggedFruit, resolveDrop])
 
   const handleAnimationComplete = useCallback((id: number) => {
     setHarvestAnimations(prev => prev.filter(a => a.id !== id))
@@ -209,6 +248,9 @@ export function GamePlayArea({
       style={{ background: 'linear-gradient(180deg, #A8DADC 0%, #4ECDC4 100%)' }}
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       onContextMenu={(e) => e.preventDefault()}
     >
       {fruits.map((fruit, index) => (
@@ -220,6 +262,8 @@ export function GamePlayArea({
           onClick={() => handleFruitClickWithAnimation(fruit, 'click')}
           onDoubleClick={() => handleFruitClickWithAnimation(fruit, 'doubleClick')}
           onMouseDown={(e) => handleMouseDown(e, fruit)}
+          onLongPress={() => handleLongPress(fruit)}
+          onTouchDragStart={(e) => handleTouchDragStart(e, fruit)}
         />
       ))}
 

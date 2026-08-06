@@ -1,7 +1,13 @@
-import React, { useRef, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { motion } from 'framer-motion'
 import { Fruit as FruitType, FRUIT_NAME } from '@/types/game'
 import { FruitSprite } from './game/FruitSprite'
+import {
+  TOUCH_CONFIG,
+  classifyTap,
+  exceedsDragThreshold,
+  isGhostClick,
+} from '@/lib/touchGestures'
 
 interface FruitProps {
   fruit: FruitType
@@ -10,6 +16,10 @@ interface FruitProps {
   onClick: () => void
   onDoubleClick: () => void
   onMouseDown: (e: React.MouseEvent) => void
+  /** 長押し（タッチでの右クリック相当） */
+  onLongPress?: () => void
+  /** タッチでのドラッグ開始（スイカ用） */
+  onTouchDragStart?: (e: React.PointerEvent) => void
 }
 
 const FRUIT_STYLES = {
@@ -145,17 +155,121 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
   isSelected = false,
   onClick,
   onDoubleClick,
-  onMouseDown
+  onMouseDown,
+  onLongPress,
+  onTouchDragStart
 }) {
   const elementRef = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
 
+  // タッチ操作の状態。再描画を挟まず即座に判定したいので ref に持つ
+  const lastTouchAtRef = useRef(0)
+  const lastTapAtRef = useRef(0)
+  const pointerStartRef = useRef<{ x: number; y: number } | null>(null)
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** 長押し・なぞりでジェスチャーが消費済み（＝指を離してもタップにしない） */
+  const gestureConsumedRef = useRef(false)
+
   const sizeClass = getSizeClass(fruit.size)
   const fruitStyle = FRUIT_STYLES[fruit.type]
   const animationState = getAnimationState(isSelected, isPressed, isHovered)
 
+  // スイカは「なぞって運ぶ」が正解の操作なので、長押しは待たない
+  const usesDragGesture = fruit.type === 'watermelon'
+
+  const clearLongPressTimer = useCallback(() => {
+    if (longPressTimerRef.current !== null) {
+      clearTimeout(longPressTimerRef.current)
+      longPressTimerRef.current = null
+    }
+  }, [])
+
+  useEffect(() => clearLongPressTimer, [clearLongPressTimer])
+
+  /** タッチ直後にブラウザが合成するマウスイベントを弾く */
+  const shouldIgnoreMouseEvent = useCallback(
+    () => isGhostClick(lastTouchAtRef.current, Date.now()),
+    []
+  )
+
+  const handlePointerDown = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return
+
+    lastTouchAtRef.current = Date.now()
+    gestureConsumedRef.current = false
+    pointerStartRef.current = { x: e.clientX, y: e.clientY }
+    setIsPressed(true)
+
+    if (usesDragGesture) {
+      onTouchDragStart?.(e)
+      return
+    }
+
+    clearLongPressTimer()
+    longPressTimerRef.current = setTimeout(() => {
+      longPressTimerRef.current = null
+      gestureConsumedRef.current = true
+      onLongPress?.()
+    }, TOUCH_CONFIG.longPressMs)
+  }, [usesDragGesture, onTouchDragStart, onLongPress, clearLongPressTimer])
+
+  const handlePointerMove = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return
+
+    const start = pointerStartRef.current
+    if (!start) return
+
+    if (exceedsDragThreshold(e.clientX - start.x, e.clientY - start.y)) {
+      // 指が動いたらタップではない（なぞり操作）
+      clearLongPressTimer()
+      gestureConsumedRef.current = true
+    }
+  }, [clearLongPressTimer])
+
+  const handlePointerUp = useCallback((e: React.PointerEvent) => {
+    if (e.pointerType !== 'touch') return
+
+    clearLongPressTimer()
+    setIsPressed(false)
+    lastTouchAtRef.current = Date.now()
+    pointerStartRef.current = null
+
+    if (gestureConsumedRef.current) {
+      gestureConsumedRef.current = false
+      return
+    }
+
+    const now = Date.now()
+    const kind = classifyTap(lastTapAtRef.current, now)
+    lastTapAtRef.current = now
+
+    // マウスと同じ順序（click → click → dblclick）で通知し、上位の判定を共通化する
+    onClick()
+    if (kind === 'double') {
+      onDoubleClick()
+    }
+  }, [clearLongPressTimer, onClick, onDoubleClick])
+
+  const handlePointerCancel = useCallback(() => {
+    clearLongPressTimer()
+    setIsPressed(false)
+    pointerStartRef.current = null
+    gestureConsumedRef.current = false
+  }, [clearLongPressTimer])
+
+  const handleClick = useCallback(() => {
+    if (shouldIgnoreMouseEvent()) return
+    onClick()
+  }, [shouldIgnoreMouseEvent, onClick])
+
+  const handleDoubleClick = useCallback(() => {
+    if (shouldIgnoreMouseEvent()) return
+    onDoubleClick()
+  }, [shouldIgnoreMouseEvent, onDoubleClick])
+
   const handleMouseDown = (e: React.MouseEvent) => {
+    if (shouldIgnoreMouseEvent()) return
     setIsPressed(true)
     onMouseDown(e)
   }
@@ -187,17 +301,25 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
         WebkitUserSelect: 'none',
         MozUserSelect: 'none',
         msUserSelect: 'none',
+        // 指でなぞってスイカを運ぶあいだ、ページがスクロール・ズームしないようにする。
+        // 長押しでの選択メニュー（iOS のコールアウト）も出さない。
+        touchAction: 'none',
+        WebkitTouchCallout: 'none',
         filter: `drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)) ${isHovered ? 'brightness(1.1)' : 'brightness(1)'}`,
       }}
       variants={ANIMATION_VARIANTS}
       initial="idle"
       animate={animationState}
-      onClick={onClick}
-      onDoubleClick={onDoubleClick}
+      onClick={handleClick}
+      onDoubleClick={handleDoubleClick}
       onMouseDown={handleMouseDown}
       onMouseUp={handleMouseUp}
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={handlePointerUp}
+      onPointerCancel={handlePointerCancel}
       data-selected={isSelected}
       data-fruit-id={fruit.id}
       whileHover={{ scale: 1.1 }}
