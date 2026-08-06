@@ -59,8 +59,6 @@ export function useLanguage() {
   const toggleLanguage = () => {
     const newLang = currentLanguage === 'ja' ? 'en' : 'ja'
     setLanguage(newLang)
-    // Force update by logging
-    console.log('Language changed to:', newLang)
   }
 
   return {

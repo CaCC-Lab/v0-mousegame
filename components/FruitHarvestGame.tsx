@@ -17,6 +17,9 @@ import {
   TouchDeviceNotice
 } from './game'
 import { ResultModal } from './game/ResultModal'
+import { ModeSelector } from './game/ModeSelector'
+import { ArcadeHUD } from './game/ArcadeHUD'
+import { ArcadeResultModal } from './game/ArcadeResultModal'
 import { BadgeNotification } from './game/BadgeNotification'
 import { BadgeDisplay } from './game/BadgeDisplay'
 import { MasteryDisplay } from './game/MasteryDisplay'
@@ -28,7 +31,9 @@ import { Button } from './ui/button'
 import { Fruit, InteractionType } from '@/types/game'
 import type { InteractionType as IT } from '@/types/game'
 import type { MasteryLevel } from '@/types/gamification'
+import type { GameMode } from '@/types/arcade'
 import { useDailyPractice } from '@/hooks/useDailyPractice'
+import { isRewardedBoostAvailable, requestRewardedBoost } from '@/lib/ads/rewardedBoost'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
@@ -57,6 +62,9 @@ function getInteractionTypeForFruit(fruitType: Fruit['type']): InteractionType {
 export function FruitHarvestGame(): React.ReactElement {
   const {
     gameState,
+    mode,
+    arcade,
+    arcadeResult,
     score,
     highScore,
     timeLeft,
@@ -102,9 +110,32 @@ export function FruitHarvestGame(): React.ReactElement {
   const levelUpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const gameAreaRef = useRef<HTMLDivElement>(null)
 
+  const isArcade = mode === 'arcade'
+  const showArcadeResult = isArcade && arcadeResult !== null
+
   const handleHardModeChange = useCallback((checked: boolean) => {
     setIsHardMode(checked)
   }, [setIsHardMode])
+
+  const handleSelectMode = useCallback((selected: GameMode) => {
+    resetAnimations()
+    startGame(selected)
+  }, [startGame, resetAnimations])
+
+  const handleArcadeRetry = useCallback(() => {
+    resetAnimations()
+    startGame('arcade')
+  }, [startGame, resetAnimations])
+
+  const handleArcadeClose = useCallback(() => {
+    resetGame()
+    resetAnimations()
+  }, [resetGame, resetAnimations])
+
+  // リワード広告はSDK導入後に有効化される（未導入のあいだはボタンを出さない）
+  const handleRewardedBoost = useCallback(() => {
+    void requestRewardedBoost()
+  }, [])
 
   const handleStageSelect = useCallback((stageNumber: number) => {
     const selected = stage?.selectStage(stageNumber) ?? false
@@ -193,7 +224,8 @@ export function FruitHarvestGame(): React.ReactElement {
 
   // Stage completion check
   useEffect(() => {
-    if (gameState !== 'idle' || score <= 0 || !stage?.isHydrated || !stage?.currentStageInfo || stageClearProcessed) {
+    // アーケードはステージの進行と無関係なので、クリア判定にもかけない
+    if (isArcade || gameState !== 'idle' || score <= 0 || !stage?.isHydrated || !stage?.currentStageInfo || stageClearProcessed) {
       return
     }
 
@@ -207,14 +239,17 @@ export function FruitHarvestGame(): React.ReactElement {
         triggerAnimation('stageComplete', rect.width / 2, rect.height / 2)
       }
     }
-  }, [gameState, score, harvestedFruits, stage, triggerAnimation, stageClearProcessed])
+  }, [gameState, score, harvestedFruits, stage, triggerAnimation, stageClearProcessed, isArcade])
 
   // Show ResultModal when game ends (playing → idle transition with score > 0)
   const prevGameStateRef = useRef(gameState)
   useEffect(() => {
     if (prevGameStateRef.current === 'playing' && gameState === 'idle' && score > 0) {
-      setShowResultModal(true)
-      // AC-8.4: プレイした日にスタンプ（全目標達成は不要）
+      // アーケードは専用の結果画面を出すため、練習用の結果モーダルは開かない
+      if (!isArcade) {
+        setShowResultModal(true)
+      }
+      // AC-8.4: プレイした日にスタンプ（モードを問わず「今日あそんだ」記録は残す）
       dailyPractice.stampToday()
     }
     prevGameStateRef.current = gameState
@@ -374,15 +409,24 @@ export function FruitHarvestGame(): React.ReactElement {
             <div className="flex-1 min-w-0">
               <ScoreBar
                 score={score}
-                highScore={highScore}
+                highScore={isArcade ? arcade.best : highScore}
                 timeLeft={timeLeft}
-                streak={operationStats.streak}
+                streak={isArcade ? undefined : operationStats.streak}
                 gameState={gameState}
                 combo={combo}
-                stage={stage}
+                stage={isArcade ? null : stage}
                 t={t}
               />
             </div>
+            {isArcade && (
+              <ArcadeHUD
+                combo={arcade.combo}
+                comboMultiplier={arcade.comboMultiplier}
+                feverGauge={arcade.feverGauge}
+                isFever={arcade.isFever}
+                t={t}
+              />
+            )}
             <HelpDialog t={t} />
           </div>
 
@@ -408,10 +452,42 @@ export function FruitHarvestGame(): React.ReactElement {
               <HarvestedFruitsDisplay
                 harvestedFruits={harvestedFruits}
                 score={score}
-                stage={stage}
+                stage={isArcade ? null : stage}
                 t={t}
               />
             </div>
+
+            {/* フィーバー中は画面全体を熱くする（クリックは通す） */}
+            {isArcade && arcade.isFever && (
+              <motion.div
+                data-testid="fever-overlay"
+                aria-hidden
+                className="absolute inset-0 z-10 pointer-events-none"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0.6, 1, 0.6] }}
+                transition={{ duration: 0.9, repeat: Infinity }}
+                style={{
+                  // 中央は透かしてフルーツを見やすく保ち、縁だけを熱くする。
+                  // screen 合成にすることで、半透明を重ねたときのくすみを避ける
+                  background:
+                    'radial-gradient(ellipse at center, rgba(255,140,0,0) 52%, rgba(255,120,0,0.9) 100%)',
+                  mixBlendMode: 'screen',
+                }}
+              />
+            )}
+
+            {/* 待機中はプレイエリアをそのまま入口にする（開いて数秒で遊び始められるように） */}
+            {gameState === 'idle' && !showArcadeResult && (
+              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/35">
+                <ModeSelector
+                  onSelectMode={handleSelectMode}
+                  arcadeBest={arcade.best}
+                  arcadeRank={arcade.rank}
+                  language={language}
+                  t={t}
+                />
+              </div>
+            )}
           </div>
 
           <GameControls
@@ -441,6 +517,18 @@ export function FruitHarvestGame(): React.ReactElement {
         />
       )}
 
+      <ArcadeResultModal
+        open={showArcadeResult}
+        result={arcadeResult}
+        rankProgress={arcade.rankProgress}
+        language={language}
+        onRetry={handleArcadeRetry}
+        onClose={handleArcadeClose}
+        rewardedAvailable={isRewardedBoostAvailable()}
+        onRewardedBoost={handleRewardedBoost}
+        t={t}
+      />
+
       <ResultModal
         open={showResultModal}
         sessionStats={operationStats.sessionStats}
@@ -462,7 +550,7 @@ export function FruitHarvestGame(): React.ReactElement {
         />
       </div>
 
-      {gameState === 'idle' && (
+      {gameState === 'idle' && !isArcade && (
         <div className="max-w-6xl mx-auto mt-4 space-y-4">
           <MasteryDisplay
             masteryLevels={gamification.masteryLevels}
