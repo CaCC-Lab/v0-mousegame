@@ -201,6 +201,8 @@ export const translations = {
       encouragement2: 'よくできました！もう少し！',
       encouragement1: 'クリアおめでとう！',
       encouragement0: 'れんしゅうのきろくだよ',
+      dailyGoalCompleteTitle: 'きょうのれんしゅうクリア！',
+      levelUpTitle: 'レベルアップ！',
       operations: {
         click: 'クリック',
         doubleClick: 'ダブルクリック',
@@ -394,8 +396,8 @@ export const translations = {
       goalIncomplete: 'Keep going!',
       totalSuccess: 'Total',
       levelProgressLabel: ' level progress',
-      nextLevel: 'Next in',
-      threshold: 'of',
+      nextLevel: 'Remaining:',
+      threshold: 'Next level:',
       badgeEarned: 'Earned',
       badgeProgress: ' progress',
       badgeCongrats: 'Congratulations!',
@@ -422,6 +424,8 @@ export const translations = {
       encouragement2: 'Well done! Almost there!',
       encouragement1: 'Nice clear!',
       encouragement0: 'Here is your practice record',
+      dailyGoalCompleteTitle: "Today's practice complete!",
+      levelUpTitle: 'Level up!',
       operations: {
         click: 'Click',
         doubleClick: 'Double-click',

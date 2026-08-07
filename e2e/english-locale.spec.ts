@@ -56,6 +56,19 @@ test.describe('英語ロケール', () => {
     expect(text.match(/[ぁ-んァ-ヶ一-龠]+/g) ?? []).toEqual([])
   })
 
+  test('ステージ選択に日本語が出ない', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('heading', { name: /Fruit Harvest Game/ })).toBeVisible()
+
+    await page.getByRole('button', { name: /Select Stage/i }).click()
+    // ステージ選択のオーバーレイは dialog ロールを持たないため、見出しから辿る
+    const heading = page.getByRole('heading', { name: /Select Stage/i })
+    await expect(heading).toBeVisible()
+
+    const text = await heading.locator('xpath=ancestor::div[2]').innerText()
+    expect(text.match(/[ぁ-んァ-ヶ一-龠]+/g) ?? []).toEqual([])
+  })
+
   test('プレイ中の画面に日本語が出ない', async ({ page }) => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: /Fruit Harvest Game/ })).toBeVisible()

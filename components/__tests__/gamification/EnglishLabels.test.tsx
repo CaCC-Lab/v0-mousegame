@@ -7,6 +7,8 @@ import { DailyPracticeCard } from '@/components/game/DailyPracticeCard'
 import { BadgeDisplay } from '@/components/game/BadgeDisplay'
 import { StreakIndicator } from '@/components/game/StreakIndicator'
 import { CollectionModal } from '@/components/game/CollectionModal'
+import { DailyGoalComplete } from '@/components/game/DailyGoalComplete'
+import { LevelUpNotification } from '@/components/game/LevelUpNotification'
 import { createDefaultCumulativeStats } from '@/lib/gamificationManager'
 
 /**
@@ -84,6 +86,18 @@ describe('英語表示のゲーミフィケーションUI', () => {
         lastSessionStats={{ ...session, click: { success: 2, miss: 0 } }}
         onClose={() => {}}
       />
+    )
+    expectNoJapanese(container)
+  })
+
+  it('DailyGoalComplete に日本語が出ない', () => {
+    const { container } = render(<DailyGoalComplete t={t} show streak={4} />)
+    expectNoJapanese(container)
+  })
+
+  it('LevelUpNotification に日本語が出ない', () => {
+    const { container } = render(
+      <LevelUpNotification t={t} show operationType="rightClick" newLevel={3} />
     )
     expectNoJapanese(container)
   })

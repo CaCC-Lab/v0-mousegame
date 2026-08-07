@@ -596,12 +596,14 @@ export function FruitHarvestGame(): React.ReactElement {
       />
 
       <DailyGoalComplete
+        t={t}
         show={showDailyGoalComplete}
         streak={dailyPractice.practiceStreak}
       />
 
       {levelUpInfo && (
         <LevelUpNotification
+          t={t}
           operationType={levelUpInfo.op}
           newLevel={levelUpInfo.level}
           show
