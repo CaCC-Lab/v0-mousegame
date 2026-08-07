@@ -6,33 +6,20 @@ import { BADGE_DEFINITIONS } from '@/types/gamification'
 import type { BadgeType, CumulativeOperationStats, DateString, OperationMasteryData } from '@/types/gamification'
 import type { HarvestedFruits, InteractionType } from '@/types/game'
 import { Button } from '@/components/ui/button'
+import { translations } from '@/lib/i18n/translations'
 
 type MasteryProgress = {
   [K in InteractionType]: { current: number; nextThreshold: number; remaining: number } | null
 }
 
-const FRUITS = [
-  { key: 'apple' as const, name: 'りんご' },
-  { key: 'blueberry' as const, name: 'ブルーベリー' },
-  { key: 'lemon' as const, name: 'レモン' },
-  { key: 'watermelon' as const, name: 'スイカ' },
-] as const
+// 表示名は翻訳辞書から引くため、ここでは並び順とキーだけを持つ
+const FRUIT_KEYS = ['apple', 'blueberry', 'lemon', 'watermelon'] as const
 
-const OPERATIONS: { key: InteractionType; name: string }[] = [
-  { key: 'click', name: 'クリック' },
-  { key: 'doubleClick', name: 'ダブルクリック' },
-  { key: 'rightClick', name: '右クリック' },
-  { key: 'drop', name: 'ドラッグ' },
-]
+const OPERATION_KEYS: InteractionType[] = ['click', 'doubleClick', 'rightClick', 'drop']
 
 type TabId = 'fruits' | 'badges' | 'mastery' | 'practice'
 
-const TABS: { id: TabId; label: string }[] = [
-  { id: 'fruits', label: 'フルーツ' },
-  { id: 'badges', label: 'バッジ' },
-  { id: 'mastery', label: 'じゅくたつ' },
-  { id: 'practice', label: 'れんしゅう' },
-]
+const TAB_IDS: TabId[] = ['fruits', 'badges', 'mastery', 'practice']
 
 export interface CollectionModalProps {
   open: boolean
@@ -45,6 +32,8 @@ export interface CollectionModalProps {
   masteryProgress: MasteryProgress
   stamps: DateString[]
   practiceStreak: number
+  /** 表示言語。省略時は日本語（既定の表示言語） */
+  t?: typeof translations.ja
 }
 
 export function CollectionModal({
@@ -56,8 +45,16 @@ export function CollectionModal({
   masteryLevels,
   stamps,
   practiceStreak,
+  t = translations.ja,
 }: CollectionModalProps): React.ReactElement | null {
   const [tab, setTab] = useState<TabId>('fruits')
+  const g = t.gamification
+  const tabLabels: Record<TabId, string> = {
+    fruits: g.tabFruits,
+    badges: g.tabBadges,
+    mastery: g.tabMastery,
+    practice: g.tabPractice,
+  }
 
   if (!open) return null
 
@@ -67,47 +64,47 @@ export function CollectionModal({
     lemon: cumulativeStats.rightClick.totalSuccess,
     watermelon: cumulativeStats.drop.totalSuccess,
   }
-  const allFruitsHarvested = FRUITS.every(f => resolvedFruits[f.key] > 0)
+  const allFruitsHarvested = FRUIT_KEYS.every(key => resolvedFruits[key] > 0)
   const stampSet = new Set(stamps)
 
   return (
     <div data-testid="collection-modal" role="dialog" aria-modal="true" className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4">
       <div className="max-w-2xl w-full max-h-[85vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl">
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-2xl font-bold">ずかん</h2>
+          <h2 className="text-2xl font-bold">{g.collectionTitle}</h2>
           <Button data-testid="collection-modal-close" onClick={onClose} variant="outline" size="sm">
-            閉じる
+            {t.close}
           </Button>
         </div>
 
         <div data-testid="collection-tabs" role="tablist" className="flex gap-1 mb-4 border-b pb-2">
-          {TABS.map(t => (
+          {TAB_IDS.map(id => (
             <button
-              key={t.id}
+              key={id}
               type="button"
               role="tab"
-              data-testid={`collection-tab-${t.id}`}
-              aria-selected={tab === t.id}
-              onClick={() => setTab(t.id)}
-              className={`px-3 py-1.5 rounded-t text-sm font-semibold ${tab === t.id ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
+              data-testid={`collection-tab-${id}`}
+              aria-selected={tab === id}
+              onClick={() => setTab(id)}
+              className={`px-3 py-1.5 rounded-t text-sm font-semibold ${tab === id ? 'bg-blue-100 text-blue-700' : 'text-gray-500 hover:text-gray-700'}`}
             >
-              {t.label}
+              {tabLabels[id]}
             </button>
           ))}
         </div>
 
         {tab === 'fruits' && (
           <div data-testid="collection-panel-fruits" role="tabpanel" className="space-y-3">
-            {FRUITS.map(f => (
-              <div key={f.key} data-testid={`collection-fruit-${f.key}`} data-harvest-count={resolvedFruits[f.key]} className="flex items-center gap-3 p-3 rounded border">
-                <span data-testid={`collection-fruit-emoji-${f.key}`}><FruitSprite type={f.key} size={32} decorative /></span>
-                <span data-testid={`collection-fruit-name-${f.key}`} className="font-semibold">{f.name}</span>
-                <span data-testid={`collection-fruit-count-${f.key}`} className="ml-auto text-lg font-bold">{resolvedFruits[f.key]}</span>
+            {FRUIT_KEYS.map(key => (
+              <div key={key} data-testid={`collection-fruit-${key}`} data-harvest-count={resolvedFruits[key]} className="flex items-center gap-3 p-3 rounded border">
+                <span data-testid={`collection-fruit-emoji-${key}`}><FruitSprite type={key} size={32} decorative /></span>
+                <span data-testid={`collection-fruit-name-${key}`} className="font-semibold">{t[key]}</span>
+                <span data-testid={`collection-fruit-count-${key}`} className="ml-auto text-lg font-bold">{resolvedFruits[key]}</span>
               </div>
             ))}
             {allFruitsHarvested && (
               <div data-testid="collection-fruits-complete" className="text-center text-green-600 font-bold text-lg py-2">
-                コンプリート！
+                {g.fruitsComplete}
               </div>
             )}
           </div>
@@ -125,8 +122,8 @@ export function CollectionModal({
                   className={earned ? 'collection-badge-earned flex items-center gap-3 p-3 rounded border' : 'collection-badge-silhouette flex items-center gap-3 p-3 rounded border opacity-40 grayscale'}
                 >
                   <span className="text-2xl">{def.icon}</span>
-                  <span className="font-semibold">{def.name}</span>
-                  {earned && <span className="ml-auto text-green-500">獲得済み</span>}
+                  <span className="font-semibold">{g.badges[def.type] ?? def.name}</span>
+                  {earned && <span className="ml-auto text-green-500">{g.badgeEarned}</span>}
                 </div>
               )
             })}
@@ -135,11 +132,11 @@ export function CollectionModal({
 
         {tab === 'mastery' && (
           <div data-testid="collection-panel-mastery" role="tabpanel" className="space-y-3">
-            {OPERATIONS.map(({ key, name }) => {
+            {OPERATION_KEYS.map(key => {
               return (
                 <div key={key} data-testid={`collection-mastery-${key}`} className="p-3 rounded border">
                   <div className="flex items-center gap-2">
-                    <span className="font-semibold">{name}</span>
+                    <span className="font-semibold">{g.operations[key]}</span>
                     <span data-testid={`collection-mastery-level-${key}`} className="text-blue-600">Lv.{masteryLevels[key]}</span>
                   </div>
                   <div data-testid={`collection-mastery-current-${key}`} className="text-sm text-gray-500 mt-1">
@@ -154,13 +151,13 @@ export function CollectionModal({
         {tab === 'practice' && (
           <div data-testid="collection-panel-practice" role="tabpanel">
             <div className="text-center mb-4">
-              <span className="text-sm text-gray-500">れんぞく</span>
+              <span className="text-sm text-gray-500">{g.practiceStreakLabel}</span>
               <div data-testid="collection-practice-streak" className="text-3xl font-bold text-blue-600">
                 {practiceStreak}
               </div>
-              <span className="text-sm text-gray-500">日</span>
+              <span className="text-sm text-gray-500">{g.practiceDaysUnit}</span>
             </div>
-            <div data-testid="collection-stamp-calendar" aria-label="直近30日スタンプカレンダー" className="grid grid-cols-7 gap-1">
+            <div data-testid="collection-stamp-calendar" aria-label={g.stampCalendarLabel} className="grid grid-cols-7 gap-1">
               {Array.from({ length: 30 }, (_, i) => {
                 const d = new Date()
                 d.setDate(d.getDate() - (29 - i))

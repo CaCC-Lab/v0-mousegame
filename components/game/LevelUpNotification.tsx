@@ -3,24 +3,20 @@
 import React from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import type { MasteryLevel } from '@/types/gamification'
-import { MASTERY_THRESHOLDS } from '@/types/gamification'
 import type { InteractionType } from '@/types/game'
-
-const OPERATION_NAMES: Record<InteractionType, string> = {
-  click: 'クリック',
-  doubleClick: 'ダブルクリック',
-  rightClick: '右クリック',
-  drop: 'ドラッグ',
-}
+import { translations } from '@/lib/i18n/translations'
 
 export interface LevelUpNotificationProps {
   operationType: InteractionType
   newLevel: MasteryLevel
   show: boolean
+  /** 表示言語。省略時は日本語（既定の表示言語） */
+  t?: typeof translations.ja
 }
 
-export function LevelUpNotification({ operationType, newLevel, show }: LevelUpNotificationProps): React.ReactElement {
-  const label = MASTERY_THRESHOLDS.find(t => t.level === newLevel)?.label ?? ''
+export function LevelUpNotification({ operationType, newLevel, show, t = translations.ja }: LevelUpNotificationProps): React.ReactElement {
+  const g = t.gamification
+  const label = g.masteryLevels[newLevel] ?? ''
 
   return (
     <AnimatePresence>
@@ -36,10 +32,10 @@ export function LevelUpNotification({ operationType, newLevel, show }: LevelUpNo
           className="fixed bottom-20 left-1/2 z-50 -translate-x-1/2 rounded-xl bg-green-100 px-6 py-4 shadow-lg"
         >
           <div className="text-lg font-bold text-center">
-            レベルアップ！
+            {g.levelUpTitle}
           </div>
           <div className="text-center mt-1">
-            <span data-testid="level-up-operation">{OPERATION_NAMES[operationType]}</span>
+            <span data-testid="level-up-operation">{g.operations[operationType]}</span>
             {' → '}
             <span data-testid="level-up-new-level" className="text-green-600 font-bold">Lv.{newLevel}</span>
             {' '}

@@ -2,16 +2,25 @@
 
 import React from 'react'
 import { SessionOperationStats, StarRating, OPERATION_LABELS } from '@/types/gamification'
-import { compareSessionSuccess, getEncouragementMessage } from '@/lib/gamificationManager'
+import { compareSessionSuccess } from '@/lib/gamificationManager'
+import { translations } from '@/lib/i18n/translations'
 
 const MAX_STARS = 3
 
-/** 前回と比べてどうだったかを、矢印と言葉の両方で伝える */
+/** 前回と比べてどうだったかを、矢印と言葉の両方で伝える（言葉は翻訳辞書から引く） */
 const DELTA_DISPLAY = {
-  up: { symbol: '↑', label: 'ふえた', className: 'text-green-600' },
-  down: { symbol: '↓', label: 'へった', className: 'text-gray-500' },
-  same: { symbol: '→', label: 'おなじ', className: 'text-gray-500' },
+  up: { symbol: '↑', labelKey: 'deltaUp', className: 'text-green-600' },
+  down: { symbol: '↓', labelKey: 'deltaDown', className: 'text-gray-500' },
+  same: { symbol: '→', labelKey: 'deltaSame', className: 'text-gray-500' },
 } as const
+
+/** 星の数に応じた励ましの言葉 */
+function encouragementFor(starRating: StarRating, g: typeof translations.ja.gamification): string {
+  if (starRating >= 3) return g.encouragement3
+  if (starRating === 2) return g.encouragement2
+  if (starRating === 1) return g.encouragement1
+  return g.encouragement0
+}
 
 export interface ResultModalProps {
   open: boolean
@@ -19,6 +28,8 @@ export interface ResultModalProps {
   starRating: StarRating
   lastSessionStats: SessionOperationStats | null
   onClose: () => void
+  /** 表示言語。省略時は日本語（既定の表示言語） */
+  t?: typeof translations.ja
   labels?: {
     title: string
     close: string
@@ -34,17 +45,20 @@ export function ResultModal({
   starRating,
   lastSessionStats,
   onClose,
-  labels = {
-    title: 'れんしゅうけっか',
-    close: 'とじる',
-    stars: 'ほし',
-    successCounts: 'せいこうかいすう',
-    comparison: 'ぜんかいくらべ',
-  },
+  t = translations.ja,
+  labels,
 }: ResultModalProps): React.ReactElement | null {
   if (!open) return null
 
-  const encouragement = getEncouragementMessage(starRating)
+  const g = t.gamification
+  const l = labels ?? {
+    title: g.resultTitle,
+    close: g.resultClose,
+    stars: g.resultStars,
+    successCounts: g.resultSuccessCounts,
+    comparison: g.resultComparison,
+  }
+  const encouragement = encouragementFor(starRating, g)
   // 前回がなければ比較しない（比べる相手がいないのに「おなじ」と出ると誤解を生む）
   const deltas = lastSessionStats ? compareSessionSuccess(sessionStats, lastSessionStats) : null
 
@@ -61,14 +75,14 @@ export function ResultModal({
           className="text-display text-2xl font-bold mb-1 text-center"
           style={{ color: 'var(--color-primary)' }}
         >
-          {labels.title}
+          {l.title}
         </h2>
 
         {/* 獲得数にかかわらず3つ分の枠を見せて、あと何個かが分かるようにする */}
         <div
           className="mb-2 text-center text-3xl tracking-widest"
           data-testid="star-rating-display"
-          aria-label={`${labels.stars} ${starRating} / ${MAX_STARS}`}
+          aria-label={`${l.stars} ${starRating} / ${MAX_STARS}`}
         >
           <span className="text-yellow-400">{'★'.repeat(starRating)}</span>
           <span className="text-gray-300">{'☆'.repeat(MAX_STARS - starRating)}</span>
@@ -81,10 +95,10 @@ export function ResultModal({
           {encouragement}
         </p>
 
-        <div data-testid="session-success-counts" aria-label={labels.successCounts}>
-          <div className="text-sm font-bold text-gray-500 mb-2">{labels.successCounts}</div>
+        <div data-testid="session-success-counts" aria-label={l.successCounts}>
+          <div className="text-sm font-bold text-gray-500 mb-2">{l.successCounts}</div>
           <ul className="space-y-1">
-            {OPERATION_LABELS.map(({ key, icon, name }) => {
+            {OPERATION_LABELS.map(({ key, icon }) => {
               const delta = deltas ? DELTA_DISPLAY[deltas[key]] : null
 
               return (
@@ -93,16 +107,16 @@ export function ResultModal({
                   className="flex items-center gap-2 rounded-[var(--radius-md)] bg-gray-50 px-3 py-2"
                 >
                   <span aria-hidden>{icon}</span>
-                  <span className="flex-1 font-semibold">{name}</span>
+                  <span className="flex-1 font-semibold">{g.operations[key]}</span>
                   <span className="font-bold tabular-nums" data-testid={`success-${key}`}>
-                    {sessionStats[key].success}かい
+                    {sessionStats[key].success}{g.resultCountUnit}
                   </span>
                   {delta && (
                     <span
                       className={`w-20 text-right text-sm font-semibold ${delta.className}`}
                       data-testid={`delta-${key}`}
                     >
-                      {delta.symbol} {delta.label}
+                      {delta.symbol} {g[delta.labelKey]}
                     </span>
                   )}
                 </li>
@@ -111,7 +125,7 @@ export function ResultModal({
           </ul>
           {deltas && (
             <div className="mt-2 text-xs text-gray-500 text-right" aria-hidden>
-              {labels.comparison}
+              {l.comparison}
             </div>
           )}
         </div>
@@ -122,7 +136,7 @@ export function ResultModal({
           style={{ backgroundColor: 'var(--color-secondary)' }}
           onClick={onClose}
         >
-          {labels.close}
+          {l.close}
         </button>
       </div>
     </div>

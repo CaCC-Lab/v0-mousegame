@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Timer, Zap } from 'lucide-react'
 import { GameState } from '@/types/game'
 import { Stage } from '@/types/stage'
+import { translations } from '@/lib/i18n/translations'
 
 interface ScoreBarProps {
   score: number
@@ -19,13 +20,8 @@ interface ScoreBarProps {
     currentStage: number
     currentStageInfo: Stage | null
   } | null
-  t: {
-    score: string
-    highScore: string
-    combo: string
-    stage: string
-    timeFormat: (minutes: number, seconds: number) => string
-  }
+  // ステージ名と連続成功の見出しも翻訳辞書から引くため、辞書全体を受け取る
+  t: typeof translations.ja
 }
 
 /**
@@ -70,7 +66,8 @@ function StageSection({ stage, t }: Pick<ScoreBarProps, 'stage' | 't'>): React.R
         {t.stage} {stage.currentStage}
       </span>
       <span className="hidden md:inline text-xs opacity-90 whitespace-nowrap">
-        {stage.currentStageInfo.name}
+        {/* stage.currentStageInfo.name は日本語固定のデータなので、表示は翻訳辞書から引く */}
+        {t.stages[`stage${stage.currentStage}` as keyof typeof t.stages]?.name ?? stage.currentStageInfo.name}
       </span>
     </div>
   )
@@ -123,7 +120,7 @@ export function ScoreBar({
           data-testid="scorebar-streak"
           className="hidden sm:block text-white text-xs font-semibold whitespace-nowrap"
         >
-          連続成功: {streak}
+          {t.gamification.streakSuccess}: {streak}
         </div>
       )}
       <div className="hidden sm:contents">

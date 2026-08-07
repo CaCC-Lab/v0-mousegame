@@ -16,6 +16,7 @@ import {
   GamePlayArea,
   TouchDeviceNotice
 } from './game'
+import { FruitSprite } from './game/FruitSprite'
 import { ResultModal } from './game/ResultModal'
 import { ModeSelector } from './game/ModeSelector'
 import { ArcadeHUD } from './game/ArcadeHUD'
@@ -404,7 +405,8 @@ export function FruitHarvestGame(): React.ReactElement {
           {/* HUDバー: タイトル + スコア/時間チップ + あそびかた */}
           <div className="bg-gradient-ocean px-3 py-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 shrink-0">
             <h1 className="text-display text-lg md:text-xl font-bold text-white whitespace-nowrap drop-shadow">
-              🍎 {t.gameTitle}
+              <FruitSprite type="apple" size={22} className="inline-block align-[-0.15em] mr-1" decorative />
+              {t.gameTitle}
             </h1>
             <div className="flex-1 min-w-0">
               <ScoreBar
@@ -439,6 +441,7 @@ export function FruitHarvestGame(): React.ReactElement {
               isHardMode={isHardMode}
               selectedFruitIndex={selectedFruitIndex}
               dropAreaText={t.dropArea}
+              t={t}
               onFruitClick={handleFruitClick}
               onPowerUpCollect={handlePowerUpClick}
               onTriggerAnimation={triggerAnimation}
@@ -533,6 +536,7 @@ export function FruitHarvestGame(): React.ReactElement {
       />
 
       <ResultModal
+        t={t}
         open={showResultModal}
         sessionStats={operationStats.sessionStats}
         starRating={lastStarRating}
@@ -541,12 +545,14 @@ export function FruitHarvestGame(): React.ReactElement {
       />
 
       <BadgeNotification
+        t={t}
         badge={gamification.newlyEarnedBadge}
         show={showBadgeNotification}
       />
 
       <div className="max-w-6xl mx-auto mt-4">
         <DailyPracticeCard
+          t={t}
           todayGoals={dailyPractice.todayGoals}
           isGoalComplete={dailyPractice.isGoalComplete}
           practiceStreak={dailyPractice.practiceStreak}
@@ -556,11 +562,13 @@ export function FruitHarvestGame(): React.ReactElement {
       {gameState === 'idle' && !isArcade && (
         <div className="max-w-6xl mx-auto mt-4 space-y-4">
           <MasteryDisplay
+            t={t}
             masteryLevels={gamification.masteryLevels}
             masteryProgress={gamification.masteryProgress}
             cumulativeStats={gamification.cumulativeStats}
           />
           <BadgeDisplay
+            t={t}
             earnedBadges={gamification.earnedBadges}
             cumulativeStats={gamification.cumulativeStats}
           />
@@ -570,12 +578,13 @@ export function FruitHarvestGame(): React.ReactElement {
             className="w-full"
             variant="outline"
           >
-            ずかんを見る
+            {t.gamification.viewCollection}
           </Button>
         </div>
       )}
 
       <CollectionModal
+        t={t}
         open={showCollection}
         onClose={() => setShowCollection(false)}
         cumulativeStats={gamification.cumulativeStats}
@@ -587,12 +596,14 @@ export function FruitHarvestGame(): React.ReactElement {
       />
 
       <DailyGoalComplete
+        t={t}
         show={showDailyGoalComplete}
         streak={dailyPractice.practiceStreak}
       />
 
       {levelUpInfo && (
         <LevelUpNotification
+          t={t}
           operationType={levelUpInfo.op}
           newLevel={levelUpInfo.level}
           show

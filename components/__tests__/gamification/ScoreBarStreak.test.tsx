@@ -5,14 +5,10 @@
 import React from 'react'
 import { render, screen } from '@testing-library/react'
 import { ScoreBar } from '@/components/game/ScoreBar'
+import { translations } from '@/lib/i18n/translations'
 
-const t = {
-  score: 'スコア',
-  highScore: 'ハイスコア',
-  combo: 'コンボ',
-  stage: 'ステージ',
-  timeFormat: (m: number, s: number) => `${m}:${s}`,
-}
+// 実際の翻訳辞書を使う（部分的な差し替えだと文言の欠落に気づけない）
+const t = translations.ja
 
 describe('ScoreBar streak', () => {
   it('streak が渡されると表示される', () => {
