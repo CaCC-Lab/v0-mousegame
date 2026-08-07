@@ -11,6 +11,7 @@ import { PowerUp as PowerUpType } from '@/types/powerup'
 import { ParticleEffect } from '@/types/animation'
 import type { StreakBonus } from '@/types/gamification'
 import { StreakIndicator } from './StreakIndicator'
+import { translations } from '@/lib/i18n/translations'
 
 interface GamePlayAreaProps {
   fruits: FruitType[]
@@ -26,6 +27,8 @@ interface GamePlayAreaProps {
   gameAreaRef: React.RefObject<HTMLDivElement>
   streak?: number
   lastStreakBonus?: StreakBonus | null
+  /** 連続成功表示の言語。省略時は日本語 */
+  t?: typeof translations.ja
 }
 
 function DraggedFruitOverlay({
@@ -114,7 +117,8 @@ export function GamePlayArea({
   onFruitCollected,
   gameAreaRef,
   streak,
-  lastStreakBonus
+  lastStreakBonus,
+  t
 }: GamePlayAreaProps): React.ReactElement {
   const [draggedFruit, setDraggedFruit] = useState<FruitType | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -285,7 +289,7 @@ export function GamePlayArea({
 
       {typeof streak === 'number' && (
         <div className="absolute top-2 right-2 z-10">
-          <StreakIndicator streak={streak} lastBonus={lastStreakBonus ?? null} />
+          <StreakIndicator streak={streak} lastBonus={lastStreakBonus ?? null} t={t} />
         </div>
       )}
 

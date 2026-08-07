@@ -1,13 +1,10 @@
 'use client'
 
 import React from 'react'
-import type { CumulativeOperationStats, MasteryLevel, OperationMasteryData } from '@/types/gamification'
-import { MASTERY_THRESHOLDS, OPERATION_LABELS } from '@/types/gamification'
+import type { CumulativeOperationStats, OperationMasteryData } from '@/types/gamification'
+import { OPERATION_LABELS } from '@/types/gamification'
 import type { InteractionType } from '@/types/game'
-
-const MASTERY_LABELS: Record<MasteryLevel, string> = Object.fromEntries(
-  MASTERY_THRESHOLDS.map(t => [t.level, t.label])
-) as Record<MasteryLevel, string>
+import { translations } from '@/lib/i18n/translations'
 
 export interface MasteryDisplayProps {
   masteryLevels: OperationMasteryData
@@ -15,14 +12,18 @@ export interface MasteryDisplayProps {
     [K in InteractionType]: { current: number; nextThreshold: number; remaining: number } | null
   }
   cumulativeStats: CumulativeOperationStats
+  /** 表示言語。省略時は日本語（既定の表示言語） */
+  t?: typeof translations.ja
 }
 
-export function MasteryDisplay({ masteryLevels, masteryProgress, cumulativeStats }: MasteryDisplayProps): React.ReactElement {
+export function MasteryDisplay({ masteryLevels, masteryProgress, cumulativeStats, t = translations.ja }: MasteryDisplayProps): React.ReactElement {
+  const g = t.gamification
   return (
     <div data-testid="mastery-display" className="grid gap-3">
-      {OPERATION_LABELS.map(({ key, icon, name }) => {
+      {OPERATION_LABELS.map(({ key, icon }) => {
+        const name = g.operations[key]
         const level = masteryLevels[key]
-        const label = MASTERY_LABELS[level]
+        const label = g.masteryLevels[level]
         const prog = masteryProgress[key]
         const total = cumulativeStats[key].totalSuccess
         return (
@@ -39,7 +40,7 @@ export function MasteryDisplay({ masteryLevels, masteryProgress, cumulativeStats
               <span data-testid={`mastery-label-${key}`} className="text-sm text-gray-500">{label}</span>
             </div>
             <div data-testid={`mastery-total-${key}`} className="mt-1 text-sm text-gray-600">
-              累計成功: {total}
+              {g.totalSuccess}: {total}
             </div>
             {prog ? (
               <div className="mt-1">
@@ -47,7 +48,7 @@ export function MasteryDisplay({ masteryLevels, masteryProgress, cumulativeStats
                   data-testid={`mastery-progress-${key}`}
                   className="h-2 w-full rounded bg-gray-200"
                   role="progressbar"
-                  aria-label={`${name}のレベル進捗`}
+                  aria-label={`${name}${g.levelProgressLabel}`}
                   aria-valuenow={prog.current}
                   aria-valuemax={prog.nextThreshold}
                 >
@@ -57,7 +58,7 @@ export function MasteryDisplay({ masteryLevels, masteryProgress, cumulativeStats
                   />
                 </div>
                 <div className="text-xs text-gray-500 mt-0.5">
-                  次まで {prog.remaining} / 閾値 {prog.nextThreshold}
+                  {g.nextLevel} {prog.remaining} / {g.threshold} {prog.nextThreshold}
                 </div>
               </div>
             ) : (

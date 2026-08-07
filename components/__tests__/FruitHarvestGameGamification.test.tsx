@@ -84,6 +84,9 @@ const mockUseOperationStats = useOperationStats as jest.MockedFunction<typeof us
 describe('FruitHarvestGame gamification (Task 8)', () => {
   beforeEach(() => {
     localStorage.clear()
+    // jsdom の navigator.language は en-US なので、指定しないと英語表示になる。
+    // このテストは日本語の文言で要素を特定するため、表示言語を日本語に固定する
+    localStorage.setItem('fruitHarvestLanguage', JSON.stringify('ja'))
     jest.clearAllMocks()
   })
 
@@ -150,9 +153,9 @@ describe('FruitHarvestGame gamification (Task 8)', () => {
         await user.dblClick(blueberries[0])
       }
 
-      const timeText = screen.getByText(/\d+:\d{2}/).textContent ?? ''
-      const [minStr, secStr] = timeText.split(':')
-      const timeLeftSeconds = Number.parseInt(minStr ?? '0', 10) * 60 + Number.parseInt(secStr ?? '0', 10)
+      // 残り時間の表記は言語で変わる（日本語は「1分00秒」、英語は「1:00」）
+      const timeMatch = screen.getByText(/\d+[:分]\d{2}/).textContent?.match(/(\d+)[:分](\d{2})/)
+      const timeLeftSeconds = Number.parseInt(timeMatch?.[1] ?? '0', 10) * 60 + Number.parseInt(timeMatch?.[2] ?? '0', 10)
 
       await act(async () => {
         jest.advanceTimersByTime(timeLeftSeconds * 1000)
