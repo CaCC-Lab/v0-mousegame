@@ -6,9 +6,9 @@ import { translations } from '@/lib/i18n/translations'
 /**
  * TouchDeviceNoticeの実装テスト（モックなし・matchMediaのみ環境差し替え）
  *
- * このゲームはマウス操作の練習ツールなので、マウスのない端末
- * （タッチのみ: hover:none かつ pointer:coarse）で開いた人には
- * 「マウスのあるパソコンで開いてね」と案内する。
+ * タッチのみの端末（hover:none かつ pointer:coarse）に、操作のヒントを一度だけ出す。
+ * 4つの操作はタッチでも成立するが「長押しが右クリックの代わり」であることは
+ * 触ってみないと分からないため、最初に伝える。
  * iPad+マウスやChromebookのようにポインタがある端末には表示しない。
  */
 
@@ -27,15 +27,16 @@ function setMatchMedia(matchesTouchOnly: boolean) {
 }
 
 describe('TouchDeviceNotice', () => {
-  it('マウスのない端末では案内を表示する', () => {
+  it('タッチのみの端末では操作のヒントを表示する', () => {
     setMatchMedia(true)
     render(<TouchDeviceNotice t={translations.ja} />)
 
     expect(screen.getByRole('note')).toBeInTheDocument()
-    expect(screen.getByText(/マウス/)).toBeInTheDocument()
+    // 長押し（右クリックの代わり）とドラッグの案内が要点
+    expect(screen.getByText(/ながおし/)).toBeInTheDocument()
   })
 
-  it('マウスのある端末では何も表示しない', () => {
+  it('ポインタのある端末では何も表示しない', () => {
     setMatchMedia(false)
     render(<TouchDeviceNotice t={translations.ja} />)
 
@@ -55,6 +56,6 @@ describe('TouchDeviceNotice', () => {
     setMatchMedia(true)
     render(<TouchDeviceNotice t={translations.en} />)
 
-    expect(screen.getByText(/mouse/i)).toBeInTheDocument()
+    expect(screen.getByText(/long-press/i)).toBeInTheDocument()
   })
 })

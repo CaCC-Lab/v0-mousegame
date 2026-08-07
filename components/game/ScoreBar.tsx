@@ -113,16 +113,26 @@ export function ScoreBar({
   t
 }: ScoreBarProps): React.ReactElement {
   return (
+    // 狭い画面ではHUDが何段にも折り返してプレイエリアを潰すため、
+    // 得点と残り時間（プレイ中に必ず要るもの）以外は sm 以上でだけ出す。
+    // testid で参照している要素は消さず、表示だけ切り替える
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
       <ScoreSection score={score} combo={combo} t={t} />
       {typeof streak === 'number' && (
-        <div data-testid="scorebar-streak" className="text-white text-xs font-semibold whitespace-nowrap">
+        <div
+          data-testid="scorebar-streak"
+          className="hidden sm:block text-white text-xs font-semibold whitespace-nowrap"
+        >
           連続成功: {streak}
         </div>
       )}
-      <StageSection stage={stage} t={t} />
+      <div className="hidden sm:contents">
+        <StageSection stage={stage} t={t} />
+      </div>
       <TimerSection timeLeft={timeLeft} gameState={gameState} t={t} />
-      <HighScoreSection highScore={highScore} t={t} />
+      <div className="hidden sm:contents">
+        <HighScoreSection highScore={highScore} t={t} />
+      </div>
     </div>
   )
 }

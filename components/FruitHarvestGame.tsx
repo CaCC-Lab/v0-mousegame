@@ -478,7 +478,10 @@ export function FruitHarvestGame(): React.ReactElement {
 
             {/* 待機中はプレイエリアをそのまま入口にする（開いて数秒で遊び始められるように） */}
             {gameState === 'idle' && !showArcadeResult && (
-              <div className="absolute inset-0 z-30 flex items-center justify-center bg-black/35">
+              // 画面が低いとカード2枚が入りきらずプレイエリアからはみ出し、
+              // 下の操作ボタンに重なってタップを奪ってしまう。
+              // オーバーレイ内でスクロールさせて外へ出さない
+              <div className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/35 py-3">
                 <ModeSelector
                   onSelectMode={handleSelectMode}
                   arcadeBest={arcade.best}
