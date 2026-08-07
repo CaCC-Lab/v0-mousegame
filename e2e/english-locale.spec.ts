@@ -12,6 +12,9 @@ test.describe('英語ロケール', () => {
 
   test('待機画面に日本語が出ない', async ({ page }) => {
     await page.goto('/')
+    // 表示言語は navigator.language からクライアント側で決まるため、
+    // 初期HTML（日本語）が英語に切り替わるのを待ってから中身を見る
+    await expect(page.getByRole('heading', { name: /Fruit Harvest Game/ })).toBeVisible()
     await expect(page.getByTestId('mode-select-arcade')).toBeVisible()
 
     const text = await page.evaluate(() => document.body.innerText)
@@ -22,6 +25,9 @@ test.describe('英語ロケール', () => {
 
   test('ずかん（コレクション）に日本語が出ない', async ({ page }) => {
     await page.goto('/')
+    // 表示言語は navigator.language からクライアント側で決まるため、
+    // 初期HTML（日本語）が英語に切り替わるのを待ってから中身を見る
+    await expect(page.getByRole('heading', { name: /Fruit Harvest Game/ })).toBeVisible()
     await expect(page.getByTestId('mode-select-arcade')).toBeVisible()
 
     await page.getByRole('button', { name: /View collection/i }).click()
@@ -37,6 +43,9 @@ test.describe('英語ロケール', () => {
 
   test('あそびかたダイアログに日本語が出ない', async ({ page }) => {
     await page.goto('/')
+    // 表示言語は navigator.language からクライアント側で決まるため、
+    // 初期HTML（日本語）が英語に切り替わるのを待ってから中身を見る
+    await expect(page.getByRole('heading', { name: /Fruit Harvest Game/ })).toBeVisible()
     await expect(page.getByTestId('mode-select-arcade')).toBeVisible()
 
     await page.getByRole('button', { name: /How to Play/i }).click()
@@ -49,6 +58,7 @@ test.describe('英語ロケール', () => {
 
   test('プレイ中の画面に日本語が出ない', async ({ page }) => {
     await page.goto('/')
+    await expect(page.getByRole('heading', { name: /Fruit Harvest Game/ })).toBeVisible()
     await page.getByTestId('mode-select-arcade').click()
     await expect(page.getByRole('button', { name: /Pause/ })).toBeVisible()
     await page.waitForTimeout(800)

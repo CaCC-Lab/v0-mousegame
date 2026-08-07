@@ -181,11 +181,11 @@ node scripts/render-cover.mjs          # docs/itch-io/cover.png (630x500)
 
 ## 🎨 素材のクレジット
 
-フルーツの絵柄には [Noto Color Emoji](https://fonts.google.com/noto/specimen/Noto+Color+Emoji)（Copyright 2022 Google Inc.／SIL Open Font License 1.1）を、
-このゲームで使う4文字だけサブセット化して同梱しています（11MB → 7.8KB）。
+フルーツの絵柄は `public/sprites/` に置いた専用のスプライト画像を使っています。
+絵文字はOSごとに絵柄が変わるため、画像で描くことでどの環境でも同じフルーツが表示されます。
 
-絵文字はOSごとに絵柄が異なるため、同梱することでどの環境でも同じフルーツが表示されます。
-ライセンス全文は [`app/fonts/FRUIT-EMOJI-LICENSE.txt`](app/fonts/FRUIT-EMOJI-LICENSE.txt) を参照してください。
+以前は Noto Color Emoji をサブセット化した絵文字フォントを同梱していましたが、
+Firefox がカラー絵文字フォント（CBDT/CBLC）をWebフォントとして読めずコンソールエラーになるため廃止しました。
 
 ## 🔧 技術スタック
 

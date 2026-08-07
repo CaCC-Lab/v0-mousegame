@@ -16,6 +16,7 @@ import {
   GamePlayArea,
   TouchDeviceNotice
 } from './game'
+import { FruitSprite } from './game/FruitSprite'
 import { ResultModal } from './game/ResultModal'
 import { ModeSelector } from './game/ModeSelector'
 import { ArcadeHUD } from './game/ArcadeHUD'
@@ -404,7 +405,8 @@ export function FruitHarvestGame(): React.ReactElement {
           {/* HUDバー: タイトル + スコア/時間チップ + あそびかた */}
           <div className="bg-gradient-ocean px-3 py-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 shrink-0">
             <h1 className="text-display text-lg md:text-xl font-bold text-white whitespace-nowrap drop-shadow">
-              🍎 {t.gameTitle}
+              <FruitSprite type="apple" size={22} className="inline-block align-[-0.15em] mr-1" decorative />
+              {t.gameTitle}
             </h1>
             <div className="flex-1 min-w-0">
               <ScoreBar
