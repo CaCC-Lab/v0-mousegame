@@ -102,25 +102,41 @@ async function waitForScoreAbove(
 }
 
 /**
- * 指定種類のフルーツを正しい操作で収穫する。
+ * 指定座標の hit test 最前面が、指定 fruit id の個体か。
+ * 実マウス操作では遮蔽された個体の中心をクリックしても届かないため、操作前に確認する。
+ */
+async function isFruitTopmostAtPoint(
+  page: Page,
+  fruitId: string,
+  x: number,
+  y: number
+): Promise<boolean> {
+  return page.evaluate(
+    ({ fruitId: id, x: px, y: py }) => {
+      const el = document.elementFromPoint(px, py)
+      if (!el) return false
+      const host = el.closest('[data-fruit-id]')
+      return host?.getAttribute('data-fruit-id') === id
+    },
+    { fruitId, x, y }
+  )
+}
+
+/**
+ * 指定種類のフルーツを正しい操作で収穫する（実マウス操作）。
  *
- * Flaky の理由:
- * - アーケードでは収穫のたびに畑が差し替わり、重なりも変わる。
- * - 「種類の n 番目」Locator を握ってから操作するまでに対象が消える／差し替わると空振りし、
- *   得点が増えない（アプリ欠陥ではなく操作タイミングの問題）。
- * - レモンは onMouseDown(button===2) で収穫判定する。
+ * スイカの D&D（page.mouse）と同じ水準で、click / dblclick / rightClick も
+ * page.mouse の hit testing を通す。dispatchEvent は使わない
+ * （遮蔽・pointer-events・イベント列・ユーザー操作相当を検証するため）。
  *
- * 対策:
- * - 試行ごとに data-fruit-id で個体をピン留めし、そのノードへ force 操作する
- *   （座標クリックは上に重なった別種を誤爆しやすいので使わない）
- * - 失敗したら別個体で再試行する（上限付き）
+ * Flaky の理由と対策:
+ * - アーケードでは畑の差し替え・重なりで、掴んだ個体が操作前に消える／隠れる。
+ * - data-fruit-id でピン留めし、boundingBox 取得直後に page.mouse で操作する。
+ * - 中心が他要素に隠れていればその個体は飛ばし、別個体を試す。
+ * - 空振りしたら上限付きで再試行する。
  *
- * リトライが許容すること:
- * - 対象消失・差し替え・瞬間的な取りこぼし（MAX_HARVEST_ATTEMPTS 回まで）
- *
- * リトライが許容しないこと:
- * - 操作種別そのものの実装バグ（上限到達で失敗）
- * - 当該フルーツが一向に出ない（visible 待ちタイムアウト）
+ * リトライが許容すること: 消失・遮蔽による一時的な空振り（MAX_HARVEST_ATTEMPTS 回まで）
+ * リトライが許容しないこと: 操作実装バグ、フルーツが一向に出ないこと
  */
 const MAX_HARVEST_ATTEMPTS = 8
 
@@ -139,50 +155,54 @@ export async function harvestFruit(
     const dropBox = await dropArea.boundingBox()
     const count = await fruits.count()
 
-    let fruitId: string | null = null
-    for (let i = 0; i < count; i++) {
-      const candidate = fruits.nth(i)
-      const candidateBox = await candidate.boundingBox()
-      if (!candidateBox) continue
-      const overlapsDropArea =
-        dropBox !== null && candidateBox.x + candidateBox.width > dropBox.x
-      if (overlapsDropArea) continue
-      fruitId = await candidate.getAttribute('data-fruit-id')
-      if (fruitId) break
-    }
-    if (!fruitId) {
-      fruitId = await fruits.first().getAttribute('data-fruit-id')
-    }
-    if (!fruitId) continue
-
-    // ピン留めした個体だけを操作する（nth のずれを避ける）
-    // fruit.id は数値文字列のため属性セレクタにそのまま使える
-    const pinned = page.locator(
-      `[data-testid="game-area"] [data-fruit-id="${fruitId}"]`
-    )
-    if (!(await pinned.isVisible().catch(() => false))) continue
-
-    try {
-      // Playwright の actionability / 座標ヒットに頼らず、ピン留めノードへ直接イベントを送る。
-      // レモンは onMouseDown(button===2)、りんごは onClick、ブルーベリーは onDoubleClick。
-      await pinned.evaluate((el, act) => {
-        const fire = (type: string, init: MouseEventInit) => {
-          el.dispatchEvent(
-            new MouseEvent(type, { bubbles: true, cancelable: true, view: window, ...init })
-          )
+    const tryClickPass = async (requireClearOfDropArea: boolean): Promise<boolean> => {
+      for (let i = 0; i < count; i++) {
+        const candidate = fruits.nth(i)
+        const probeBox = await candidate.boundingBox()
+        if (!probeBox) continue
+        if (
+          requireClearOfDropArea &&
+          dropBox !== null &&
+          probeBox.x + probeBox.width > dropBox.x
+        ) {
+          continue
         }
-        if (act === 'rightClick') {
-          fire('mousedown', { button: 2, buttons: 2 })
-        } else if (act === 'dblclick') {
-          fire('dblclick', { button: 0, buttons: 0 })
-        } else {
-          fire('click', { button: 0, buttons: 0 })
+
+        const fruitId = await candidate.getAttribute('data-fruit-id')
+        if (!fruitId) continue
+
+        const pinned = page.locator(
+          `[data-testid="game-area"] [data-fruit-id="${fruitId}"]`
+        )
+        // 操作直前に座標を取り直す（取得〜操作の隙間を最小化）
+        const box = await pinned.boundingBox()
+        if (!box) continue
+        const x = box.x + box.width / 2
+        const y = box.y + box.height / 2
+
+        if (!(await isFruitTopmostAtPoint(page, fruitId, x, y))) continue
+
+        try {
+          if (action === 'click') {
+            await page.mouse.click(x, y)
+          } else if (action === 'dblclick') {
+            await page.mouse.dblclick(x, y)
+          } else {
+            // レモンは onMouseDown(button===2)。page.mouse の right click がそれに相当
+            await page.mouse.click(x, y, { button: 'right' })
+          }
+        } catch {
+          continue
         }
-      }, action)
-    } catch {
-      continue
+        return true
+      }
+      return false
     }
 
+    // ドロップエリア非重複を先に試し、だめなら全体から（実マウスの hit test 前提）
+    const acted =
+      (await tryClickPass(true)) || (await tryClickPass(false))
+    if (!acted) continue
     if (await waitForScoreAbove(page, scoreBefore, 1200)) return
   }
 
