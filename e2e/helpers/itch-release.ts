@@ -273,7 +273,10 @@ export function installSameOriginHttpErrorCollector(
   page: Page,
   baseURL: string
 ): HttpErrorRecord[] {
-  const host = new URL(baseURL).host
+  // host ではなく origin で比較する。host だとプロトコルが異なる URL
+  // (http:// と https:// が混在する構成) まで同一オリジンとして拾ってしまう
+  // (独立レビュー CodeRabbit の指摘)。
+  const origin = new URL(baseURL).origin
   const errors: HttpErrorRecord[] = []
 
   page.on('response', (res) => {
@@ -282,7 +285,7 @@ export function installSameOriginHttpErrorCollector(
 
     const url = res.url()
     try {
-      if (new URL(url).host !== host) return
+      if (new URL(url).origin !== origin) return
     } catch {
       return
     }
