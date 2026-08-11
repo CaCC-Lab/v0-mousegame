@@ -62,9 +62,11 @@ export async function getScoreValue(page: Page | FrameLocator): Promise<number> 
 }
 
 /**
- * 右端ドロップエリアに重なっていない個体を優先する。
- * 重なっているとポインタが遮られてクリックできない（game-flow.spec.ts と同じ理由）。
- * フルーツ同士の重なりもあるため、呼び出し側は click({ force: true }) を推奨。
+ * 右端ドロップエリアに重なっていない個体を優先して1つ返す。
+ * 見つからなければ先頭（呼び出し側で再試行する）。
+ *
+ * 注意: 返した Locator は遅延評価のため、取得から操作までに間を空けると
+ * アーケードの補充・重なり変化で別ノードを指すことがある。操作は直後に行うこと。
  */
 export async function findInteractableFruit(
   page: Page,
@@ -86,28 +88,107 @@ export async function findInteractableFruit(
   return fruits.first()
 }
 
-/** フルーツ操作は重なりで遮られやすいので force クリックする。得点が増えるまで再試行する。 */
+async function waitForScoreAbove(
+  page: Page,
+  minimumExclusive: number,
+  timeoutMs: number
+): Promise<boolean> {
+  const deadline = Date.now() + timeoutMs
+  while (Date.now() < deadline) {
+    if ((await getScoreValue(page)) > minimumExclusive) return true
+    await page.waitForTimeout(40)
+  }
+  return (await getScoreValue(page)) > minimumExclusive
+}
+
+/**
+ * 指定種類のフルーツを正しい操作で収穫する。
+ *
+ * Flaky の理由:
+ * - アーケードでは収穫のたびに畑が差し替わり、重なりも変わる。
+ * - 「種類の n 番目」Locator を握ってから操作するまでに対象が消える／差し替わると空振りし、
+ *   得点が増えない（アプリ欠陥ではなく操作タイミングの問題）。
+ * - レモンは onMouseDown(button===2) で収穫判定する。
+ *
+ * 対策:
+ * - 試行ごとに data-fruit-id で個体をピン留めし、そのノードへ force 操作する
+ *   （座標クリックは上に重なった別種を誤爆しやすいので使わない）
+ * - 失敗したら別個体で再試行する（上限付き）
+ *
+ * リトライが許容すること:
+ * - 対象消失・差し替え・瞬間的な取りこぼし（MAX_HARVEST_ATTEMPTS 回まで）
+ *
+ * リトライが許容しないこと:
+ * - 操作種別そのものの実装バグ（上限到達で失敗）
+ * - 当該フルーツが一向に出ない（visible 待ちタイムアウト）
+ */
+const MAX_HARVEST_ATTEMPTS = 8
+
 export async function harvestFruit(
   page: Page,
   type: FruitKind,
   action: 'click' | 'dblclick' | 'rightClick'
 ) {
   const scoreBefore = await getScoreValue(page)
+  const dropArea = page.locator('[data-testid="game-area"] .drop-area')
 
-  for (let attempt = 0; attempt < 5; attempt++) {
-    const fruit = await findInteractableFruit(page, type)
-    if (action === 'click') {
-      await fruit.click({ force: true, timeout: 5000 })
-    } else if (action === 'dblclick') {
-      await fruit.dblclick({ force: true, timeout: 5000 })
-    } else {
-      await fruit.click({ button: 'right', force: true, timeout: 5000 })
+  for (let attempt = 0; attempt < MAX_HARVEST_ATTEMPTS; attempt++) {
+    const fruits = fruitsOfType(page, type)
+    await expect(fruits.first()).toBeVisible({ timeout: 15_000 })
+
+    const dropBox = await dropArea.boundingBox()
+    const count = await fruits.count()
+
+    let fruitId: string | null = null
+    for (let i = 0; i < count; i++) {
+      const candidate = fruits.nth(i)
+      const candidateBox = await candidate.boundingBox()
+      if (!candidateBox) continue
+      const overlapsDropArea =
+        dropBox !== null && candidateBox.x + candidateBox.width > dropBox.x
+      if (overlapsDropArea) continue
+      fruitId = await candidate.getAttribute('data-fruit-id')
+      if (fruitId) break
     }
-    await page.waitForTimeout(300)
-    if ((await getScoreValue(page)) > scoreBefore) return
+    if (!fruitId) {
+      fruitId = await fruits.first().getAttribute('data-fruit-id')
+    }
+    if (!fruitId) continue
+
+    // ピン留めした個体だけを操作する（nth のずれを避ける）
+    // fruit.id は数値文字列のため属性セレクタにそのまま使える
+    const pinned = page.locator(
+      `[data-testid="game-area"] [data-fruit-id="${fruitId}"]`
+    )
+    if (!(await pinned.isVisible().catch(() => false))) continue
+
+    try {
+      // Playwright の actionability / 座標ヒットに頼らず、ピン留めノードへ直接イベントを送る。
+      // レモンは onMouseDown(button===2)、りんごは onClick、ブルーベリーは onDoubleClick。
+      await pinned.evaluate((el, act) => {
+        const fire = (type: string, init: MouseEventInit) => {
+          el.dispatchEvent(
+            new MouseEvent(type, { bubbles: true, cancelable: true, view: window, ...init })
+          )
+        }
+        if (act === 'rightClick') {
+          fire('mousedown', { button: 2, buttons: 2 })
+        } else if (act === 'dblclick') {
+          fire('dblclick', { button: 0, buttons: 0 })
+        } else {
+          fire('click', { button: 0, buttons: 0 })
+        }
+      }, action)
+    } catch {
+      continue
+    }
+
+    if (await waitForScoreAbove(page, scoreBefore, 1200)) return
   }
 
-  throw new Error(`${type} の ${action} で得点が増えませんでした`)
+  throw new Error(
+    `${type} の ${action} で得点が増えませんでした（${MAX_HARVEST_ATTEMPTS} 回まで再試行）`
+  )
 }
 
 /**
@@ -194,27 +275,41 @@ export function installSameOriginHttpErrorCollector(
 }
 
 /**
- * サブパス配信 + 単スレッド http.server 負荷時に出やすいノイズか。
+ * 収集した 4xx/5xx のうち、同一 URL への再 GET が成功したものだけを一過性として落とす。
  *
- * itch ビルドの webpack は publicPath が "/_next/" のまま残ることがあり、
- * 並列取得でチャンク再取得がオリジン直下へ飛ぶと 404 になる。
- * ルート配信（pathname === '/'）では /_next/ は正規パスなのでノイズ扱いにしない。
- *
- * /sprites/ の絶対パス化などは書き換え漏れの本命なので、ここでは除外しない。
+ * - オリジン直下 `/_next/...` の 404 はパス誤り（CHECK-(4) の本命）なので、
+ *   再試行も 404 のまま残り、除外されない。
+ * - 503 等は再試行が 2xx/3xx なら一過性とみなして除外する。
+ * - パスやステータス番号での一律除外はしない。
  */
-export function isWebpackPublicPathNoise(
-  error: HttpErrorRecord,
-  baseURL: string
-): boolean {
-  const app = new URL(normalizeAppBaseURL(baseURL))
-  if (app.pathname === '/') return false
-
-  try {
-    const u = new URL(error.url)
-    return u.origin === app.origin && u.pathname.startsWith('/_next/')
-  } catch {
-    return false
+export async function retainPersistentHttpErrors(
+  page: Page,
+  errors: HttpErrorRecord[]
+): Promise<HttpErrorRecord[]> {
+  const uniqueByUrl = new Map<string, HttpErrorRecord>()
+  for (const error of errors) {
+    if (!uniqueByUrl.has(error.url)) {
+      uniqueByUrl.set(error.url, error)
+    }
   }
+
+  const persistent: HttpErrorRecord[] = []
+  for (const error of uniqueByUrl.values()) {
+    const retryStatus = await page.evaluate(async (url) => {
+      try {
+        const res = await fetch(url, { method: 'GET', cache: 'no-store' })
+        return res.status
+      } catch {
+        return 0
+      }
+    }, error.url)
+
+    if (retryStatus > 0 && retryStatus < 400) {
+      continue
+    }
+    persistent.push(error)
+  }
+  return persistent
 }
 
 /**

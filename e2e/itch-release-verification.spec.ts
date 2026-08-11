@@ -10,8 +10,8 @@
  * Vercel ルートだけでは書き換え不具合を見逃すため、公開前は itch 側 BASE_URL でも走らせること。
  *
  * 注意: itch ローカル確認の python http.server は単スレッドのため、
- * 並列実行で操作系や webpack publicPath("/_next/") 再取得の 404 がフレークしうる。
- * 公開前の itch サブパス検証は --workers=1 を推奨。(4) は publicPath ノイズのみ 1 回リトライする。
+ * 並列実行で操作系がフレークしうる。公開前の itch サブパス検証は --workers=1 を推奨。
+ * (4) の HTTP エラーはパス一律除外せず、同一 URL 再 GET が成功した一過性のみ落とす。
  *
  * 実行例:
  *   BASE_URL=https://v0-mousegame.vercel.app npx playwright test e2e/itch-release-verification.spec.ts --project=chromium
@@ -37,8 +37,8 @@ import {
   harvestFruit,
   installAudioPlayCounter,
   installSameOriginHttpErrorCollector,
-  isWebpackPublicPathNoise,
   normalizeAppBaseURL,
+  retainPersistentHttpErrors,
   startArcade,
   startViaHajimeru,
 } from './helpers/itch-release'
@@ -97,38 +97,19 @@ test.describe('itch.io 公開前動作確認', () => {
     expect(baseURL).toBeTruthy()
 
     // goto より前に登録し、初期チャンク〜実行時 img までまとめて拾う。
-    // 初期 DOM の script/link スキャンだけでは、実行時生成の sprites img や
-    // 動的 chunk の絶対パス化を検出し切れない。
+    // オリジン直下 /_next/... の 404 も「誤った絶対パス」の証拠として残す（パス一律除外しない）。
     const httpErrors = installSameOriginHttpErrorCollector(page, baseURL!)
 
-    const playThroughAssetCheck = async () => {
-      httpErrors.length = 0
-      await gotoApp(page, baseURL!)
-      await startArcade(page)
-      // 実行時に fruit img がマウント・取得される経路を通す
-      await harvestFruit(page, 'apple', 'click')
-      await assertGameAreaSpritesDecoded(page)
-    }
+    await gotoApp(page, baseURL!)
+    await startArcade(page)
+    // 実行時に fruit img がマウント・取得される経路を通す
+    await harvestFruit(page, 'apple', 'click')
+    await assertGameAreaSpritesDecoded(page)
 
-    await playThroughAssetCheck()
-
-    const hardErrors = () =>
-      httpErrors.filter((e) => !isWebpackPublicPathNoise(e, baseURL!))
-
-    // 単スレッド http.server + 並列ワーカーでは、webpack publicPath="/_next/" への
-    // 再取得がオリジン直下 404 として混入しうる。その場合のみ 1 回リトライする。
-    // /sprites/ の絶対パス化など本命の配信ミスは hardErrors に残り、リトライしても落ちる。
-    if (httpErrors.length > 0 && hardErrors().length === 0) {
-      await playThroughAssetCheck()
-    } else if (hardErrors().length > 0) {
-      // 本命失敗でも、サーバ瞬間過負荷の可能性に備え 1 回だけ再実施
-      await playThroughAssetCheck()
-    }
-
-    expect(
-      hardErrors(),
-      `HTTP errors: ${JSON.stringify(httpErrors, null, 2)}`
-    ).toEqual([])
+    // 503 等は同一 URL 再 GET が成功したときだけ一過性として除外する。
+    // 404（特にサブパス配信での /_next/ ルート絶対参照）は再試行しても残る。
+    const persistent = await retainPersistentHttpErrors(page, httpErrors)
+    expect(persistent, `HTTP errors: ${JSON.stringify(httpErrors, null, 2)}`).toEqual([])
   })
 
   // ---------------------------------------------------------------------------
