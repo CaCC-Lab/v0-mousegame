@@ -158,6 +158,86 @@ export async function getAudioPlayCount(page: Page): Promise<number> {
   )
 }
 
+export type HttpErrorRecord = { url: string; status: number }
+
+/**
+ * 同一オリジンの 4xx/5xx を収集する。
+ * page.goto より前に呼ぶこと（初期ロードの失敗も拾うため）。
+ *
+ * 除外:
+ * - 他オリジン（Google Fonts 等。オフライン時の見た目は docs 既知注意点で手動）
+ * - favicon: ブラウザが勝手に取りに行くことがあり、ゲーム本体の配信成否とは無関係
+ */
+export function installSameOriginHttpErrorCollector(
+  page: Page,
+  baseURL: string
+): HttpErrorRecord[] {
+  const host = new URL(baseURL).host
+  const errors: HttpErrorRecord[] = []
+
+  page.on('response', (res) => {
+    const status = res.status()
+    if (status < 400) return
+
+    const url = res.url()
+    try {
+      if (new URL(url).host !== host) return
+    } catch {
+      return
+    }
+    if (/\/favicon\.ico(\?|$)/i.test(url)) return
+
+    errors.push({ url, status })
+  })
+
+  return errors
+}
+
+/**
+ * サブパス配信 + 単スレッド http.server 負荷時に出やすいノイズか。
+ *
+ * itch ビルドの webpack は publicPath が "/_next/" のまま残ることがあり、
+ * 並列取得でチャンク再取得がオリジン直下へ飛ぶと 404 になる。
+ * ルート配信（pathname === '/'）では /_next/ は正規パスなのでノイズ扱いにしない。
+ *
+ * /sprites/ の絶対パス化などは書き換え漏れの本命なので、ここでは除外しない。
+ */
+export function isWebpackPublicPathNoise(
+  error: HttpErrorRecord,
+  baseURL: string
+): boolean {
+  const app = new URL(normalizeAppBaseURL(baseURL))
+  if (app.pathname === '/') return false
+
+  try {
+    const u = new URL(error.url)
+    return u.origin === app.origin && u.pathname.startsWith('/_next/')
+  } catch {
+    return false
+  }
+}
+
+/**
+ * ゲームエリア内のスプライト img がデコード済みか（実行時生成ノードのロード成否）。
+ * naturalWidth === 0 は 404・パス壊れ・未ロードを示す。
+ */
+export async function assertGameAreaSpritesDecoded(page: Page) {
+  const sprites = page.locator('[data-testid="game-area"] img[src*="sprites/"]')
+  await expect(sprites.first()).toBeVisible({ timeout: 15_000 })
+
+  const bad = await sprites.evaluateAll((imgs) =>
+    (imgs as HTMLImageElement[])
+      .map((img) => ({
+        src: img.currentSrc || img.src,
+        complete: img.complete,
+        naturalWidth: img.naturalWidth,
+      }))
+      .filter((i) => !(i.complete && i.naturalWidth > 0))
+  )
+
+  expect(bad, `sprite decode failed: ${JSON.stringify(bad, null, 2)}`).toEqual([])
+}
+
 /**
  * スイカを右端ドロップエリアへ運ぶ。
  * カスタム mouse ハンドラ実装のため HTML5 DnD ではなく page.mouse を使う。
