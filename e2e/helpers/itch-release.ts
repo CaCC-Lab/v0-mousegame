@@ -86,20 +86,28 @@ export async function findInteractableFruit(
   return fruits.first()
 }
 
-/** フルーツ操作は重なりで遮られやすいので force クリックする */
+/** フルーツ操作は重なりで遮られやすいので force クリックする。得点が増えるまで再試行する。 */
 export async function harvestFruit(
   page: Page,
   type: FruitKind,
   action: 'click' | 'dblclick' | 'rightClick'
 ) {
-  const fruit = await findInteractableFruit(page, type)
-  if (action === 'click') {
-    await fruit.click({ force: true, timeout: 5000 })
-  } else if (action === 'dblclick') {
-    await fruit.dblclick({ force: true, timeout: 5000 })
-  } else {
-    await fruit.click({ button: 'right', force: true, timeout: 5000 })
+  const scoreBefore = await getScoreValue(page)
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const fruit = await findInteractableFruit(page, type)
+    if (action === 'click') {
+      await fruit.click({ force: true, timeout: 5000 })
+    } else if (action === 'dblclick') {
+      await fruit.dblclick({ force: true, timeout: 5000 })
+    } else {
+      await fruit.click({ button: 'right', force: true, timeout: 5000 })
+    }
+    await page.waitForTimeout(300)
+    if ((await getScoreValue(page)) > scoreBefore) return
   }
+
+  throw new Error(`${type} の ${action} で得点が増えませんでした`)
 }
 
 /**
