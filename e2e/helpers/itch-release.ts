@@ -3,6 +3,39 @@ import { expect, type FrameLocator, type Locator, type Page } from '@playwright/
 export type FruitKind = 'apple' | 'blueberry' | 'lemon' | 'watermelon'
 
 /**
+ * Playwright の baseURL をディレクトリとして正規化する。
+ * 末尾スラッシュがないと `new URL('./', base)` が親ディレクトリに解決される。
+ */
+export function normalizeAppBaseURL(baseURL: string): string {
+  const url = new URL(baseURL)
+  if (!url.pathname.endsWith('/')) {
+    url.pathname += '/'
+  }
+  return url.href
+}
+
+/**
+ * アプリを開く。
+ *
+ * `page.goto('/')` はパス絶対指定のため baseURL のサブパスを捨て、
+ * `http://host/`（ディレクトリ一覧など）へ飛んでしまう。
+ * itch のサブパス配信（例: /html/12345/）と Vercel ルート配信の両方で
+ * 同じテストを通すため、baseURL をディレクトリとして開く。
+ *
+ * 相対指定 `./` でもよいが、末尾スラッシュ有無の差を吸収するため絶対URLへ正規化する。
+ */
+export async function gotoApp(page: Page, baseURL: string) {
+  const target = normalizeAppBaseURL(baseURL)
+  await page.goto(target)
+  await page.waitForLoadState('domcontentloaded')
+  // サブパスを捨ててオリジン直下へ落ちていないこと
+  expect(
+    page.url().startsWith(target.replace(/\/$/, '')),
+    `unexpected url: ${page.url()} (expected under ${target})`
+  ).toBe(true)
+}
+
+/**
  * itch.io 公開前チェック用ヘルパー。
  * exploratory.spec.ts の fruitsOfType と同じく、スプライト画像から操作対象を辿る。
  */
@@ -115,20 +148,6 @@ export async function getAudioPlayCount(page: Page): Promise<number> {
     () =>
       (window as unknown as { __audioOscillatorStarts?: number }).__audioOscillatorStarts ?? 0
   )
-}
-
-/** 同一オリジンの 404 を収集する（favicon は任意アセットのため除外） */
-export function collectSameOrigin404s(page: Page, baseURL: string): string[] {
-  const host = new URL(baseURL).host
-  const notFound: string[] = []
-  page.on('response', (res) => {
-    if (res.status() !== 404) return
-    const url = res.url()
-    if (!url.includes(host)) return
-    if (/favicon/i.test(url)) return
-    notFound.push(url)
-  })
-  return notFound
 }
 
 /**
