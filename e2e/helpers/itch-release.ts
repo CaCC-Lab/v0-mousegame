@@ -1,0 +1,175 @@
+import { expect, type FrameLocator, type Locator, type Page } from '@playwright/test'
+
+export type FruitKind = 'apple' | 'blueberry' | 'lemon' | 'watermelon'
+
+/**
+ * itch.io 公開前チェック用ヘルパー。
+ * exploratory.spec.ts の fruitsOfType と同じく、スプライト画像から操作対象を辿る。
+ */
+export function fruitsOfType(
+  root: Page | FrameLocator,
+  type: FruitKind
+): Locator {
+  return root.locator(`[data-testid="game-area"] [role="button"]:has(img[src*="${type}"])`)
+}
+
+export async function startViaHajimeru(page: Page | FrameLocator) {
+  await page.getByRole('button', { name: /はじめる|Start/i }).click()
+}
+
+/** アーケードは generateBalancedFruits で4種が揃うため、操作別収穫の検証向き */
+export async function startArcade(page: Page | FrameLocator) {
+  await page.getByTestId('mode-select-arcade').click()
+  await expect(page.getByRole('button', { name: /ちゅうだん|Pause/i })).toBeVisible()
+}
+
+export async function getScoreValue(page: Page | FrameLocator): Promise<number> {
+  const text = await page.getByTestId('score-value').textContent()
+  return parseInt((text ?? '0').replace(/[^\d]/g, ''), 10) || 0
+}
+
+/**
+ * 右端ドロップエリアに重なっていない個体を優先する。
+ * 重なっているとポインタが遮られてクリックできない（game-flow.spec.ts と同じ理由）。
+ * フルーツ同士の重なりもあるため、呼び出し側は click({ force: true }) を推奨。
+ */
+export async function findInteractableFruit(
+  page: Page,
+  type: FruitKind
+): Promise<Locator> {
+  const dropArea = page.locator('[data-testid="game-area"] .drop-area')
+  const dropBox = await dropArea.boundingBox()
+  const fruits = fruitsOfType(page, type)
+  await expect(fruits.first()).toBeVisible({ timeout: 15_000 })
+
+  const count = await fruits.count()
+  for (let i = 0; i < count; i++) {
+    const fruit = fruits.nth(i)
+    const box = await fruit.boundingBox()
+    if (!box) continue
+    const overlapsDropArea = dropBox !== null && box.x + box.width > dropBox.x
+    if (!overlapsDropArea) return fruit
+  }
+  return fruits.first()
+}
+
+/** フルーツ操作は重なりで遮られやすいので force クリックする */
+export async function harvestFruit(
+  page: Page,
+  type: FruitKind,
+  action: 'click' | 'dblclick' | 'rightClick'
+) {
+  const fruit = await findInteractableFruit(page, type)
+  if (action === 'click') {
+    await fruit.click({ force: true, timeout: 5000 })
+  } else if (action === 'dblclick') {
+    await fruit.dblclick({ force: true, timeout: 5000 })
+  } else {
+    await fruit.click({ button: 'right', force: true, timeout: 5000 })
+  }
+}
+
+/**
+ * Web Audio の発火を数える。
+ *
+ * 注意: 実際にスピーカーから聞こえるかは自動判定できない。
+ * SoundManager は OscillatorNode.start で合成音を鳴らすため、その呼び出し回数をスパイする。
+ */
+export async function installAudioPlayCounter(page: Page) {
+  await page.addInitScript(() => {
+    const w = window as unknown as {
+      __audioOscillatorStarts: number
+      AudioContext?: typeof AudioContext
+      webkitAudioContext?: typeof AudioContext
+    }
+    w.__audioOscillatorStarts = 0
+
+    // 効果音オフだと play() が早期 return するため、検証用に強制オン
+    try {
+      localStorage.setItem('soundEnabled', 'true')
+    } catch {
+      // private mode 等では無視
+    }
+
+    const Original = w.AudioContext ?? w.webkitAudioContext
+    if (!Original) return
+
+    const origCreateOscillator = Original.prototype.createOscillator
+    Original.prototype.createOscillator = function createOscillator(
+      this: AudioContext,
+      ...args: Parameters<AudioContext['createOscillator']>
+    ) {
+      const osc = origCreateOscillator.apply(this, args)
+      const origStart = osc.start.bind(osc)
+      osc.start = (...startArgs: Parameters<OscillatorNode['start']>) => {
+        w.__audioOscillatorStarts += 1
+        return origStart(...startArgs)
+      }
+      return osc
+    }
+  })
+}
+
+export async function getAudioPlayCount(page: Page): Promise<number> {
+  return page.evaluate(
+    () =>
+      (window as unknown as { __audioOscillatorStarts?: number }).__audioOscillatorStarts ?? 0
+  )
+}
+
+/** 同一オリジンの 404 を収集する（favicon は任意アセットのため除外） */
+export function collectSameOrigin404s(page: Page, baseURL: string): string[] {
+  const host = new URL(baseURL).host
+  const notFound: string[] = []
+  page.on('response', (res) => {
+    if (res.status() !== 404) return
+    const url = res.url()
+    if (!url.includes(host)) return
+    if (/favicon/i.test(url)) return
+    notFound.push(url)
+  })
+  return notFound
+}
+
+/**
+ * スイカを右端ドロップエリアへ運ぶ。
+ * カスタム mouse ハンドラ実装のため HTML5 DnD ではなく page.mouse を使う。
+ * 重なりや取りこぼしで失敗しうるので、得点が増えるまで別個体で再試行する。
+ */
+export async function dragWatermelonToDropArea(page: Page) {
+  const dropArea = page.locator('[data-testid="game-area"] .drop-area')
+  await expect(dropArea).toBeVisible()
+  await expect(fruitsOfType(page, 'watermelon').first()).toBeVisible({ timeout: 15_000 })
+
+  const scoreBefore = await getScoreValue(page)
+
+  for (let attempt = 0; attempt < 5; attempt++) {
+    const fruits = fruitsOfType(page, 'watermelon')
+    const count = await fruits.count()
+    if (count === 0) {
+      await page.waitForTimeout(400)
+      continue
+    }
+
+    const watermelon = fruits.nth(attempt % count)
+    const wmBox = await watermelon.boundingBox()
+    const dropBox = await dropArea.boundingBox()
+    if (!wmBox || !dropBox) continue
+
+    // record-gameplay.ts と同じ手順（down 後に一拍置いてから移動）
+    await page.mouse.move(wmBox.x + wmBox.width / 2, wmBox.y + wmBox.height / 2)
+    await page.waitForTimeout(100)
+    await page.mouse.down()
+    await page.waitForTimeout(300)
+    await page.mouse.move(dropBox.x + dropBox.width / 2, dropBox.y + dropBox.height / 2, {
+      steps: 25,
+    })
+    await page.waitForTimeout(200)
+    await page.mouse.up()
+    await page.waitForTimeout(400)
+
+    if ((await getScoreValue(page)) > scoreBefore) return
+  }
+
+  throw new Error('スイカのドラッグ＆ドロップで得点が増えませんでした')
+}
