@@ -205,6 +205,8 @@ export const translations = {
       levelUpTitle: 'レベルアップ！',
       // 誤操作したときに出すヒント（{fruit} と {action} を差し替えて使う）
       missHint: '{fruit}は{action}だよ！',
+      // 星が付かなかったときに出す次の一歩（{fruit} と {action} を差し替えて使う）
+      nextFocus: 'つぎは{fruit}の{action}をやってみよう！',
       operations: {
         click: 'クリック',
         doubleClick: 'ダブルクリック',
@@ -430,6 +432,8 @@ export const translations = {
       levelUpTitle: 'Level up!',
       // Shown when the player uses the wrong action ({fruit} / {action} are replaced)
       missHint: '{fruit} needs a {action}!',
+      // Suggested next step when no stars were earned ({fruit} / {action} are replaced)
+      nextFocus: 'Next, try the {action} on the {fruit}!',
       operations: {
         click: 'Click',
         doubleClick: 'Double-click',

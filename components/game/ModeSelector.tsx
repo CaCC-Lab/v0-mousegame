@@ -52,7 +52,7 @@ export function ModeSelector({
     selectedMode === mode ? 'border-amber-300 ring-4 ring-amber-300/60' : 'border-white/60'
 
   return (
-    <div className="flex flex-col items-center gap-3 w-full max-w-2xl px-4">
+    <div className="flex flex-col items-center gap-2 sm:gap-3 w-full max-w-2xl px-4">
       <p className="text-white text-lg font-bold drop-shadow text-display">{t.chooseMode}</p>
 
       <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -66,7 +66,7 @@ export function ModeSelector({
           transition={{ type: 'spring', bounce: 0.4 }}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          className={`flex-[3] rounded-[var(--radius-xl)] px-5 py-4 text-left text-white shadow-playful border-4 ${ring('arcade')}`}
+          className={`flex-[3] rounded-[var(--radius-xl)] px-4 py-2.5 sm:px-5 sm:py-4 text-left text-white shadow-playful border-4 ${ring('arcade')}`}
           style={{ background: 'var(--gradient-berry, linear-gradient(135deg,#FF6B6B,#C77DFF))' }}
         >
           <span className="flex items-center gap-2">
@@ -77,7 +77,8 @@ export function ModeSelector({
               {t.seconds}
             </span>
           </span>
-          <span className="block mt-1 text-sm font-semibold opacity-95">{t.arcadeTagline}</span>
+          {/* 狭い画面では説明文を畳む。カード2枚と「はじめる」が収まらなくなるため */}
+          <span className="hidden sm:block mt-1 text-sm font-semibold opacity-95">{t.arcadeTagline}</span>
 
           {arcadeBest > 0 && (
             <span className="mt-2 flex items-center gap-2 text-sm font-bold">
@@ -101,14 +102,14 @@ export function ModeSelector({
           transition={{ type: 'spring', bounce: 0.4, delay: 0.08 }}
           whileHover={{ scale: 1.03 }}
           whileTap={{ scale: 0.97 }}
-          className={`flex-[2] rounded-[var(--radius-xl)] px-5 py-4 text-left bg-white/95 shadow-playful border-4 ${ring('practice')}`}
+          className={`flex-[2] rounded-[var(--radius-xl)] px-4 py-2.5 sm:px-5 sm:py-4 text-left bg-white/95 shadow-playful border-4 ${ring('practice')}`}
           style={{ color: 'var(--color-purple)' }}
         >
           <span className="flex items-center gap-2">
             <GraduationCap className="w-6 h-6 shrink-0" aria-hidden />
             <span className="text-display text-xl font-bold">{t.practiceMode}</span>
           </span>
-          <span className="block mt-1 text-sm font-semibold text-gray-600">{t.practiceTagline}</span>
+          <span className="hidden sm:block mt-1 text-sm font-semibold text-gray-600">{t.practiceTagline}</span>
         </motion.button>
       </div>
 
@@ -121,7 +122,7 @@ export function ModeSelector({
         transition={{ type: 'spring', bounce: 0.4, delay: 0.16 }}
         whileHover={{ scale: 1.04 }}
         whileTap={{ scale: 0.96 }}
-        className="flex items-center gap-2 rounded-full px-10 py-3 text-display text-xl font-bold text-white shadow-playful border-4 border-white/60"
+        className="flex items-center gap-2 rounded-full px-8 py-2 sm:px-10 sm:py-3 text-display text-lg sm:text-xl font-bold text-white shadow-playful border-4 border-white/60"
         style={{ background: 'var(--gradient-mint, linear-gradient(135deg,#4ECDC4,#2E9E96))' }}
       >
         <Play className="w-6 h-6" aria-hidden />

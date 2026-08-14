@@ -162,7 +162,6 @@ describe('starAccuracy (Task 9)', () => {
           particles={[]}
           isHardMode={false}
           selectedFruitIndex={-1}
-          dropAreaText="Drop"
           onFruitClick={onFruitClick}
           onPowerUpCollect={jest.fn()}
           onTriggerAnimation={jest.fn()}

@@ -170,3 +170,13 @@ export function formatTime(seconds: number): string {
   const remainingSeconds = seconds % 60
   return `${minutes}\u5206${remainingSeconds.toString().padStart(2, '0')}\u79d2`
 }
+
+/**
+ * その操作で取れるフルーツを返す。getRequiredInteraction の逆引き。
+ *
+ * 「つぎはブルーベリーのダブルクリックを」のように、
+ * 操作だけでなく対象のフルーツもあわせて伝えるために使う。
+ */
+export function getRequiredFruit(action: InteractionType): FruitType {
+  return INTERACTION_SCORE_MAP[action].validType
+}

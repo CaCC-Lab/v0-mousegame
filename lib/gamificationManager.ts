@@ -14,6 +14,7 @@ import {
   StarRating,
   StageStarData,
 } from '@/types/gamification'
+import type { InteractionType } from '@/types/game'
 
 const INTERACTION_KEYS = ['click', 'doubleClick', 'rightClick', 'drop'] as const
 
@@ -294,4 +295,27 @@ export function getProgressToNextLevel(
     nextThreshold: nextThreshold.requiredSuccess,
     remaining: nextThreshold.requiredSuccess - totalSuccess,
   }
+}
+
+/** 練習を勧める順。やさしい操作から積み上げる */
+const FOCUS_ORDER: readonly InteractionType[] = INTERACTION_KEYS
+
+/**
+ * 次に練習するとよい操作を1つ選ぶ。
+ *
+ * 星が付かなかったとき、何がダメだったか言われないまま減点された感じだけが残る。
+ * 責める代わりに、次にやることを1つだけ示すために使う。
+ *
+ * まだ一度も成功していない操作を基本の順に拾い、
+ * ひととおりできているなら、いちばん失敗が多かった操作を勧める。
+ */
+export function getNextFocusOperation(sessionStats: SessionOperationStats): InteractionType {
+  const untouched = FOCUS_ORDER.find(op => sessionStats[op].success === 0)
+  if (untouched) return untouched
+
+  const hardest = FOCUS_ORDER.reduce((worst, op) =>
+    sessionStats[op].fail > sessionStats[worst].fail ? op : worst
+  , FOCUS_ORDER[0])
+
+  return sessionStats[hardest].fail > 0 ? hardest : FOCUS_ORDER[0]
 }

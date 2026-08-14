@@ -450,7 +450,6 @@ export function FruitHarvestGame(): React.ReactElement {
               particles={particles}
               isHardMode={isHardMode}
               selectedFruitIndex={selectedFruitIndex}
-              dropAreaText={t.dropArea}
               t={t}
               missHint={missHint}
               onFruitClick={handleFruitClick}

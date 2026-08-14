@@ -8,6 +8,7 @@ import { ParticleContainer } from '../ParticleContainer'
 import { Fruit as FruitType, HarvestAnimation, InteractionType } from '@/types/game'
 import { FruitSprite } from './FruitSprite'
 import { MissHintToast } from './MissHintToast'
+import { DropArea } from './DropArea'
 import { PowerUp as PowerUpType } from '@/types/powerup'
 import { ParticleEffect } from '@/types/animation'
 import type { StreakBonus } from '@/types/gamification'
@@ -21,7 +22,6 @@ interface GamePlayAreaProps {
   particles: ParticleEffect[]
   isHardMode: boolean
   selectedFruitIndex: number
-  dropAreaText: string
   onFruitClick: (fruit: FruitType, action: InteractionType) => void
   onPowerUpCollect: (powerUpId: string) => void
   onTriggerAnimation: (type: 'fruitCollect' | 'powerUpCollect', x: number, y: number) => void
@@ -68,19 +68,6 @@ function DraggedFruitOverlay({
   )
 }
 
-function DropArea({ text }: { text: string }): React.ReactElement {
-  return (
-    <div
-      className="drop-area absolute right-0 top-0 bottom-0 w-20 flex justify-center items-center border-l-4 border-dashed border-white/50"
-      style={{ background: 'var(--gradient-berry)' }}
-    >
-      <div className="writing-vertical text-white font-bold text-xl drop-shadow-lg">
-        {text}
-      </div>
-    </div>
-  )
-}
-
 function HarvestAnimations({
   animations,
   onAnimationComplete
@@ -114,7 +101,6 @@ export function GamePlayArea({
   particles,
   isHardMode,
   selectedFruitIndex,
-  dropAreaText,
   onFruitClick,
   onPowerUpCollect,
   onTriggerAnimation,
@@ -300,7 +286,7 @@ export function GamePlayArea({
 
       <MissHintToast hint={missHint ?? null} t={t} />
 
-      <DropArea text={dropAreaText} />
+      <DropArea t={t} />
 
       <HarvestAnimations
         animations={harvestAnimations}
