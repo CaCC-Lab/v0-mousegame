@@ -76,3 +76,14 @@ export function formatTime(seconds: number): string {
   const remainingSeconds = seconds % 60
   return `${minutes}分${remainingSeconds.toString().padStart(2, '0')}秒`
 }
+/**
+ * 誤操作したときに出すヒント。
+ *
+ * 「そのフルーツには何をすればよかったのか」をその場で伝えるためのもの。
+ * 同じ間違いを繰り返しても表示し直せるよう、毎回ちがう id を持たせる。
+ */
+export interface MissHint {
+  id: number
+  fruitType: FruitType
+  requiredAction: InteractionType
+}

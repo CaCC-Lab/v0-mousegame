@@ -34,6 +34,11 @@ interface GameControlsProps {
   onStageSelect: () => void
   onHardModeChange: (checked: boolean) => void
   onToggleLanguage: () => void
+  /**
+   * 開始ボタンを出すか。待機中はプレイエリア上のモード選択が開始の入口なので、
+   * ここからは外して導線をひとつにする（省略時は従来どおり出す）
+   */
+  showStart?: boolean
   t: TranslationType
 }
 
@@ -51,16 +56,19 @@ function getControlButtons(
   onPause: () => void,
   onReset: () => void,
   onStageSelect: () => void,
-  t: GameControlsProps['t']
+  t: GameControlsProps['t'],
+  showStart: boolean
 ): ControlButtonConfig[] {
   return [
-    {
-      action: onStart,
-      disabled: gameState === 'playing',
-      icon: Play,
-      label: t.start,
-      color: 'var(--color-secondary)'
-    },
+    ...(showStart
+      ? [{
+          action: onStart,
+          disabled: gameState === 'playing',
+          icon: Play,
+          label: t.start,
+          color: 'var(--color-secondary)'
+        }]
+      : []),
     {
       action: onPause,
       disabled: gameState === 'idle',
@@ -176,9 +184,10 @@ export function GameControls({
   onStageSelect,
   onHardModeChange,
   onToggleLanguage,
+  showStart = true,
   t
 }: GameControlsProps): React.ReactElement {
-  const controlButtons = getControlButtons(gameState, onStart, onPause, onReset, onStageSelect, t)
+  const controlButtons = getControlButtons(gameState, onStart, onPause, onReset, onStageSelect, t, showStart)
 
   // プレイエリアを最大化するため、操作は1行のスリムなバーに収める。
   // 難易度などの設定はプレイ中に変更できない（selectはdisabled）ため、

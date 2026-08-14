@@ -7,11 +7,14 @@ import { PowerUp } from '../PowerUp'
 import { ParticleContainer } from '../ParticleContainer'
 import { Fruit as FruitType, HarvestAnimation, InteractionType } from '@/types/game'
 import { FruitSprite } from './FruitSprite'
+import { MissHintToast } from './MissHintToast'
+import { DropArea } from './DropArea'
 import { PowerUp as PowerUpType } from '@/types/powerup'
 import { ParticleEffect } from '@/types/animation'
 import type { StreakBonus } from '@/types/gamification'
 import { StreakIndicator } from './StreakIndicator'
 import { translations } from '@/lib/i18n/translations'
+import type { MissHint } from '@/types/game'
 
 interface GamePlayAreaProps {
   fruits: FruitType[]
@@ -19,7 +22,6 @@ interface GamePlayAreaProps {
   particles: ParticleEffect[]
   isHardMode: boolean
   selectedFruitIndex: number
-  dropAreaText: string
   onFruitClick: (fruit: FruitType, action: InteractionType) => void
   onPowerUpCollect: (powerUpId: string) => void
   onTriggerAnimation: (type: 'fruitCollect' | 'powerUpCollect', x: number, y: number) => void
@@ -29,6 +31,8 @@ interface GamePlayAreaProps {
   lastStreakBonus?: StreakBonus | null
   /** 連続成功表示の言語。省略時は日本語 */
   t?: typeof translations.ja
+  /** 誤操作したときのヒント（正解の操作を伝える） */
+  missHint?: MissHint | null
 }
 
 function DraggedFruitOverlay({
@@ -60,19 +64,6 @@ function DraggedFruitOverlay({
       }}
     >
       <FruitSprite type={draggedFruit.type} decorative />
-    </div>
-  )
-}
-
-function DropArea({ text }: { text: string }): React.ReactElement {
-  return (
-    <div
-      className="drop-area absolute right-0 top-0 bottom-0 w-20 flex justify-center items-center border-l-4 border-dashed border-white/50"
-      style={{ background: 'var(--gradient-berry)' }}
-    >
-      <div className="writing-vertical text-white font-bold text-xl drop-shadow-lg">
-        {text}
-      </div>
     </div>
   )
 }
@@ -110,7 +101,6 @@ export function GamePlayArea({
   particles,
   isHardMode,
   selectedFruitIndex,
-  dropAreaText,
   onFruitClick,
   onPowerUpCollect,
   onTriggerAnimation,
@@ -118,7 +108,8 @@ export function GamePlayArea({
   gameAreaRef,
   streak,
   lastStreakBonus,
-  t
+  t,
+  missHint
 }: GamePlayAreaProps): React.ReactElement {
   const [draggedFruit, setDraggedFruit] = useState<FruitType | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -293,7 +284,9 @@ export function GamePlayArea({
         </div>
       )}
 
-      <DropArea text={dropAreaText} />
+      <MissHintToast hint={missHint ?? null} t={t} />
+
+      <DropArea t={t} />
 
       <HarvestAnimations
         animations={harvestAnimations}

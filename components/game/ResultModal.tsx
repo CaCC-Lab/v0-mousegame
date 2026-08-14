@@ -2,7 +2,8 @@
 
 import React from 'react'
 import { SessionOperationStats, StarRating, OPERATION_LABELS } from '@/types/gamification'
-import { compareSessionSuccess } from '@/lib/gamificationManager'
+import { compareSessionSuccess, getNextFocusOperation } from '@/lib/gamificationManager'
+import { getRequiredFruit } from '@/lib/gameLogic'
 import { translations } from '@/lib/i18n/translations'
 
 const MAX_STARS = 3
@@ -59,6 +60,9 @@ export function ResultModal({
     comparison: g.resultComparison,
   }
   const encouragement = encouragementFor(starRating, g)
+  // 星が付かなかったときだけ、次にやることを1つだけ示す。
+  // 何がダメだったか言われないまま減点された感じだけが残るのを避ける
+  const nextFocus = starRating === 0 ? getNextFocusOperation(sessionStats) : null
   // 前回がなければ比較しない（比べる相手がいないのに「おなじ」と出ると誤解を生む）
   const deltas = lastSessionStats ? compareSessionSuccess(sessionStats, lastSessionStats) : null
 
@@ -94,6 +98,17 @@ export function ResultModal({
         >
           {encouragement}
         </p>
+
+        {nextFocus && (
+          <p
+            data-testid="result-next-focus"
+            className="mb-4 rounded-[var(--radius-md)] bg-amber-50 px-4 py-2 text-center text-sm font-bold text-amber-700"
+          >
+            {g.nextFocus
+              .replace('{fruit}', t[getRequiredFruit(nextFocus)])
+              .replace('{action}', g.operations[nextFocus])}
+          </p>
+        )}
 
         <div data-testid="session-success-counts" aria-label={l.successCounts}>
           <div className="text-sm font-bold text-gray-500 mb-2">{l.successCounts}</div>

@@ -126,11 +126,10 @@ describe('FruitHarvestGame gamification (Task 8)', () => {
       const user = userEvent.setup({ advanceTimers: jest.advanceTimersByTime })
       render(<FruitHarvestGame />)
 
-      const startButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent?.match(/Start|はじめる/i)
-      )
-      expect(startButton).toBeTruthy()
-      await user.click(startButton!)
+      // ResultModal は練習モードの結果画面なので、練習を選んでから始める
+      // （待機中の既定はアーケード。アーケードの結果は ArcadeResultModal が出す）
+      await user.click(screen.getByTestId('mode-select-practice'))
+      await user.click(screen.getByTestId('mode-start'))
 
       await waitFor(() => {
         expect(screen.getByTestId('game-area').querySelector('[data-fruit-id]')).toBeInTheDocument()
