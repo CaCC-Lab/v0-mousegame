@@ -7,11 +7,13 @@ import { PowerUp } from '../PowerUp'
 import { ParticleContainer } from '../ParticleContainer'
 import { Fruit as FruitType, HarvestAnimation, InteractionType } from '@/types/game'
 import { FruitSprite } from './FruitSprite'
+import { MissHintToast } from './MissHintToast'
 import { PowerUp as PowerUpType } from '@/types/powerup'
 import { ParticleEffect } from '@/types/animation'
 import type { StreakBonus } from '@/types/gamification'
 import { StreakIndicator } from './StreakIndicator'
 import { translations } from '@/lib/i18n/translations'
+import type { MissHint } from '@/types/game'
 
 interface GamePlayAreaProps {
   fruits: FruitType[]
@@ -29,6 +31,8 @@ interface GamePlayAreaProps {
   lastStreakBonus?: StreakBonus | null
   /** 連続成功表示の言語。省略時は日本語 */
   t?: typeof translations.ja
+  /** 誤操作したときのヒント（正解の操作を伝える） */
+  missHint?: MissHint | null
 }
 
 function DraggedFruitOverlay({
@@ -118,7 +122,8 @@ export function GamePlayArea({
   gameAreaRef,
   streak,
   lastStreakBonus,
-  t
+  t,
+  missHint
 }: GamePlayAreaProps): React.ReactElement {
   const [draggedFruit, setDraggedFruit] = useState<FruitType | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -292,6 +297,8 @@ export function GamePlayArea({
           <StreakIndicator streak={streak} lastBonus={lastStreakBonus ?? null} t={t} />
         </div>
       )}
+
+      <MissHintToast hint={missHint ?? null} t={t} />
 
       <DropArea text={dropAreaText} />
 

@@ -112,6 +112,19 @@ export function calculateScore(fruitType: FruitType, action: InteractionType): n
 }
 
 /**
+ * そのフルーツを取るのに必要な操作を返す。
+ *
+ * 誤操作したときに「正解は何だったか」をその場で伝えるために使う。
+ * 得点計算と同じ対応表を逆に引くので、ヒントと実際の判定がずれない。
+ */
+export function getRequiredInteraction(fruitType: FruitType): InteractionType {
+  const entry = Object.entries(INTERACTION_SCORE_MAP).find(
+    ([, mapping]) => mapping.validType === fruitType
+  )
+  return entry![0] as InteractionType
+}
+
+/**
  * Clamps a value between min and max bounds.
  */
 function clamp(value: number, min: number, max: number): number {

@@ -11,6 +11,7 @@ import {
   ScoreBar,
   GameControls,
   HarvestedFruitsDisplay,
+  OperationLegend,
   HelpDialog,
   StageClearModal,
   GamePlayArea,
@@ -77,6 +78,7 @@ export function FruitHarvestGame(): React.ReactElement {
     pauseGame,
     resetGame,
     handleFruitInteraction,
+    missHint,
     handlePowerUpClick,
     soundEffects,
     difficulty,
@@ -118,10 +120,18 @@ export function FruitHarvestGame(): React.ReactElement {
     setIsHardMode(checked)
   }, [setIsHardMode])
 
+  // 待機中に選んでいるモード。カードを押しても始めず、「はじめる」で始める
+  // （押した瞬間にタイマーが走ると、初見のプレイヤーは何が起きたか分からない）
+  const [selectedMode, setSelectedMode] = useState<GameMode>('arcade')
+
   const handleSelectMode = useCallback((selected: GameMode) => {
+    setSelectedMode(selected)
+  }, [])
+
+  const handleStart = useCallback(() => {
     resetAnimations()
-    startGame(selected)
-  }, [startGame, resetAnimations])
+    startGame(selectedMode)
+  }, [startGame, resetAnimations, selectedMode])
 
   const handleArcadeRetry = useCallback(() => {
     resetAnimations()
@@ -442,6 +452,7 @@ export function FruitHarvestGame(): React.ReactElement {
               selectedFruitIndex={selectedFruitIndex}
               dropAreaText={t.dropArea}
               t={t}
+              missHint={missHint}
               onFruitClick={handleFruitClick}
               onPowerUpCollect={handlePowerUpClick}
               onTriggerAnimation={triggerAnimation}
@@ -451,13 +462,15 @@ export function FruitHarvestGame(): React.ReactElement {
               lastStreakBonus={operationStats.lastStreakBonus}
             />
             {/* pointer-events-none でクリックを下のフルーツへ通す */}
-            <div className="absolute top-1.5 inset-x-0 z-20 pointer-events-none">
+            <div className="absolute top-1.5 inset-x-0 z-20 pointer-events-none space-y-1">
               <HarvestedFruitsDisplay
                 harvestedFruits={harvestedFruits}
                 score={score}
                 stage={isArcade ? null : stage}
                 t={t}
               />
+              {/* どのフルーツに何をすればいいかを、遊んでいる間ずっと見えるところに置く */}
+              <OperationLegend t={t} />
             </div>
 
             {/* フィーバー中は画面全体を熱くする（クリックは通す） */}
@@ -487,6 +500,8 @@ export function FruitHarvestGame(): React.ReactElement {
               <div className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/35 py-3">
                 <ModeSelector
                   onSelectMode={handleSelectMode}
+                  onStart={handleStart}
+                  selectedMode={selectedMode}
                   arcadeBest={arcade.best}
                   arcadeRank={arcade.rank}
                   language={language}
@@ -502,7 +517,10 @@ export function FruitHarvestGame(): React.ReactElement {
             language={language}
             difficulty={difficulty}
             soundEffects={soundEffects}
-            onStart={startGame}
+            onStart={handleStart}
+            // 待機中はプレイエリア上のモード選択が開始の入口。
+            // ここにも「はじめる」があると、どちらを押せばいいのか分からなくなる
+            showStart={!(gameState === 'idle' && !showArcadeResult)}
             onPause={pauseGame}
             onReset={resetGame}
             onStageSelect={() => setShowStageSelector(true)}

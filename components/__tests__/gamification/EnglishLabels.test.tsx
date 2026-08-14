@@ -72,10 +72,10 @@ describe('英語表示のゲーミフィケーションUI', () => {
 
   it('ResultModal に日本語が出ない', () => {
     const session = {
-      click: { success: 5, miss: 1 },
-      doubleClick: { success: 3, miss: 0 },
-      rightClick: { success: 2, miss: 0 },
-      drop: { success: 1, miss: 0 },
+      click: { success: 5, fail: 1 },
+      doubleClick: { success: 3, fail: 0 },
+      rightClick: { success: 2, fail: 0 },
+      drop: { success: 1, fail: 0 },
     }
     const { container } = render(
       <ResultModal
@@ -83,7 +83,7 @@ describe('英語表示のゲーミフィケーションUI', () => {
         open
         sessionStats={session}
         starRating={3}
-        lastSessionStats={{ ...session, click: { success: 2, miss: 0 } }}
+        lastSessionStats={{ ...session, click: { success: 2, fail: 0 } }}
         onClose={() => {}}
       />
     )

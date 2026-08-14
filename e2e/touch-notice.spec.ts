@@ -30,6 +30,7 @@ test.describe('タッチ専用端末への案内', () => {
     // ブロックはしない方針: モードを選んで遊び始められる
     // （待機中はプレイエリア上のモード選択が入口になる）
     await page.getByTestId('mode-select-arcade').tap()
+    await page.getByTestId('mode-start').tap()
     await expect(page.getByRole('button', { name: /ちゅうだん|Pause/ })).toBeVisible()
   })
 })

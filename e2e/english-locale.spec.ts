@@ -73,6 +73,7 @@ test.describe('英語ロケール', () => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: /Fruit Harvest Game/ })).toBeVisible()
     await page.getByTestId('mode-select-arcade').click()
+    await page.getByTestId('mode-start').click()
     await expect(page.getByRole('button', { name: /Pause/ })).toBeVisible()
     await page.waitForTimeout(800)
 

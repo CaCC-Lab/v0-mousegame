@@ -4,6 +4,7 @@ import {
   GameState,
   HarvestedFruits,
   InteractionType,
+  MissHint,
   GAME_CONFIG,
 } from '@/types/game'
 import {
@@ -12,6 +13,7 @@ import {
   generateFruitForField,
   generateBalancedFruits,
   calculateScore,
+  getRequiredInteraction,
   updateFruitPosition,
 } from '@/lib/gameLogic'
 import { useLocalStorage } from './useLocalStorage'
@@ -49,6 +51,9 @@ export function useGameLogic() {
   const [harvestedFruits, setHarvestedFruits] = useState<HarvestedFruits>(createInitialHarvestedFruits())
   const [isHardMode, setIsHardMode] = useLocalStorage('fruitHarvestHardMode', false)
   const [lastStarRating, setLastStarRating] = useState<0 | 1 | 2 | 3>(0)
+  // 誤操作したときに出すヒント。正しく取れたら消す
+  const [missHint, setMissHint] = useState<MissHint | null>(null)
+  const missHintSeqRef = useRef<number>(0)
 
   const animationFrameRef = useRef<number>()
   const lastUpdateTimeRef = useRef<number>(0)
@@ -114,6 +119,7 @@ export function useGameLogic() {
     setGameState('playing')
     setScore(0)
     scoreRef.current = 0
+    setMissHint(null)
     resetPowerUps()
 
     if (nextMode === 'arcade') {
@@ -177,6 +183,7 @@ export function useGameLogic() {
     timeLeftRef.current = 60
     setFruits([])
     setHarvestedFruits(createInitialHarvestedFruits())
+    setMissHint(null)
 
     if (animationFrameRef.current) {
       cancelAnimationFrame(animationFrameRef.current)
@@ -195,8 +202,19 @@ export function useGameLogic() {
       operationStatsRef.current.recordFailure(action)
       // アーケードでは操作を間違えるとコンボが途切れる（点は減らさない）
       if (isArcade) arcadeRef.current.registerMiss()
+      // 何が正解だったかをその場で伝える。
+      // 黙って0点にされると、初見のプレイヤーは何を直せばいいのか分からない
+      missHintSeqRef.current += 1
+      setMissHint({
+        id: missHintSeqRef.current,
+        fruitType: fruit.type,
+        requiredAction: getRequiredInteraction(fruit.type),
+      })
       return
     }
+
+    // 正しく取れたらヒントは役目を終える
+    setMissHint(null)
 
     const newStreak = operationStatsRef.current.recordSuccess(action)
 
@@ -401,6 +419,7 @@ export function useGameLogic() {
     pauseGame,
     resetGame,
     handleFruitInteraction,
+    missHint,
     handlePowerUpClick,
     soundEffects,
     difficulty,
