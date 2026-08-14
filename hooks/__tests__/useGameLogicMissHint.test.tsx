@@ -90,6 +90,20 @@ describe('useGameLogic 誤操作のヒント', () => {
     expect(result.current.missHint?.id).not.toBe(first?.id)
   })
 
+  it('時間切れでゲームが終わるとヒントも消える', () => {
+    // 遊び終わって待機画面に戻ったあとまで、直前の失敗が残り続けないようにする
+    const { result } = renderHook(() => useGameLogic())
+    const fruit = startAndGetFruit(result)
+
+    act(() => { result.current.handleFruitInteraction({ ...fruit, type: 'lemon' }, 'click') })
+    expect(result.current.missHint).not.toBeNull()
+
+    act(() => { jest.advanceTimersByTime(70_000) })
+
+    expect(result.current.gameState).toBe('idle')
+    expect(result.current.missHint).toBeNull()
+  })
+
   it('ゲームをリセットするとヒントも消える', () => {
     const { result } = renderHook(() => useGameLogic())
     const fruit = startAndGetFruit(result)

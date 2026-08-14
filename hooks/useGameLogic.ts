@@ -260,6 +260,7 @@ export function useGameLogic() {
     const currentStage = stageRef.current
     if (currentStage.currentStageInfo && currentStage.checkStageCompletion(newScore, newHarvested)) {
       setGameState('idle')
+      setMissHint(null)
       stopSpawningRef.current()
       soundEffectsRef.current.playHighScoreSound()
 
@@ -301,6 +302,8 @@ export function useGameLogic() {
    */
   const finishGame = useCallback((remainingTime: number) => {
     setGameState('idle')
+    // 遊び終わって待機画面に戻ったあとまで、直前の失敗を残さない
+    setMissHint(null)
     stopSpawningRef.current()
 
     if (modeRef.current === 'arcade') {
