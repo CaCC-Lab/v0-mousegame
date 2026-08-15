@@ -21,21 +21,27 @@ export interface OperationLegendProps {
  * プレイテストでは「ただのクリックゲーだと思ってた」まま時間切れになった。
  *
  * 対応は得点計算と同じ表から引くので、ルールが変わってもずれない。
+ *
+ * すぐ上には収穫カウンター（🍎0 🫐0 …）が並んでおり、
+ * 見た目が似ていると「操作説明なのか進捗なのか一瞬分からない」と言われた。
+ * 見出しを付け、色も反転させて、ひと目で別物と分かるようにしている。
  */
 export function OperationLegend({ t = translations.ja }: OperationLegendProps): React.ReactElement {
   return (
     <div
       data-testid="operation-legend"
-      className="flex flex-wrap items-center justify-center gap-1.5"
+      className="mx-auto flex w-fit max-w-full flex-wrap items-center justify-center gap-x-2 gap-y-1 rounded-[var(--radius-full)] bg-black/45 px-3 py-1 backdrop-blur-sm"
     >
+      <span
+        data-testid="legend-title"
+        className="text-[11px] font-bold uppercase tracking-wide text-white/90"
+      >
+        {t.gamification.legendTitle}
+      </span>
       {FRUIT_ORDER.map(fruit => (
-        <span
-          key={fruit}
-          data-testid={`legend-${fruit}`}
-          className="flex items-center gap-1 rounded-[var(--radius-full)] bg-white/85 px-2 py-0.5 shadow-sm backdrop-blur-sm"
-        >
+        <span key={fruit} data-testid={`legend-${fruit}`} className="flex items-center gap-1">
           <FruitSprite type={fruit} size={16} decorative />
-          <span className="text-xs font-bold" style={{ color: 'var(--color-purple)' }}>
+          <span className="text-xs font-bold text-white">
             {t.gamification.operations[getRequiredInteraction(fruit)]}
           </span>
         </span>

@@ -46,13 +46,21 @@ export function fruitsOfType(
   return root.locator(`[data-testid="game-area"] [role="button"]:has(img[src*="${type}"])`)
 }
 
+/**
+ * 「はじめる」でゲームを始める。
+ *
+ * 待機中はプレイエリア上のモード選択が開始の入口になっており、
+ * カードは選ぶだけ・「はじめる」で始まる（#51 で二重の開始導線を解消した）。
+ */
 export async function startViaHajimeru(page: Page | FrameLocator) {
-  await page.getByRole('button', { name: /はじめる|Start/i }).click()
+  await page.getByTestId('mode-start').click()
 }
 
 /** アーケードは generateBalancedFruits で4種が揃うため、操作別収穫の検証向き */
 export async function startArcade(page: Page | FrameLocator) {
+  // カードは選ぶだけ。始めるのは「はじめる」（#51）
   await page.getByTestId('mode-select-arcade').click()
+  await page.getByTestId('mode-start').click()
   await expect(page.getByRole('button', { name: /ちゅうだん|Pause/i })).toBeVisible()
 }
 

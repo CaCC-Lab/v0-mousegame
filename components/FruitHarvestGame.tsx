@@ -12,6 +12,7 @@ import {
   GameControls,
   HarvestedFruitsDisplay,
   OperationLegend,
+  FeverIntro,
   HelpDialog,
   StageClearModal,
   GamePlayArea,
@@ -128,13 +129,35 @@ export function FruitHarvestGame(): React.ReactElement {
     setSelectedMode(selected)
   }, [])
 
+  // はじめてフィーバーに入ったときだけ、何が起きたのかを一度だけ説明する。
+  // プレイテストでは「Feverが何なのか最後まで分からなかった」まま終わっていた
+  const [showFeverIntro, setShowFeverIntro] = useState(false)
+  const feverIntroShownRef = useRef(false)
+
+  useEffect(() => {
+    if (!isArcade || !arcade.isFever || feverIntroShownRef.current) return
+
+    feverIntroShownRef.current = true
+    setShowFeverIntro(true)
+    const timer = setTimeout(() => setShowFeverIntro(false), 4000)
+
+    // 出している最中にゲームが終わる（arcade.reset() で isFever が落ちる）ことがある。
+    // タイマーを止めるだけだと表示が true のまま残り、次のプレイで出っぱなしになる
+    return () => {
+      clearTimeout(timer)
+      setShowFeverIntro(false)
+    }
+  }, [isArcade, arcade.isFever])
+
   const handleStart = useCallback(() => {
     resetAnimations()
+    setShowFeverIntro(false)
     startGame(selectedMode)
   }, [startGame, resetAnimations, selectedMode])
 
   const handleArcadeRetry = useCallback(() => {
     resetAnimations()
+    setShowFeverIntro(false)
     startGame('arcade')
   }, [startGame, resetAnimations])
 
@@ -468,9 +491,19 @@ export function FruitHarvestGame(): React.ReactElement {
                 stage={isArcade ? null : stage}
                 t={t}
               />
-              {/* どのフルーツに何をすればいいかを、遊んでいる間ずっと見えるところに置く */}
+            </div>
+
+            {/*
+              どのフルーツに何をすればいいかを、遊んでいる間ずっと見えるところに置く。
+              上の収穫カウンターの真下だと役割を取り違えられたので、
+              プレイエリアの下端に離して置く（ドロップエリアの手前まで）
+            */}
+            <div className="absolute bottom-1.5 left-0 right-20 z-20 px-2 pointer-events-none">
               <OperationLegend t={t} />
             </div>
+
+            {/* 遊び終わって待機画面に戻ったら残さない（モード選択と重なる） */}
+            <FeverIntro show={isArcade && showFeverIntro && gameState === 'playing'} t={t} />
 
             {/* フィーバー中は画面全体を熱くする（クリックは通す） */}
             {isArcade && arcade.isFever && (

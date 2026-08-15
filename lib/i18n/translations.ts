@@ -81,6 +81,9 @@ export const translations = {
     rank: 'だんい',
     fever: 'フィーバー',
     feverGauge: 'フィーバーゲージ',
+    // ゲージの意味と発動条件を、遊んでいる最中に読めるようにするための短い一言
+    feverHintCharging: 'コンボでたまる',
+    feverHintActive: 'てんすう2ばい！',
     maxCombo: 'さいだいコンボ',
     feverCount: 'フィーバー',
     times: 'かい',
@@ -201,6 +204,10 @@ export const translations = {
       encouragement2: 'よくできました！もう少し！',
       encouragement1: 'クリアおめでとう！',
       encouragement0: 'れんしゅうのきろくだよ',
+      // プレイ中の凡例の見出し。すぐ上の収穫カウンターと役割を見分けるためのもの
+      legendTitle: 'とりかた',
+      // 連続成功が途切れた瞬間だけ出す。薄い表示のままだと気づけない
+      streakBroken: 'とぎれた！',
       dailyGoalCompleteTitle: 'きょうのれんしゅうクリア！',
       levelUpTitle: 'レベルアップ！',
       // 誤操作したときに出すヒント（{fruit} と {action} を差し替えて使う）
@@ -310,6 +317,9 @@ export const translations = {
     rank: 'Rank',
     fever: 'FEVER',
     feverGauge: 'Fever gauge',
+    // Short line so players can learn what the gauge is while playing
+    feverHintCharging: 'Chain combos to fill',
+    feverHintActive: 'Double points!',
     maxCombo: 'Max combo',
     feverCount: 'Fevers',
     times: 'x',
@@ -428,6 +438,10 @@ export const translations = {
       encouragement2: 'Well done! Almost there!',
       encouragement1: 'Nice clear!',
       encouragement0: 'Here is your practice record',
+      // Heading for the in-play legend, so it is not mistaken for the harvest counter
+      legendTitle: 'How to catch',
+      // Shown only at the moment a streak is lost
+      streakBroken: 'Streak lost!',
       dailyGoalCompleteTitle: "Today's practice complete!",
       levelUpTitle: 'Level up!',
       // Shown when the player uses the wrong action ({fruit} / {action} are replaced)

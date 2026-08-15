@@ -77,7 +77,10 @@ export function HarvestedFruitsDisplay({
   t
 }: HarvestedFruitsDisplayProps): React.ReactElement {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-1.5 px-2">
+    <div
+      data-testid="collection-fruit-counters"
+      className="flex flex-wrap items-center justify-center gap-1.5 px-2"
+    >
       <StageGoals score={score} harvestedFruits={harvestedFruits} stage={stage} t={t} />
       {Object.entries(harvestedFruits).map(([fruit, count], index) => (
         <FruitCounter key={fruit} fruit={fruit} count={count} index={index} />
