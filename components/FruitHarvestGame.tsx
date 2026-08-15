@@ -494,7 +494,8 @@ export function FruitHarvestGame(): React.ReactElement {
               <OperationLegend t={t} />
             </div>
 
-            <FeverIntro show={showFeverIntro} t={t} />
+            {/* 遊び終わって待機画面に戻ったら残さない（モード選択と重なる） */}
+            <FeverIntro show={showFeverIntro && gameState === 'playing'} t={t} />
 
             {/* フィーバー中は画面全体を熱くする（クリックは通す） */}
             {isArcade && arcade.isFever && (
