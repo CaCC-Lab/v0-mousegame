@@ -182,11 +182,16 @@ export function FruitHarvestGame(): React.ReactElement {
 
   const handleFruitClick = useCallback((fruit: Fruit, action: InteractionType) => {
     handleFruitInteraction(fruit, action)
-    // AC-8.2: 収穫成功時にリアルタイムで目標更新
-    dailyPractice.updateGoals(operationStats.getLatestSessionStats())
+    // AC-8.2: 収穫成功時にリアルタイムで目標更新。
+    // ただし「きょうのれんしゅう」は練習モードの日課なので、
+    // 60秒スコアアタックのアーケードでは埋めない
+    // （何をした結果なのか分からなくなるため）
+    if (!isArcade) {
+      dailyPractice.updateGoals(operationStats.getLatestSessionStats())
+    }
   // dailyPractice.updateGoals/operationStats.getLatestSessionStats は useCallback([]) で安定参照
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleFruitInteraction])
+  }, [handleFruitInteraction, isArcade])
 
   const handleKeyboardEnter = useCallback(() => {
     if (gameState === 'idle') {
@@ -293,13 +298,16 @@ export function FruitHarvestGame(): React.ReactElement {
 
   // AC-8.3: 全目標達成時に祝福演出（スタンプはゲーム終了時に既に押下済み）
   useEffect(() => {
+    // アーケード中は練習の完了演出を出さない（別の遊びなので混ざると誤解を生む）
+    if (isArcade) return
+
     if (dailyPractice.isGoalComplete && dailyPractice.isHydrated) {
       setShowDailyGoalComplete(true)
       const timer = setTimeout(() => setShowDailyGoalComplete(false), 3000)
       return () => clearTimeout(timer)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [dailyPractice.isGoalComplete, dailyPractice.isHydrated])
+  }, [dailyPractice.isGoalComplete, dailyPractice.isHydrated, isArcade])
 
   // Auto-dismiss badge notification after 3 seconds
   useEffect(() => {
