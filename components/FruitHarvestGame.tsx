@@ -140,16 +140,24 @@ export function FruitHarvestGame(): React.ReactElement {
     feverIntroShownRef.current = true
     setShowFeverIntro(true)
     const timer = setTimeout(() => setShowFeverIntro(false), 4000)
-    return () => clearTimeout(timer)
+
+    // 出している最中にゲームが終わる（arcade.reset() で isFever が落ちる）ことがある。
+    // タイマーを止めるだけだと表示が true のまま残り、次のプレイで出っぱなしになる
+    return () => {
+      clearTimeout(timer)
+      setShowFeverIntro(false)
+    }
   }, [isArcade, arcade.isFever])
 
   const handleStart = useCallback(() => {
     resetAnimations()
+    setShowFeverIntro(false)
     startGame(selectedMode)
   }, [startGame, resetAnimations, selectedMode])
 
   const handleArcadeRetry = useCallback(() => {
     resetAnimations()
+    setShowFeverIntro(false)
     startGame('arcade')
   }, [startGame, resetAnimations])
 
@@ -495,7 +503,7 @@ export function FruitHarvestGame(): React.ReactElement {
             </div>
 
             {/* 遊び終わって待機画面に戻ったら残さない（モード選択と重なる） */}
-            <FeverIntro show={showFeverIntro && gameState === 'playing'} t={t} />
+            <FeverIntro show={isArcade && showFeverIntro && gameState === 'playing'} t={t} />
 
             {/* フィーバー中は画面全体を熱くする（クリックは通す） */}
             {isArcade && arcade.isFever && (
