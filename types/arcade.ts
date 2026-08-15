@@ -36,7 +36,15 @@ export interface ArcadeConfig {
   duration: number
   /** この時間だけ収穫が途切れるとコンボが切れる（ミリ秒） */
   comboTimeoutMs: number
-  /** フィーバーゲージの満タン値 */
+  /**
+   * フィーバーゲージの満タン値。
+   *
+   * 初見が60秒のあいだに1回は発動できる大きさにする。
+   * 100 だったころは、コンボが切れ続けると13回の成功が必要で、
+   * 実績（60秒で成功5〜6回）では届きようがなかった
+   * （プレイテストで「バーは半分くらいまで行ったけど発動しなかった」）。
+   * 必要回数は lib/__tests__/feverReachability.test.ts で固定している。
+   */
   feverGaugeMax: number
   /** 収穫1回あたりのゲージ増加の基礎値 */
   feverGainBase: number
@@ -55,7 +63,7 @@ export interface ArcadeConfig {
 export const ARCADE_CONFIG: ArcadeConfig = {
   duration: 60,
   comboTimeoutMs: 2500,
-  feverGaugeMax: 100,
+  feverGaugeMax: 50,
   feverGainBase: 6,
   feverGainPerMultiplier: 2,
   feverDurationMs: 8000,
