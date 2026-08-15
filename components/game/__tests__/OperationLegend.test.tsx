@@ -39,11 +39,27 @@ describe('OperationLegend', () => {
     expect(screen.getByTestId('legend-watermelon')).toHaveTextContent('ドラッグ')
   })
 
+  it('何の一覧なのか見出しで分かる', () => {
+    // すぐ上に収穫カウンター（🍎0 🫐0 …）があり、
+    // 「操作説明なのか進捗カウンターなのか一瞬分からなかった」と言われた
+    render(<OperationLegend t={translations.ja} />)
+
+    expect(screen.getByTestId('legend-title')).toHaveTextContent('とりかた')
+  })
+
+  it('収穫カウンターと見分けられるよう、数を並べない', () => {
+    render(<OperationLegend t={translations.ja} />)
+
+    // カウンター側は「🍎 0」のように数が並ぶ。凡例には数を出さない
+    expect(screen.getByTestId('operation-legend').textContent).not.toMatch(/\d/)
+  })
+
   it('英語でも読める', () => {
     render(<OperationLegend t={translations.en} />)
 
     const legend = screen.getByTestId('operation-legend')
     expect(legend).toHaveTextContent(/Double-click/i)
+    expect(screen.getByTestId('legend-title')).toHaveTextContent(/How to catch/i)
     expect(legend.textContent).not.toMatch(/[ぁ-んァ-ヶ一-龠]/)
   })
 })

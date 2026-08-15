@@ -56,29 +56,47 @@ export function ArcadeHUD({
         </motion.div>
       )}
 
-      <div className="flex items-center gap-1.5 w-[140px] md:w-[180px] rounded-[var(--radius-md)] bg-black/15 px-2 py-1">
+      {/*
+        アイコンだけだと何のゲージか分からず、プレイテストでは
+        「Feverが何なのか最後まで分からなかった」と言われた。
+        名前と、どうすれば溜まるのか（溜まったら何が起きるのか）を添える
+      */}
+      <div className="flex items-center gap-1.5 w-[190px] md:w-[240px] rounded-[var(--radius-md)] bg-black/15 px-2 py-1">
         <Flame
           className={`w-4 h-4 shrink-0 ${isFever ? 'text-yellow-300' : 'text-white'}`}
           aria-hidden
         />
-        <div
-          data-testid="arcade-fever-gauge"
-          role="progressbar"
-          aria-label={t.feverGauge}
-          aria-valuenow={gaugeValue}
-          aria-valuemin={0}
-          aria-valuemax={ARCADE_CONFIG.feverGaugeMax}
-          className="h-3 flex-1 rounded-full bg-white/40 overflow-hidden border border-white/50"
-        >
+        <div className="flex flex-col min-w-0 flex-1 gap-0.5">
+          <div className="flex items-baseline gap-1.5 whitespace-nowrap leading-none">
+            <span data-testid="fever-label" className="text-[11px] font-bold text-white">
+              {t.fever}
+            </span>
+            <span
+              data-testid="fever-hint"
+              className={`text-[10px] font-semibold ${isFever ? 'text-yellow-200' : 'text-white/85'}`}
+            >
+              {isFever ? t.feverHintActive : t.feverHintCharging}
+            </span>
+          </div>
           <div
-            className="h-full rounded-full transition-[width] duration-100 ease-linear"
-            style={{
-              width: `${gaugeRatio}%`,
-              background: isFever
-                ? 'linear-gradient(90deg,#FFD23F,#FF6B6B)'
-                : 'linear-gradient(90deg,#A8DADC,#FFD23F)',
-            }}
-          />
+            data-testid="arcade-fever-gauge"
+            role="progressbar"
+            aria-label={t.feverGauge}
+            aria-valuenow={gaugeValue}
+            aria-valuemin={0}
+            aria-valuemax={ARCADE_CONFIG.feverGaugeMax}
+            className="h-2.5 w-full rounded-full bg-white/40 overflow-hidden border border-white/50"
+          >
+            <div
+              className="h-full rounded-full transition-[width] duration-100 ease-linear"
+              style={{
+                width: `${gaugeRatio}%`,
+                background: isFever
+                  ? 'linear-gradient(90deg,#FFD23F,#FF6B6B)'
+                  : 'linear-gradient(90deg,#A8DADC,#FFD23F)',
+              }}
+            />
+          </div>
         </div>
       </div>
 

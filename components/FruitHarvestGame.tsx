@@ -12,6 +12,7 @@ import {
   GameControls,
   HarvestedFruitsDisplay,
   OperationLegend,
+  FeverIntro,
   HelpDialog,
   StageClearModal,
   GamePlayArea,
@@ -127,6 +128,20 @@ export function FruitHarvestGame(): React.ReactElement {
   const handleSelectMode = useCallback((selected: GameMode) => {
     setSelectedMode(selected)
   }, [])
+
+  // はじめてフィーバーに入ったときだけ、何が起きたのかを一度だけ説明する。
+  // プレイテストでは「Feverが何なのか最後まで分からなかった」まま終わっていた
+  const [showFeverIntro, setShowFeverIntro] = useState(false)
+  const feverIntroShownRef = useRef(false)
+
+  useEffect(() => {
+    if (!isArcade || !arcade.isFever || feverIntroShownRef.current) return
+
+    feverIntroShownRef.current = true
+    setShowFeverIntro(true)
+    const timer = setTimeout(() => setShowFeverIntro(false), 4000)
+    return () => clearTimeout(timer)
+  }, [isArcade, arcade.isFever])
 
   const handleStart = useCallback(() => {
     resetAnimations()
@@ -468,9 +483,18 @@ export function FruitHarvestGame(): React.ReactElement {
                 stage={isArcade ? null : stage}
                 t={t}
               />
-              {/* どのフルーツに何をすればいいかを、遊んでいる間ずっと見えるところに置く */}
+            </div>
+
+            {/*
+              どのフルーツに何をすればいいかを、遊んでいる間ずっと見えるところに置く。
+              上の収穫カウンターの真下だと役割を取り違えられたので、
+              プレイエリアの下端に離して置く（ドロップエリアの手前まで）
+            */}
+            <div className="absolute bottom-1.5 left-0 right-20 z-20 px-2 pointer-events-none">
               <OperationLegend t={t} />
             </div>
+
+            <FeverIntro show={showFeverIntro} t={t} />
 
             {/* フィーバー中は画面全体を熱くする（クリックは通す） */}
             {isArcade && arcade.isFever && (
