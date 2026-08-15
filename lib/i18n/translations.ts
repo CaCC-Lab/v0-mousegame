@@ -13,6 +13,9 @@ export const translations = {
     volume: 'おんりょう',
     stageSelect: 'ステージ選択',
     dropArea: 'ドロップエリア',
+    // 右端の細い帯に横書きで収まる短い語。
+    // 「ドロップエリア」は縦書きにしないと入らず、縦書きは読みにくいと2人に言われた
+    dropAreaShort: 'ここへ',
     stageGoals: 'ステージ目標:',
     scoreText: 'スコア:',
     fruitsText: 'フルーツ:',
@@ -249,6 +252,8 @@ export const translations = {
     volume: 'Volume',
     stageSelect: 'Select Stage',
     dropArea: 'Drop Area',
+    // Short label that fits the narrow strip horizontally
+    dropAreaShort: 'DROP',
     stageGoals: 'Stage Goals:',
     scoreText: 'Score:',
     fruitsText: 'Fruits:',

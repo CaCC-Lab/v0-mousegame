@@ -323,11 +323,11 @@ describe('FruitHarvestGame', () => {
     it('drop area exists for watermelon', () => {
       render(<FruitHarvestGame />)
 
-      // ドロップエリアの存在を確認（言語に依存しない）
-      const dropArea = screen.getByText((content) =>
-        content === 'ドロップエリア' || content === 'Drop Area'
-      )
-      expect(dropArea).toBeInTheDocument()
+      // ドロップエリアの存在を確認。
+      // 帯には横書きで収まる短い語しか出さないので、読み上げ用の名前で探す
+      // （縦書きは読みにくいとプレイテストで2人に指摘された）
+      expect(screen.getByTestId('drop-area')).toBeInTheDocument()
+      expect(screen.getByLabelText(/ドロップエリア|Drop Area/)).toBeInTheDocument()
     })
   })
 
