@@ -45,13 +45,13 @@ describe('ArcadeResultModal: 今回の結果', () => {
   })
 
   it('段位と「あと N てん」は、ベストではなく今回のスコアから出す', () => {
-    // 今回 1200 点（シルバー、ゴールドまで 1300）、ベスト 3000 点（ゴールド）
-    renderResult(1200, 3000)
+    // 今回 5,000 点（シルバー、ゴールドまで 3,000）、ベスト 20,000 点（ゴールド）
+    renderResult(5000, 20000)
 
     expect(screen.getByTestId('arcade-result-rank')).toHaveTextContent('シルバー')
-    const progress = getRankProgress(1200)
+    const progress = getRankProgress(5000)
     expect(screen.getByTestId('arcade-rank-progress')).toHaveTextContent(`あと${progress.pointsToNext}てん`)
     // ベストは別の欄に残る
-    expect(screen.getByTestId('arcade-result-best')).toHaveTextContent('3,000')
+    expect(screen.getByTestId('arcade-result-best')).toHaveTextContent('20,000')
   })
 })

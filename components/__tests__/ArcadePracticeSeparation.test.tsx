@@ -34,11 +34,18 @@ describe('アーケードと練習の分離', () => {
 
   const harvestOnce = async (user: ReturnType<typeof userEvent.setup>) => {
     const gameArea = screen.getByTestId('game-area')
-    // りんごをクリックで取る。ブルーベリーへのクリックはダブルクリック待ちで判定が遅れるため
-    // （docs/game-spec.md §2）、「最初の果物」を選ぶと種類しだいで結果が揺れる
-    const fruit = gameArea.querySelector('[role="button"][data-fruit-id]:has(img[src*="apple"])')
-    expect(fruit).not.toBeNull()
-    await user.click(fruit as HTMLElement)
+    // 正しい操作で1つ取る。ブルーベリーへのクリックはダブルクリック待ちで判定が遅れるので、
+    // りんご（クリック）→レモン（右クリック）→ブルーベリー（ダブルクリック）の順に、畑にあるものを使う。
+    // れんしゅうの畑は種類がランダムで、りんごが1つも無い回がある
+    const pick = (type: string) =>
+      gameArea.querySelector(`[role="button"][data-fruit-id]:has(img[src*="${type}"])`) as HTMLElement | null
+    const apple = pick('apple')
+    const lemon = pick('lemon')
+    const berry = pick('blueberry')
+    if (apple) await user.click(apple)
+    else if (lemon) await user.pointer({ keys: '[MouseRight]', target: lemon })
+    else if (berry) await user.dblClick(berry)
+    else throw new Error('スイカしか無い畑はこのテストの前提外')
   }
 
   it('アーケードの収穫では、きょうのれんしゅうを更新しない', async () => {

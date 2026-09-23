@@ -1,7 +1,6 @@
 import React from 'react'
 import { render, screen, act, within } from '@testing-library/react'
 import { FruitHarvestGame } from '../FruitHarvestGame'
-import { ARCADE_CONFIG } from '@/types/arcade'
 
 /**
  * `?debug=1` の診断表示と `?test=1` の自動プレイ（v1.1 計画 G12、docs/game-spec.md §10）。
@@ -41,24 +40,27 @@ describe('検証用の入口', () => {
     }
   })
 
-  it('?test=1&debug=1 で、自動でアーケードを遊び、4操作すべてが成功して結果画面まで行く', () => {
-    setSearch('?test=1&debug=1')
+  it('?test=1&debug=1&bot=beginner で、自動でチャレンジを遊び、4操作すべてを使って結果画面まで行く', () => {
+    // チャレンジは時間をかせぐ型なので、ミスしない expert は 5 分近く続く（v1.2 D1）。
+    // 早く終わる beginner（1.5 秒ごと・ミス 20%）で通す
+    setSearch('?test=1&debug=1&bot=beginner')
     render(<FruitHarvestGame />)
 
     // 開始・カウントダウン・自動プレイのタイマーは、描画のあとで張られる。
     // 1回の act でまとめて進めると後から張られたタイマーが動かないので、1秒ずつ進める
-    for (let second = 0; second < ARCADE_CONFIG.duration + 5; second++) {
+    for (let second = 0; second < 300 && !screen.queryByRole('dialog'); second++) {
       act(() => {
         jest.advanceTimersByTime(1000)
       })
     }
 
-    expect(screen.getByRole('dialog')).toHaveTextContent(/アーケードけっか/)
+    expect(screen.getByRole('dialog')).toHaveTextContent(/チャレンジけっか/)
     const panel = screen.getByTestId('debug-panel')
     for (const action of ['click', 'doubleClick', 'rightClick', 'drop']) {
       const value = Number(within(panel).getByTestId(`debug-ok-${action}`).textContent)
       expect(value).toBeGreaterThanOrEqual(1)
     }
-    expect(Number(within(panel).getByTestId('debug-miss').textContent)).toBe(0)
+    // beginner は5回に1回まちがえる。ミスは数として出る
+    expect(Number(within(panel).getByTestId('debug-miss').textContent)).toBeGreaterThan(0)
   })
 })

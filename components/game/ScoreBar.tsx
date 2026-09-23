@@ -74,7 +74,7 @@ function TimerSection({ timeLeft, gameState, t }: Pick<ScoreBarProps, 'timeLeft'
       transition={{ duration: 0.5, repeat: isLowTime ? Infinity : 0 }}
     >
       <Timer className="w-4 h-4 text-white" aria-hidden />
-      <span className="text-display text-lg font-bold text-white">
+      <span className="text-display text-lg font-bold text-white whitespace-nowrap">
         {t.timeFormat(Math.floor(timeLeft / 60), timeLeft % 60)}
       </span>
     </motion.div>
@@ -108,7 +108,8 @@ export function ScoreBar({
         <StageSection stage={stage} t={t} />
       </div>
       <TimerSection timeLeft={timeLeft} gameState={gameState} t={t} />
-      <div className="hidden sm:contents">
+      {/* 幅 1024px 未満ではベストを隠す（ヘッダを1段に保つ。ベストは結果画面とモード選択のカードで見られる。v1.2 D8） */}
+      <div className="hidden lg:contents">
         <HighScoreSection highScore={highScore} t={t} />
       </div>
     </div>

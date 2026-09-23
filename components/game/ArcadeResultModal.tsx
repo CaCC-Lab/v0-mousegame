@@ -4,7 +4,8 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { RotateCcw, Home, Sparkles } from 'lucide-react'
 import { ArcadeResult, RankProgress, RankTierId, RANK_TIERS } from '@/types/arcade'
-import { getRankProgress } from '@/lib/arcadeManager'
+import { getRankProgress, nextArcadeTarget } from '@/lib/arcadeManager'
+import { getRequiredFruit } from '@/lib/gameLogic'
 import { translations } from '@/lib/i18n/translations'
 
 type TranslationType = typeof translations.ja | typeof translations.en
@@ -20,6 +21,8 @@ export interface ArcadeResultModalProps {
   language: 'ja' | 'en'
   onRetry: () => void
   onClose: () => void
+  /** 「にがてな そうさ」をれんしゅうで試す（v1.2 D4）。渡したときだけボタンを出す */
+  onPracticeWeak?: () => void
   /** リワード広告（スペシャルフルーツ）が使えるか。SDK導入前は false */
   rewardedAvailable?: boolean
   onRewardedBoost?: () => void
@@ -59,6 +62,7 @@ export function ArcadeResultModal({
   language,
   onRetry,
   onClose,
+  onPracticeWeak,
   rewardedAvailable = false,
   onRewardedBoost,
   t,
@@ -93,13 +97,31 @@ export function ArcadeResultModal({
           🏆 {t.arcadeResultTitle}
         </h2>
 
+        {result.endReason === 'timeUp' && (
+          // 終わった理由を1行で（負ける理由は1つ。v1.2 G3）
+          <p data-testid="arcade-end-reason" className="mt-1 text-center text-sm font-bold text-gray-500">
+            ⏱ {t.endReasonTimeUp}
+          </p>
+        )}
+
+        {/* 0点を大きな赤で出すと叱られたように感じる（初見テスト）。0点は控えめに出す（v1.2 D6） */}
         <div
-          className="mt-3 text-center text-display font-bold tabular-nums"
+          className="mt-2 text-center text-display font-bold tabular-nums"
           data-testid="arcade-result-score"
-          style={{ color: 'var(--color-berry)', fontSize: '3rem', lineHeight: 1.1 }}
+          data-emphasis={isZero ? 'low' : 'high'}
+          style={
+            isZero
+              ? { color: 'var(--color-gray-400, #9ca3af)', fontSize: '2rem', lineHeight: 1.1 }
+              : { color: 'var(--color-berry)', fontSize: '3rem', lineHeight: 1.1 }
+          }
         >
           {result.score.toLocaleString()}
         </div>
+
+        {/* 次の目標を1つだけ出す。「もういちど」の理由になる（v1.2 D6） */}
+        <p data-testid="arcade-next-target" className="mt-1 text-center text-base font-bold" style={{ color: 'var(--color-purple)' }}>
+          🎯 {t.nextTarget.replace('{points}', nextArcadeTarget(result.score, result.best).toLocaleString())}
+        </p>
 
         {result.isNewBest && (
           <motion.div
@@ -157,6 +179,30 @@ export function ArcadeResultModal({
               : t.maxRankReached}
           </div>
         </div>
+        )}
+
+        {result.weakOperation && (
+          // ミスがいちばん多かった操作と、その練習への導線（v1.2 D4）
+          <div
+            data-testid="arcade-weak-operation"
+            className="mt-4 rounded-[var(--radius-lg)] bg-sky-50 px-4 py-3 text-center"
+          >
+            <div className="text-xs font-semibold text-gray-500">{t.weakOperationTitle}</div>
+            <div className="text-base font-bold text-gray-700">
+              {t[getRequiredFruit(result.weakOperation)]}: {t.gamification.operations[result.weakOperation]}
+            </div>
+            {onPracticeWeak && (
+              <button
+                type="button"
+                data-testid="arcade-practice-weak"
+                onClick={onPracticeWeak}
+                className="mt-2 rounded-[var(--radius-full)] px-4 py-1.5 text-sm font-bold text-white shadow"
+                style={{ backgroundColor: 'var(--color-purple)' }}
+              >
+                {t.practiceWeakOperation}
+              </button>
+            )}
+          </div>
         )}
 
         <button

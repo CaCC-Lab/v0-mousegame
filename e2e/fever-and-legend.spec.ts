@@ -36,7 +36,8 @@ test.describe('フィーバーゲージの説明', () => {
     await startArcade(page)
 
     await expect(page.getByTestId('fever-label')).toBeVisible()
-    await expect(page.getByTestId('fever-label')).toContainText('フィーバー')
+    // 画面での名前は「ボーナスタイム」（v1.2 D5。コードでは fever）
+    await expect(page.getByTestId('fever-label')).toContainText('ボーナスタイム')
     // 「あと何で発動するかは画面から読めない」への対応
     await expect(page.getByTestId('fever-hint')).toContainText('コンボ')
   })

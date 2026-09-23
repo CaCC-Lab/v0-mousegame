@@ -25,12 +25,12 @@ describe('待機中の画面', () => {
     expect(screen.queryByTestId('score-value')).not.toBeInTheDocument()
     expect(screen.queryByText(/\d+分\d+秒/)).not.toBeInTheDocument()
     expect(screen.queryByText('ベスト:')).not.toBeInTheDocument()
-    expect(screen.queryByText('とりかた')).not.toBeInTheDocument()
+    // 4つの果物と操作は、待機中も1行で出す（v1.2 D7。ChallengeFlow.test.tsx）
     expect(screen.queryByText(/ステージ目標/)).not.toBeInTheDocument()
     expect(screen.queryByTestId('streak-count')).not.toBeInTheDocument()
   })
 
-  it('はじめると、得点・時間・凡例が出る', () => {
+  it('はじめると、得点・時間と、プレイエリアの凡例が出る', () => {
     render(<FruitHarvestGame />)
     act(() => screen.getByTestId('mode-start').click())
 

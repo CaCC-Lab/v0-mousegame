@@ -42,7 +42,8 @@ describe('結果表示中・アーケード中の背後の操作', () => {
     startArcade()
 
     act(() => {
-      jest.advanceTimersByTime((ARCADE_CONFIG.duration + 2) * 1000)
+      // 何もしなければ開始時間（30 秒）で終わる（v1.2 D1）。タイマーは描画のあとで張られるので1秒ずつ
+      for (let s = 0; s < ARCADE_CONFIG.startTimeSec + 2; s++) jest.advanceTimersByTime(1000)
     })
 
     const dialog = screen.getByRole('dialog')

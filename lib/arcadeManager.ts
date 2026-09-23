@@ -108,3 +108,40 @@ export function getRankProgress(score: number): RankProgress {
 export function isNewBest(score: number, best: number): boolean {
   return score > 0 && score > best
 }
+
+/**
+ * 正しく取ったときに増える時間（秒）。取った数（これまでの収穫数）が増えるほど減る。
+ * 上手な子でもいつかは終わり、そこまでの長さが腕前で変わる（v1.2 D1）
+ */
+export function arcadeTimeGain(harvestCount: number): number {
+  return Math.max(
+    ARCADE_CONFIG.timeGainMinSec,
+    ARCADE_CONFIG.timeGainBaseSec - ARCADE_CONFIG.timeGainDecayPerHarvest * harvestCount
+  )
+}
+
+/** 正しく取ったあとの残り時間（上限を超えない） */
+export function addHarvestTime(timeLeftSec: number, harvestCount: number): number {
+  return Math.min(ARCADE_CONFIG.maxTimeSec, timeLeftSec + arcadeTimeGain(harvestCount))
+}
+
+/** ミスしたあとの残り時間（0 より下にならない） */
+export function subtractMissTime(timeLeftSec: number): number {
+  return Math.max(0, timeLeftSec - ARCADE_CONFIG.missPenaltySec)
+}
+
+/** 0点のときの最初の目標（v1.2 D6） */
+export const FIRST_ARCADE_TARGET = 100
+/** 目標を丸める単位 */
+const TARGET_STEP = 50
+
+/**
+ * 結果画面の「つぎは ◯てんを めざそう」の点（v1.2 D6、docs/game-spec.md §5）。
+ * 0点なら最初の目標。それ以外は、ベスト（今回を含む）の 1.1 倍を 50 点単位で切り上げる
+ */
+export function nextArcadeTarget(score: number, best: number): number {
+  const top = Math.max(score, best)
+  if (top <= 0) return FIRST_ARCADE_TARGET
+  const target = Math.ceil((top * 1.1) / TARGET_STEP) * TARGET_STEP
+  return target > top ? target : top + TARGET_STEP
+}

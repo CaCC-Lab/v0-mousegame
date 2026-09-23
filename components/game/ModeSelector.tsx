@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Trophy, GraduationCap, Play } from 'lucide-react'
 import { GameMode, RankTierId, RANK_TIERS, ARCADE_CONFIG } from '@/types/arcade'
 import { translations } from '@/lib/i18n/translations'
+import { OperationLegend } from './OperationLegend'
 
 type TranslationType = typeof translations.ja | typeof translations.en
 
@@ -31,7 +32,7 @@ function rankTier(id: RankTierId) {
  *
  * CrazyGames のように「開いた人が数秒で遊び始める」ことを狙い、
  * 待機中のプレイエリアにこれだけを大きく出す。
- * 競う遊び（アーケード）を主役に、練習モードは並べて残す。
+ * 競う遊び（チャレンジ）を主役に、練習モードは並べて残す。
  *
  * カードは「選ぶ」だけで、始めるのは「はじめる」ボタン。
  * 押した瞬間にタイマーが走ると、初見のプレイヤーは何が起きたか分からないまま
@@ -52,7 +53,9 @@ export function ModeSelector({
     selectedMode === mode ? 'border-amber-300 ring-4 ring-amber-300/60' : 'border-white/60'
 
   return (
-    <div className="flex flex-col items-center gap-2 sm:gap-3 w-full max-w-2xl px-4">
+    <div data-testid="mode-selector" className="flex flex-col items-center gap-2 sm:gap-3 w-full max-w-2xl px-4">
+      {/* 何をするゲームかを、遊ぶ前に絵で見せる（4つの果物と操作を1行で。v1.2 D7） */}
+      <OperationLegend t={t} />
       <p className="text-white text-lg font-bold drop-shadow text-display">{t.chooseMode}</p>
 
       <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -73,8 +76,7 @@ export function ModeSelector({
             <Trophy className="w-6 h-6 shrink-0" aria-hidden />
             <span className="text-display text-2xl font-bold">{t.arcadeMode}</span>
             <span className="ml-auto text-sm font-bold bg-white/25 rounded-full px-2.5 py-0.5 whitespace-nowrap">
-              {ARCADE_CONFIG.duration}
-              {t.seconds}
+              {t.arcadeBadge.replace('{seconds}', String(ARCADE_CONFIG.startTimeSec))}
             </span>
           </span>
           {/* 狭い画面では説明文を畳む。カード2枚と「はじめる」が収まらなくなるため */}

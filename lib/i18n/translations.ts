@@ -73,23 +73,31 @@ export const translations = {
     helpDescription: 'ゲームの遊び方の説明',
     touchDeviceNotice: 'スマホでもあそべるよ！ながおしでレモン、なぞってスイカをはこぼう。',
 
-    // Arcade Mode
+    // チャレンジ（コード上は arcade。画面での名前は「チャレンジ」。v1.2 D5）
     chooseMode: 'あそびかたをえらぼう',
-    arcadeMode: 'アーケード',
-    arcadeTagline: '60びょうスコアアタック！コンボをつないでフィーバーだ',
+    arcadeMode: 'チャレンジ',
+    // {seconds} は ARCADE_CONFIG.startTimeSec から差し込む
+    arcadeBadge: '{seconds}びょう から',
+    arcadeTagline: 'とると じかんが ふえるよ。どこまで つづけられるかな？',
     practiceMode: 'れんしゅう',
     practiceTagline: 'ステージをすすんで、マウスそうさをマスターしよう',
-    arcadeResultTitle: 'アーケードけっか',
+    arcadeResultTitle: 'チャレンジけっか',
+    endReasonTimeUp: 'じかんぎれ！',
+    // {points} はリザルトで計算した次の目標点
+    nextTarget: 'つぎは {points}てんを めざそう',
+    weakOperationTitle: 'にがてな そうさ',
+    practiceWeakOperation: 'れんしゅうで ためす',
+    fruitsStartMoving: 'フルーツが うごきだした！',
     best: 'ベスト',
     newBest: 'じこベストこうしん！',
     rank: 'だんい',
-    fever: 'フィーバー',
-    feverGauge: 'フィーバーゲージ',
+    fever: 'ボーナスタイム',
+    feverGauge: 'ボーナスタイムのゲージ',
     // ゲージの意味と発動条件を、遊んでいる最中に読めるようにするための短い一言
     feverHintCharging: 'コンボでたまる',
     feverHintActive: 'てんすう2ばい！',
     maxCombo: 'さいだいコンボ',
-    feverCount: 'フィーバー',
+    feverCount: 'ボーナスタイム',
     times: 'かい',
     retry: 'もういちど',
     arcadeZeroHint: 'まずは 🍎 をクリックしてみよう',
@@ -111,9 +119,9 @@ export const translations = {
     // {multiplier} は types/difficulty.ts の scoreMultiplier から差し込む（docs/game-spec.md §7）。
     // 難易度で実際に変わるのは、れんしゅうの得点倍率だけ（時間・果物の数はステージの値が優先される）
     difficultyDesc: {
-      easy: 'れんしゅうで とれる てんすうが {multiplier}ばいに なるよ（アーケードは かわらないよ）',
+      easy: 'れんしゅうで とれる てんすうが {multiplier}ばいに なるよ（チャレンジは かわらないよ）',
       normal: 'れんしゅうの てんすうは そのまま（{multiplier}ばい）だよ',
-      hard: 'れんしゅうで とれる てんすうが {multiplier}ばいに なるよ（アーケードは かわらないよ）'
+      hard: 'れんしゅうで とれる てんすうが {multiplier}ばいに なるよ（チャレンジは かわらないよ）'
     },
     
     // Game Info
@@ -132,9 +140,9 @@ export const translations = {
       easyModeDesc: 'とまるモード: フルーツはうごかないから、ゆっくりあそべるよ',
       timeLimit: 'じかんはステージによってかわるよ（だいたい１ぷん〜２ふん３０びょう）',
       goal: 'できるだけたくさんのフルーツをあつめて、たかいてんすうをめざそう！',
-      arcadeTitle: '🏆 アーケードモード 🏆',
-      arcadeDesc: '60びょうでなんてんとれるかにちょうせん！つづけてとると「コンボ」がつながって、てんすうが2ばい・3ばい…とふえていくよ。',
-      arcadeFever: 'コンボをつなげてゲージがいっぱいになると「フィーバー」！てんすうがさらに2ばい、フルーツもどんどんふえるよ。',
+      arcadeTitle: '🏆 チャレンジ 🏆',
+      arcadeDesc: 'とると のこりじかんが ふえて、まちがえると へるよ。じかんが なくなったら おしまい。つづけてとると「コンボ」がつながって、てんすうが2ばい・3ばい…とふえていくよ。たくさんとると、フルーツが うごきだすよ。',
+      arcadeFever: 'コンボをつなげてゲージがいっぱいになると「ボーナスタイム」！てんすうがさらに2ばい、フルーツもどんどんふえるよ。',
       arcadeRank: 'じこベストにおうじて、ブロンズ→シルバー→ゴールド…とだんいがあがるよ。',
       touchTitle: 'スマホ・タブレットのそうさ:',
       touchTap: 'タップ: りんごをとる',
@@ -302,23 +310,29 @@ export const translations = {
     helpDescription: 'How to play the game',
     touchDeviceNotice: 'Touch works too! Long-press for lemons, drag watermelons to the drop zone.',
 
-    // Arcade Mode
+    // Challenge (arcade in code; v1.2 D5)
     chooseMode: 'Choose how to play',
-    arcadeMode: 'Arcade',
-    arcadeTagline: '60-second score attack — chain combos and hit Fever!',
+    arcadeMode: 'Challenge',
+    arcadeBadge: 'From {seconds}s',
+    arcadeTagline: 'Every catch adds time. How long can you keep going?',
     practiceMode: 'Practice',
     practiceTagline: 'Clear stages and master every mouse move',
-    arcadeResultTitle: 'Arcade Result',
+    arcadeResultTitle: 'Challenge Result',
+    endReasonTimeUp: 'Time up!',
+    nextTarget: 'Next goal: {points} pts',
+    weakOperationTitle: 'Needs practice',
+    practiceWeakOperation: 'Practice it',
+    fruitsStartMoving: 'The fruits are moving!',
     best: 'Best',
     newBest: 'New personal best!',
     rank: 'Rank',
-    fever: 'FEVER',
-    feverGauge: 'Fever gauge',
+    fever: 'BONUS TIME',
+    feverGauge: 'Bonus Time gauge',
     // Short line so players can learn what the gauge is while playing
     feverHintCharging: 'Chain combos to fill',
     feverHintActive: 'Double points!',
     maxCombo: 'Max combo',
-    feverCount: 'Fevers',
+    feverCount: 'Bonus Times',
     times: 'x',
     retry: 'Play again',
     arcadeZeroHint: 'Start by clicking an 🍎 apple!',
@@ -338,9 +352,9 @@ export const translations = {
     difficultyNormal: 'Normal',
     difficultyHard: 'Hard',
     difficultyDesc: {
-      easy: 'Points in Practice are x{multiplier} (Arcade is not affected)',
+      easy: 'Points in Practice are x{multiplier} (Challenge is not affected)',
       normal: 'Points in Practice are unchanged (x{multiplier})',
-      hard: 'Points in Practice are x{multiplier} (Arcade is not affected)'
+      hard: 'Points in Practice are x{multiplier} (Challenge is not affected)'
     },
     
     // Game Info
@@ -359,9 +373,9 @@ export const translations = {
       easyModeDesc: 'Still Mode: Fruits don\'t move, so you can play slowly',
       timeLimit: 'Time varies by stage (about 1 to 2.5 minutes)',
       goal: 'Collect as many fruits as you can and beat your best!',
-      arcadeTitle: '🏆 Arcade Mode 🏆',
-      arcadeDesc: 'How many points can you score in 60 seconds? Keep harvesting without a miss to build a Combo — your points go 2x, 3x and higher.',
-      arcadeFever: 'Fill the gauge with combos to trigger FEVER: double points on top of your combo, and the field fills up with fruit.',
+      arcadeTitle: '🏆 Challenge 🏆',
+      arcadeDesc: 'Every catch adds a little time and every mistake takes some away. When the timer runs out, the game ends. Keep catching without a miss to build a Combo — your points go 2x, 3x and higher. Catch enough and the fruits start to move.',
+      arcadeFever: 'Fill the gauge with combos to start BONUS TIME: double points on top of your combo, and the field fills up with fruit.',
       arcadeRank: 'Your personal best sets your rank: Bronze → Silver → Gold and beyond.',
       touchTitle: 'On phones and tablets:',
       touchTap: 'Tap: pick an apple',
