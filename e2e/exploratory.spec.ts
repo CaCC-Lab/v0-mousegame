@@ -352,8 +352,10 @@ test.describe('探索的テスト: フルーツハーベストゲーム', () => 
     const errors = collectConsoleErrors(page)
     await startGame(page)
 
-    // タイマーが0:05以下になるまで待つ（最大65秒）
-    const timerText = page.locator('text=/0:0[0-5]/')
+    // タイマーが残り5秒以下になるまで待つ（最大65秒）。
+    // テストは locale ja-JP で動くので表示は「0分05秒」形式。
+    // 以前は「0:05」形式だけを待っていて一致せず、WARN を出して素通りしていた
+    const timerText = page.locator('text=/0分0[0-5]秒|0:0[0-5]/')
     try {
       await timerText.waitFor({ timeout: 65000 })
     } catch {
