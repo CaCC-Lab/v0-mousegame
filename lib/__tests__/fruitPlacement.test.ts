@@ -78,7 +78,7 @@ describe('果物の配置', () => {
     // 1280×800 でのプレイエリアは 1144×660px（2026-09-23 実測）
     const px = { small: 39, medium: 47, large: 62 }
     ;(['small', 'medium', 'large'] as const).forEach((size) => {
-      const r = fruitFootprint({ id: 1, type: 'apple', size, x: 0, y: 0, dx: 0, dy: 0 })
+      const r = fruitFootprint({ size, x: 0, y: 0 })
       expect(((r.right - r.left) / 100) * 1144).toBeGreaterThanOrEqual(px[size])
       expect(((r.bottom - r.top) / 100) * 660).toBeGreaterThanOrEqual(px[size])
     })

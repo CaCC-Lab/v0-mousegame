@@ -73,7 +73,7 @@ function findPlacement(size: Fruit['size'], existing: readonly Fruit[]): { x: nu
   const maxY = GAME_CONFIG.gameHeight - PLACEMENT_CONFIG.reservedBottomPercent - height
   const others = existing.map(fruitFootprint)
 
-  let best = { x: minX, y: minY }
+  let best: { x: number; y: number } = { x: minX, y: minY }
   let bestOverlap = Infinity
   for (let attempt = 0; attempt < PLACEMENT_CONFIG.maxAttempts; attempt++) {
     const x = minX + Math.random() * (maxX - minX)
