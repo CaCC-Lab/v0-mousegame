@@ -14,6 +14,11 @@
  *   ビルド後にHTML内の参照だけを相対パスへ書き換える。
  *
  * 使い方: npm run build:itch
+ *
+ * どのコミットから作ったかを zip 名と build-info.json に残す（v1.1 計画 G13）。
+ * ビルドに効くファイルに未コミットの変更があるとき、out/ がコミットより古いとき、
+ * 配布物の定数がソースと食い違うときは失敗する。
+ * 試しに作るだけなら ALLOW_DIRTY=1 npm run build:itch（build-info.json に dirty: true が残る）。
  */
 import { execFileSync } from 'node:child_process'
 import fs from 'node:fs'
@@ -25,11 +30,30 @@ import {
   rewriteCssToRelativePaths,
   findRemainingAbsolutePathsInCss,
 } from './itch-path-rewrite.mjs'
+import {
+  BUILD_INPUT_PATHS,
+  zipNameFor,
+  parseNumericConstant,
+  findNumericConstantInBundle,
+  dirtyBuildInputs,
+  isOutputStale,
+} from './build-info.mjs'
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..')
 const sourceDir = path.join(projectRoot, 'out')
-const stagingDir = path.join(projectRoot, 'dist-itch', 'build')
-const zipPath = path.join(projectRoot, 'dist-itch', 'fruit-harvest-itch.zip')
+const distDir = path.join(projectRoot, 'dist-itch')
+const stagingDir = path.join(distDir, 'build')
+
+/**
+ * 配布物に入っているかを確かめる定数（ソースの値と一致しなければ、古いビルド）。
+ * 監査で実際に食い違っていた値を見張る。増やすときは「最近変えた値」を足す
+ */
+const CANARY_CONSTANTS = [{ file: 'types/arcade.ts', name: 'feverGaugeMax' }]
+
+function git(args) {
+  // 先頭は削らない（--porcelain の行頭の空白は状態の一部。削ると1行目のパスが1文字欠ける）
+  return execFileSync('git', args, { cwd: projectRoot, encoding: 'utf8' }).trimEnd()
+}
 
 /** itch.ioの配布物に含めない開発用ファイル */
 const EXCLUDED_ENTRIES = [
@@ -87,8 +111,32 @@ function main() {
     )
   }
 
-  // 1. ステージング領域を作り直す
-  fs.rmSync(path.dirname(stagingDir), { recursive: true, force: true })
+  // 0. どのコミットから作るかを確かめる（v1.1 計画 G13）
+  const commit = git(['rev-parse', 'HEAD'])
+  const shortCommit = git(['rev-parse', '--short', 'HEAD'])
+  const commitEpochSec = Number(git(['log', '-1', '--format=%ct']))
+  const dirty = dirtyBuildInputs(git(['status', '--porcelain', '--', ...BUILD_INPUT_PATHS]))
+  const allowDirty = process.env.ALLOW_DIRTY === '1'
+  if (dirty.length > 0 && !allowDirty) {
+    fail(
+      'ビルドに効くファイルに未コミットの変更があります',
+      `このままではどのコミットとも一致しない配布物になります: ${dirty.join(', ')}`,
+      'コミットしてから実行してください（試しに作るだけなら ALLOW_DIRTY=1 npm run build:itch）'
+    )
+  }
+
+  const newestOutputMs = Math.max(...collectFiles(sourceDir).map((f) => fs.statSync(f).mtimeMs))
+  if (isOutputStale(newestOutputMs, commitEpochSec)) {
+    fail(
+      'out/ がいまのコミットより古いビルドです',
+      '最後の next build のあとにコミットが進んでいます（直したものが配布物に入りません）',
+      'npm run build:itch（next build からやり直す）を実行してください'
+    )
+  }
+
+  // 1. ステージング領域を作り直す。
+  // 以前の zip（コミットごとの名前）は前の版に戻すときのために残す
+  fs.rmSync(stagingDir, { recursive: true, force: true })
   fs.mkdirSync(stagingDir, { recursive: true })
   fs.cpSync(sourceDir, stagingDir, { recursive: true })
 
@@ -151,6 +199,30 @@ function main() {
     )
   }
 
+  // 3.5 配布物の定数がソースと一致しているか（古いビルドを出さない）
+  const jsFiles = collectFiles(stagingDir).filter((file) => file.endsWith('.js'))
+  for (const { file, name } of CANARY_CONSTANTS) {
+    const expected = parseNumericConstant(fs.readFileSync(path.join(projectRoot, file), 'utf8'), name)
+    const found = jsFiles.flatMap((js) => findNumericConstantInBundle(fs.readFileSync(js, 'utf8'), name))
+    if (expected === null || found.length === 0 || found.some((value) => value !== expected)) {
+      fail(
+        `配布物の ${name} がソースと一致しません`,
+        `ソース（${file}）は ${expected}、配布物は ${found.join(', ') || '見つからない'}`,
+        'npm run build:itch（next build からやり直す）を実行してください'
+      )
+    }
+  }
+
+  // 3.6 どのコミットから作ったかを残す
+  const buildInfo = {
+    commit,
+    shortCommit,
+    dirty: dirty.length > 0,
+    builtAt: new Date().toISOString(),
+    version: JSON.parse(fs.readFileSync(path.join(projectRoot, 'package.json'), 'utf8')).version,
+  }
+  fs.writeFileSync(path.join(stagingDir, 'build-info.json'), `${JSON.stringify(buildInfo, null, 2)}\n`)
+
   // 4. index.html がzipのルートにあることを確認する（itch.ioの必須要件）
   const indexPath = path.join(stagingDir, 'index.html')
   if (!fs.existsSync(indexPath)) {
@@ -202,6 +274,7 @@ function main() {
   }
 
   // 6. zipに固める（zip直下にindex.htmlが来るようステージング内で実行）
+  const zipPath = path.join(distDir, zipNameFor(dirty.length > 0 ? `${shortCommit}-dirty` : shortCommit))
   fs.rmSync(zipPath, { force: true })
   try {
     execFileSync('zip', ['-r', '-q', zipPath, '.'], { cwd: stagingDir })
@@ -222,6 +295,7 @@ function main() {
       `（itch.io上限: ${ITCH_LIMITS.fileCount} ファイル / ${formatSize(ITCH_LIMITS.extractedBytes)}）`
   )
   console.log(`   検証用ディレクトリ: ${path.relative(projectRoot, stagingDir)}`)
+  console.log(`   コミット: ${commit}${buildInfo.dirty ? '（未コミットの変更あり）' : ''}`)
   console.log('\n   次の手順は docs/itch-io-release.md を参照してください。\n')
 }
 

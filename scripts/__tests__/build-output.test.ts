@@ -1,5 +1,6 @@
 import fs from 'node:fs'
 import path from 'node:path'
+import { parseNumericConstant, findNumericConstantInBundle } from '../build-info.mjs'
 
 /**
  * 配布物（dist-itch/build）が公開先の要件を満たしているかの検査。
@@ -81,5 +82,25 @@ describeIfBuilt('配布物の検査（npm run build:itch の出力）', () => {
     files.forEach((f) => {
       expect(fs.statSync(f).size).toBeLessThanOrEqual(200 * 1024 * 1024)
     })
+  })
+
+  it('どのコミットから作ったかが build-info.json に残っている（v1.1 計画 G13）', () => {
+    const infoPath = path.join(buildDir, 'build-info.json')
+    expect(fs.existsSync(infoPath)).toBe(true)
+    const info = JSON.parse(fs.readFileSync(infoPath, 'utf8'))
+    expect(info.commit).toMatch(/^[0-9a-f]{40}$/)
+    expect(info.dirty).toBe(false)
+  })
+
+  it('配布物の定数がいまのソースと一致している（古いビルドを出さない。v1.1 計画 G13）', () => {
+    // 監査時、配布物は feverGaugeMax:100 のまま（ソースは 50）だった。
+    // 落ちたら: npm run build:itch で作り直す
+    const source = fs.readFileSync(path.join(process.cwd(), 'types', 'arcade.ts'), 'utf8')
+    const expected = parseNumericConstant(source, 'feverGaugeMax')
+    const found = collectFiles(buildDir)
+      .filter((f) => f.endsWith('.js'))
+      .flatMap((f) => findNumericConstantInBundle(fs.readFileSync(f, 'utf8'), 'feverGaugeMax'))
+    expect(found.length).toBeGreaterThan(0)
+    expect(new Set(found)).toEqual(new Set([expected]))
   })
 })
