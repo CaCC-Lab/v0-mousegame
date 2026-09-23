@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FruitHarvestGame } from '../FruitHarvestGame'
 
@@ -231,6 +231,9 @@ describe('FruitHarvestGame Integration Tests', () => {
 
       // 再度レンダリング
       render(<FruitHarvestGame />)
+      // 待機中のヘッダは選んでいるモードに従う（既定はアーケード）。
+      // れんしゅうの最高得点は、れんしゅうを選んだときに出る（docs/game-spec.md §4.3）
+      fireEvent.click(screen.getByTestId('mode-select-practice'))
 
       // 保存されたハイスコアが表示される
       expect(screen.getByText('100')).toBeInTheDocument()

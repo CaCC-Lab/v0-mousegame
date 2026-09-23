@@ -3,6 +3,8 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { HelpDialog } from '../HelpDialog'
 import { translations } from '@/lib/i18n/translations'
+import { POWERUP_CONFIGS, POWERUP_SPAWN_INTERVAL, POWERUP_LIFETIME } from '@/types/powerup'
+import { GAME_SCORES } from '@/types/game'
 
 /**
  * HelpDialogの実装テスト（モックなし）
@@ -78,24 +80,47 @@ describe('HelpDialog', () => {
       expect(screen.getByText(/フルーツをえらべるよ/)).toBeInTheDocument()
     })
 
-    it('パワーアップアイテムを8種類すべて表示する', async () => {
+    it('パワーアップは実装されている5種類だけを表示し、架空の種類は出さない', async () => {
+      // 以前は存在しない「じしゃく」「シールド」「じかんストップ」を含む8種類を説明していた（v1.1 計画 G3）
       await openDialog(translations.ja)
-
       expect(await screen.findByText('⚡ パワーアップアイテムについて ⚡')).toBeInTheDocument()
 
-      const powerUps = [
-        /スピードダウン/,
-        /スコア２ばい/,
-        /じかんストップ/,
-        /じしゃく/,
-        /シールド/,
-        /じかんえんちょう/,
-        /フルーツついか/,
-        /じかんこおり/,
-      ]
-      powerUps.forEach((powerUp) => {
-        expect(screen.getByText(powerUp)).toBeInTheDocument()
-      })
+      const items = screen.getAllByTestId('help-powerup')
+      expect(items).toHaveLength(Object.keys(POWERUP_CONFIGS).length)
+      expect(screen.queryByText(/じしゃく|シールド|じかんストップ/)).not.toBeInTheDocument()
+    })
+
+    it('パワーアップの秒数・個数・出現間隔は定数から差し込む（手で書き写さない）', async () => {
+      await openDialog(translations.ja)
+      await screen.findByText('⚡ パワーアップアイテムについて ⚡')
+
+      const sec = (ms: number) => String(ms / 1000)
+      const textOf = (type: string) =>
+        screen.getAllByTestId('help-powerup').find((el) => el.getAttribute('data-type') === type)!.textContent!
+
+      expect(textOf('timeExtension')).toContain(`${sec(POWERUP_CONFIGS.timeExtension.effect.value)}びょう`)
+      expect(textOf('scoreMultiplier')).toContain(`${sec(POWERUP_CONFIGS.scoreMultiplier.effect.duration)}びょう`)
+      expect(textOf('speedBoost')).toContain(`${sec(POWERUP_CONFIGS.speedBoost.effect.duration)}びょう`)
+      expect(textOf('extraFruits')).toContain(`${POWERUP_CONFIGS.extraFruits.effect.value}こ`)
+      expect(textOf('freezeTime')).toContain(`${sec(POWERUP_CONFIGS.freezeTime.effect.duration)}びょう`)
+
+      const desc = screen.getByTestId('help-powerup-desc').textContent!
+      expect(desc).toContain(`${sec(POWERUP_SPAWN_INTERVAL)}びょう`)
+      expect(desc).toContain(`${sec(POWERUP_LIFETIME)}びょう`)
+      // 置き換え忘れの {…} が残っていない
+      expect(desc).not.toMatch(/[{}]/)
+      screen.getAllByTestId('help-powerup').forEach((el) => expect(el.textContent).not.toMatch(/[{}]/))
+    })
+
+    it('フルーツの点数は得点計算と同じ定数から出す', async () => {
+      await openDialog(translations.ja)
+      await screen.findByText('🍓 フルーツのとりかた 🍓')
+      const cardOf = (fruitName: string) => screen.getByText(fruitName).closest('div.p-4')!
+
+      expect(cardOf('りんご').textContent).toContain(`${GAME_SCORES.apple} てん`)
+      expect(cardOf('ブルーベリー').textContent).toContain(`${GAME_SCORES.blueberry} てん`)
+      expect(cardOf('レモン').textContent).toContain(`${GAME_SCORES.lemon} てん`)
+      expect(cardOf('スイカ').textContent).toContain(`${GAME_SCORES.watermelon} てん`)
     })
   })
 
@@ -111,6 +136,9 @@ describe('HelpDialog', () => {
       expect(screen.getByText(/Time varies by stage/)).toBeInTheDocument()
       expect(screen.getByText('You can also use keyboard:')).toBeInTheDocument()
       expect(screen.getByText('⚡ About Power-Up Items ⚡')).toBeInTheDocument()
+      expect(screen.getAllByTestId('help-powerup')).toHaveLength(Object.keys(POWERUP_CONFIGS).length)
+      expect(screen.getByTestId('help-powerup-desc').textContent).not.toMatch(/[{}]/)
+      expect(screen.queryByText(/Magnet|Shield|Time Stop/)).not.toBeInTheDocument()
     })
 
     it('英語でも説明文の接頭辞を取り除いて表示する', async () => {

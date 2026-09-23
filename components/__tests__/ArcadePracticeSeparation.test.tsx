@@ -34,8 +34,9 @@ describe('アーケードと練習の分離', () => {
 
   const harvestOnce = async (user: ReturnType<typeof userEvent.setup>) => {
     const gameArea = screen.getByTestId('game-area')
-    const fruit = gameArea.querySelector('[data-fruit-id] [role="button"], [role="button"][data-fruit-id]')
-      ?? gameArea.querySelector('[data-fruit-id]')
+    // りんごをクリックで取る。ブルーベリーへのクリックはダブルクリック待ちで判定が遅れるため
+    // （docs/game-spec.md §2）、「最初の果物」を選ぶと種類しだいで結果が揺れる
+    const fruit = gameArea.querySelector('[role="button"][data-fruit-id]:has(img[src*="apple"])')
     expect(fruit).not.toBeNull()
     await user.click(fruit as HTMLElement)
   }

@@ -129,6 +129,11 @@ export function FruitHarvestGame(): React.ReactElement {
     setSelectedMode(selected)
   }, [])
 
+  // ヘッダ（得点・ステージ・目標）の表示に使うモード。
+  // 待機中は「選んでいるモード」、遊んでいる間は「遊んでいるモード」に合わせる
+  // （アーケードを選んでいるのにステージ目標が出ていると、どちらのルールか迷う。docs/game-spec.md §4.3）
+  const hudIsArcade = gameState === 'idle' ? selectedMode === 'arcade' : isArcade
+
   // はじめてフィーバーに入ったときだけ、何が起きたのかを一度だけ説明する。
   // プレイテストでは「Feverが何なのか最後まで分からなかった」まま終わっていた
   const [showFeverIntro, setShowFeverIntro] = useState(false)
@@ -195,7 +200,8 @@ export function FruitHarvestGame(): React.ReactElement {
 
   const handleKeyboardEnter = useCallback(() => {
     if (gameState === 'idle') {
-      startGame()
+      // 選んでいるモードで始める（以前は常にれんしゅうで始まっていた）
+      startGame(selectedMode)
       return
     }
 
@@ -205,7 +211,7 @@ export function FruitHarvestGame(): React.ReactElement {
       handleFruitClick(selectedFruit, interactionType)
       setSelectedFruitIndex(-1)
     }
-  }, [gameState, selectedFruitIndex, fruits, startGame, handleFruitClick])
+  }, [gameState, selectedMode, selectedFruitIndex, fruits, startGame, handleFruitClick])
 
   const handleKeyboardSpace = useCallback(() => {
     if (gameState === 'playing' || gameState === 'paused') {
@@ -452,12 +458,12 @@ export function FruitHarvestGame(): React.ReactElement {
             <div className="flex-1 min-w-0">
               <ScoreBar
                 score={score}
-                highScore={isArcade ? arcade.best : highScore}
+                highScore={hudIsArcade ? arcade.best : highScore}
                 timeLeft={timeLeft}
-                streak={isArcade ? undefined : operationStats.streak}
+                streak={hudIsArcade ? undefined : operationStats.streak}
                 gameState={gameState}
                 combo={combo}
-                stage={isArcade ? null : stage}
+                stage={hudIsArcade ? null : stage}
                 t={t}
               />
             </div>
@@ -496,7 +502,7 @@ export function FruitHarvestGame(): React.ReactElement {
               <HarvestedFruitsDisplay
                 harvestedFruits={harvestedFruits}
                 score={score}
-                stage={isArcade ? null : stage}
+                stage={hudIsArcade ? null : stage}
                 t={t}
               />
             </div>
@@ -559,8 +565,11 @@ export function FruitHarvestGame(): React.ReactElement {
             soundEffects={soundEffects}
             onStart={handleStart}
             // 待機中はプレイエリア上のモード選択が開始の入口。
-            // ここにも「はじめる」があると、どちらを押せばいいのか分からなくなる
-            showStart={!(gameState === 'idle' && !showArcadeResult)}
+            // アーケードの結果表示中は結果の「もういちど」が入口。
+            // ここにも「はじめる」があると、どちらを押せばいいのか分からなくなる（docs/game-spec.md §4.3）
+            showStart={gameState !== 'idle'}
+            // アーケードにステージは無いので、遊んでいる間はステージ選択を押せない
+            stageSelectDisabled={isArcade && gameState !== 'idle'}
             onPause={pauseGame}
             onReset={resetGame}
             onStageSelect={() => setShowStageSelector(true)}

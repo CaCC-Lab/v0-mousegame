@@ -71,6 +71,29 @@ export const GAME_CONFIG: GameConfig = {
 
 export const PLAY_AREA_WIDTH = GAME_CONFIG.gameWidth - GAME_CONFIG.dropAreaWidth
 
+/**
+ * 果物の配置規則（docs/game-spec.md §3、v1.1 計画 G5）。
+ *
+ * 果物の位置はプレイエリアに対する百分率だが、大きさは px（Tailwind の text-3xl/4xl/5xl）。
+ * 百分率に直すための基準は、itch.io の埋め込み（1280×800）でのプレイエリア 1144×660px（2026-09-23 実測）。
+ * これより小さい画面では果物が相対的に大きくなるので、gapPercent で余白を取る。
+ */
+export const PLACEMENT_CONFIG = {
+  referenceAreaPx: { width: 1144, height: 660 },
+  /** 実測の表示サイズ（39/47/62px）に、影・枠のぶん 2px を足した値 */
+  fruitSizePx: { small: 41, medium: 49, large: 64 },
+  /** 上端: 収穫カウンター（とステージ目標）の帯 */
+  reservedTopPercent: 7,
+  /** 下端: 操作の凡例（とりかた）の帯 */
+  reservedBottomPercent: 6,
+  /** 左端からの余白 */
+  minLeftPercent: 5,
+  /** 果物どうしのすき間 */
+  gapPercent: 1,
+  /** 空きを探す回数。見つからなければ最も重なりの少ない候補を使う */
+  maxAttempts: 60,
+} as const
+
 export function formatTime(seconds: number): string {
   const minutes = Math.floor(seconds / 60)
   const remainingSeconds = seconds % 60

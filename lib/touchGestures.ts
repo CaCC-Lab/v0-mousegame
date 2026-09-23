@@ -29,6 +29,22 @@ export const TOUCH_CONFIG: TouchConfig = {
   ghostClickSuppressMs: 700,
 }
 
+export interface MouseConfig {
+  /**
+   * ブルーベリーへの1回目のクリックを、ダブルクリックの2回目が来るまで保留する時間（ミリ秒）。
+   *
+   * ブラウザはダブルクリックのとき click → click → dblclick の順に発火するので、
+   * 1回目の click をすぐ判定すると、正しいダブルクリックの途中がミスとして数えられる。
+   * OS の標準的なダブルクリック間隔（Windows 既定 500ms）より短いと、
+   * ゆっくりダブルクリックする子の1回目が先にミスとして確定するので、それ以上にする。
+   */
+  doubleClickWaitMs: number
+}
+
+export const MOUSE_CONFIG: MouseConfig = {
+  doubleClickWaitMs: 500,
+}
+
 export type TapKind = 'single' | 'double'
 
 /**
