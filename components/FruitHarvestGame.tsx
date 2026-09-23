@@ -42,7 +42,7 @@ import {
   createDebugStats,
   recordInteraction,
   chooseAutoPlayMove,
-  AUTOPLAY_INTERVAL_MS,
+  BOT_PROFILES,
   type DebugFlags,
 } from '@/lib/debugTools'
 import { DebugPanel } from './game/DebugPanel'
@@ -204,7 +204,7 @@ export function FruitHarvestGame(): React.ReactElement {
 
   // 検証用の入口（?debug=1 / ?test=1。docs/game-spec.md §10）。
   // URL はクライアントでだけ読む（静的エクスポートの HTML と食い違わないように）
-  const [debugFlags, setDebugFlags] = useState<DebugFlags>({ debug: false, test: false })
+  const [debugFlags, setDebugFlags] = useState<DebugFlags>({ debug: false, test: false, bot: 'expert' })
   const [debugStats, setDebugStats] = useState(createDebugStats)
   useEffect(() => {
     setDebugFlags(readDebugFlags(window.location.search))
@@ -261,13 +261,14 @@ export function FruitHarvestGame(): React.ReactElement {
   useEffect(() => {
     if (!debugFlags.test || gameState !== 'playing') return
     let step = 0
+    const profile = BOT_PROFILES[debugFlags.bot]
     const timer = setInterval(() => {
-      const move = chooseAutoPlayMove(fruitsRef.current, step)
+      const move = chooseAutoPlayMove(fruitsRef.current, step, { missRate: profile.missRate })
       step += 1
       if (move) handleFruitClickRef.current(move.fruit, move.action)
-    }, AUTOPLAY_INTERVAL_MS)
+    }, profile.intervalMs)
     return () => clearInterval(timer)
-  }, [debugFlags.test, gameState])
+  }, [debugFlags.test, debugFlags.bot, gameState])
 
   const handleKeyboardEnter = useCallback(() => {
     if (gameState === 'idle') {

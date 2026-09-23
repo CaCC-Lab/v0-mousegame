@@ -4,6 +4,8 @@ import {
   recordInteraction,
   chooseAutoPlayMove,
   AUTOPLAY_ORDER,
+  AUTOPLAY_INTERVAL_MS,
+  BOT_PROFILES,
 } from '../debugTools'
 import type { Fruit } from '@/types/game'
 
@@ -13,14 +15,14 @@ import type { Fruit } from '@/types/game'
  */
 describe('readDebugFlags', () => {
   it('?debug=1 と ?test=1 を読む', () => {
-    expect(readDebugFlags('?debug=1')).toEqual({ debug: true, test: false })
-    expect(readDebugFlags('?test=1&lang=ja')).toEqual({ debug: false, test: true })
-    expect(readDebugFlags('?test=1&debug=1')).toEqual({ debug: true, test: true })
+    expect(readDebugFlags('?debug=1')).toMatchObject({ debug: true, test: false })
+    expect(readDebugFlags('?test=1&lang=ja')).toMatchObject({ debug: false, test: true })
+    expect(readDebugFlags('?test=1&debug=1')).toMatchObject({ debug: true, test: true })
   })
 
   it('指定が無い・1 以外なら無効', () => {
-    expect(readDebugFlags('')).toEqual({ debug: false, test: false })
-    expect(readDebugFlags('?debug=0&test=yes')).toEqual({ debug: false, test: false })
+    expect(readDebugFlags('')).toMatchObject({ debug: false, test: false })
+    expect(readDebugFlags('?debug=0&test=yes')).toMatchObject({ debug: false, test: false })
   })
 })
 
@@ -64,5 +66,37 @@ describe('chooseAutoPlayMove', () => {
   it('その順番の種類が畑に無ければ、ある種類で代わりに取る。畑が空なら null', () => {
     expect(chooseAutoPlayMove([fruit(1, 'lemon')], 0)).toEqual({ fruit: fruit(1, 'lemon'), action: 'rightClick' })
     expect(chooseAutoPlayMove([], 0)).toBeNull()
+  })
+})
+
+/**
+ * 自動プレイの腕前（v1.2 計画のベースライン計測用）。
+ * `?test=1&bot=beginner|normal|expert`。指定なしは expert（これまでどおり：0.4 秒ごと・ミスなし）
+ */
+describe('自動プレイの腕前', () => {
+  const fruit = (id: number, type: Fruit['type']): Fruit => ({ id, type, size: 'medium', x: 10, y: 10, dx: 0, dy: 0 })
+  const field = [fruit(1, 'apple'), fruit(2, 'blueberry'), fruit(3, 'lemon'), fruit(4, 'watermelon')]
+
+  it('?bot= を読む。指定なし・不明な値は expert', () => {
+    expect(readDebugFlags('?test=1&bot=beginner').bot).toBe('beginner')
+    expect(readDebugFlags('?test=1&bot=normal').bot).toBe('normal')
+    expect(readDebugFlags('?test=1').bot).toBe('expert')
+    expect(readDebugFlags('?test=1&bot=wizard').bot).toBe('expert')
+  })
+
+  it('腕前ごとに間隔とミス率が違い、上手なほど速くミスが少ない', () => {
+    expect(BOT_PROFILES.beginner.intervalMs).toBeGreaterThan(BOT_PROFILES.normal.intervalMs)
+    expect(BOT_PROFILES.normal.intervalMs).toBeGreaterThan(BOT_PROFILES.expert.intervalMs)
+    expect(BOT_PROFILES.beginner.missRate).toBeGreaterThan(BOT_PROFILES.normal.missRate)
+    expect(BOT_PROFILES.expert.missRate).toBe(0)
+    expect(BOT_PROFILES.expert.intervalMs).toBe(AUTOPLAY_INTERVAL_MS)
+  })
+
+  it('ミス率に応じて、まちがった操作を選ぶ（乱数を渡して決める）', () => {
+    const correct = chooseAutoPlayMove(field, 0, { missRate: 0.5, random: () => 0.9 })!
+    expect(correct.action).toBe('click') // りんご＝クリック（0.9 ≥ 0.5 なので正しい操作）
+    const wrong = chooseAutoPlayMove(field, 0, { missRate: 0.5, random: () => 0.1 })!
+    expect(wrong.fruit.type).toBe('apple')
+    expect(wrong.action).not.toBe('click')
   })
 })
