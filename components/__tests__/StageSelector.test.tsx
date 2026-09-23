@@ -120,7 +120,7 @@ describe('StageSelector', () => {
       )
       
       expect(screen.getByText('✅ クリア済み')).toBeInTheDocument()
-      expect(screen.getByText(/最高得点: 150/)).toBeInTheDocument()
+      expect(screen.getByText(/ベスト: 150/)).toBeInTheDocument()
     })
 
     it('should show locked status', () => {

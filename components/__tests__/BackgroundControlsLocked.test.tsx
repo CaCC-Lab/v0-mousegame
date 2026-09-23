@@ -54,10 +54,13 @@ describe('結果表示中・アーケード中の背後の操作', () => {
     expect(outsideStart).toHaveLength(0)
   })
 
-  it('れんしゅうを選んで待機しているときは「ステージ選択」を押せる', () => {
+  it('待機中は「せってい」から「ステージ選択」を押せる', () => {
     render(<FruitHarvestGame />)
     act(() => {
       screen.getByTestId('mode-select-practice').click()
+    })
+    act(() => {
+      screen.getByRole('button', { name: /せってい/ }).click()
     })
 
     expect(screen.getByRole('button', { name: /ステージ選択/ })).toBeEnabled()

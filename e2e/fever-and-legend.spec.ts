@@ -86,7 +86,9 @@ test.describe('凡例と進捗カウンターの区別', () => {
   })
 })
 
-test.describe('連続成功が途切れたときの表示', () => {
+test.describe('コンボが途切れたときの表示', () => {
+  // アーケードのコンボの数は ArcadeHUD に出す（表示は1か所。v1.1 計画 G2）。
+  // 途切れた瞬間の「コンボがとぎれた！」はアーケードでも出す
   test('ミスした瞬間に、途切れたことがはっきり出る', async ({ page }) => {
     await startArcade(page)
 
@@ -96,7 +98,7 @@ test.describe('連続成功が途切れたときの表示', () => {
       if (apple) await apple.click({ force: true }).catch(() => {})
       await page.waitForTimeout(120)
     }
-    await expect(page.getByTestId('streak-count')).not.toHaveAttribute('data-broken', 'true')
+    await expect(page.getByTestId('streak-broken')).toHaveCount(0)
 
     // わざと間違える（ブルーベリーはダブルクリックが正解）
     const blueberry = await pickClickableFruit(page, 'blueberry')
@@ -105,6 +107,6 @@ test.describe('連続成功が途切れたときの表示', () => {
 
     // 「薄い枠で気づくのが遅れた」ので、途切れをはっきり示す
     await expect(page.getByTestId('streak-broken')).toBeVisible()
-    await expect(page.getByTestId('streak-count')).toHaveAttribute('data-broken', 'true')
+    await expect(page.getByTestId('streak-broken')).toContainText('コンボがとぎれた！')
   })
 })

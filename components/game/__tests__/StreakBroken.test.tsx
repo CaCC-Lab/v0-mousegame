@@ -57,3 +57,18 @@ describe('StreakIndicator の途切れ表示', () => {
     expect(broken.textContent).not.toMatch(/[ぁ-んァ-ヶ一-龠]/)
   })
 })
+
+/**
+ * アーケードではコンボの数は ArcadeHUD に出す（表示は1か所。v1.1 計画 G2）。
+ * ただし、途切れたことははっきり出す（#52 で入れた表示をアーケードでも失わない）。
+ */
+describe('StreakIndicator: 数を出さない指定（アーケード）', () => {
+  it('数は出さないが、途切れた瞬間は「コンボがとぎれた！」を出す', () => {
+    const { rerender } = render(<StreakIndicator streak={3} lastBonus={null} showCount={false} />)
+    expect(screen.queryByTestId('streak-count')).not.toBeInTheDocument()
+
+    rerender(<StreakIndicator streak={0} lastBonus={null} showCount={false} />)
+    expect(screen.getByTestId('streak-broken')).toHaveTextContent('コンボがとぎれた！')
+  })
+})
+

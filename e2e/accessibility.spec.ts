@@ -23,8 +23,12 @@ test.describe('Accessibility Tests', () => {
     
     // Check buttons have accessible names
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
-    await expect(page.getByRole('button', { name: /リセット|Reset/ })).toBeVisible()
-    
+    // 待機中の設定は「せってい」の中（v1.1 計画 D6）。開閉の状態も読み上げられる
+    const settings = page.getByRole('button', { name: /せってい|Settings/ })
+    await expect(settings).toHaveAttribute('aria-expanded', 'false')
+    await settings.click()
+    await expect(settings).toHaveAttribute('aria-expanded', 'true')
+
     // Check switches have labels
     const hardModeSwitch = page.getByRole('checkbox', { name: /うごくモード|Moving Mode/ })
     await expect(hardModeSwitch).toBeVisible()
@@ -42,7 +46,10 @@ test.describe('Accessibility Tests', () => {
     }
     expect(reached).toBe(true)
     
-    // Check if switches can be toggled with keyboard
+    // Check if switches can be toggled with keyboard（「せってい」もキーボードで開ける）
+    const settings = page.getByRole('button', { name: /せってい|Settings/ })
+    await settings.focus()
+    await page.keyboard.press('Enter')
     const hardModeSwitch = page.getByRole('checkbox', { name: /うごくモード|Moving Mode/ })
     await hardModeSwitch.focus()
     await page.keyboard.press('Space')

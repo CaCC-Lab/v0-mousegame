@@ -13,11 +13,13 @@ test.describe('Fruit Harvest Game Flow', () => {
     // Check if the game title is visible
     await expect(page.getByRole('application', { name: 'フルーツハーベストゲーム' })).toBeVisible()
     
-    // Check if score displays
-    await expect(page.getByText('得点:', { exact: true })).toBeVisible()
-    
+    // 待機中の画面は題名・モード・はじめる（v1.1 計画 D6）。得点は遊んでいる間だけ出る
+    await expect(page.getByText('得点:', { exact: true })).toHaveCount(0)
+
     // Check if start button is visible
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
+    await page.getByRole('button', { name: /はじめる|Start/ }).click()
+    await expect(page.getByText('得点:', { exact: true })).toBeVisible()
   })
 
   test('should start and play the game', async ({ page }) => {
@@ -85,13 +87,15 @@ test.describe('Fruit Harvest Game Flow', () => {
     
     // Check if start button is visible again
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
-    
-    // Check if score is reset to 0
-    await expect(page.getByText('得点:', { exact: true }).locator('..').getByText('0').first()).toBeVisible()
+
+    // 次に始めたときの得点は 0 から
+    await page.getByRole('button', { name: /はじめる|Start/ }).click()
+    await expect(page.getByTestId('score-value')).toHaveText('0')
   })
 
   test('should toggle hard mode', async ({ page }) => {
-    // Find hard mode switch
+    // Find hard mode switch（待機中は「せってい」の中。v1.1 計画 D6）
+    await page.getByRole('button', { name: /せってい|Settings/ }).click()
     const hardModeSwitch = page.getByRole('checkbox', { name: /うごくモード|Moving Mode/ })
     
     // Check initial state
@@ -173,15 +177,17 @@ test.describe('Fruit Harvest Game Flow', () => {
     // Reset game
     await page.getByRole('button', { name: /リセット|Reset/ }).click()
     
-    // Check if high score is preserved
-    const highScoreText = page.getByText(/最高得点:|High Score:/)
+    // Check if high score is preserved（ヘッダは遊んでいる間だけ出る。v1.1 計画 D6）
+    await page.getByRole('button', { name: /はじめる|Start/ }).click()
+    const highScoreText = page.getByText(/ベスト:|Best:/)
     await expect(highScoreText).toBeVisible()
-    
+
     // Open new page and check if high score persists
     const newPage = await context.newPage()
     await newPage.goto('/')
-    
-    const newHighScoreText = newPage.getByText(/最高得点:|High Score:/)
+    await newPage.getByRole('button', { name: /はじめる|Start/ }).click()
+
+    const newHighScoreText = newPage.getByText(/ベスト:|Best:/)
     await expect(newHighScoreText).toBeVisible()
   })
 })

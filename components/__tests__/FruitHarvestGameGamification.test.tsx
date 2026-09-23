@@ -23,7 +23,7 @@
  */
 
 import React from 'react'
-import { act, render, screen, waitFor, within } from '@testing-library/react'
+import { act, render, screen, waitFor, within, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FruitHarvestGame } from '../FruitHarvestGame'
 
@@ -180,8 +180,11 @@ describe('FruitHarvestGame gamification (Task 8)', () => {
   })
 
   describe('Task 8.4: StreakIndicator を GamePlayArea 内に配置', () => {
-    it('game-area 内に StreakIndicator（連続カウント）がある', () => {
+    it('game-area 内に StreakIndicator（コンボ）がある（れんしゅう中）', () => {
       render(<FruitHarvestGame />)
+      // コンボの表示はれんしゅうで遊んでいる間だけ（v1.1 計画 D4・D6）
+      fireEvent.click(screen.getByTestId('mode-select-practice'))
+      fireEvent.click(screen.getByTestId('mode-start'))
 
       const gameArea = screen.getByTestId('game-area')
       expect(

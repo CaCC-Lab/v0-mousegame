@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import { DifficultyManager } from '../lib/difficultyManager'
 import { DifficultyLevel, DifficultyConfig } from '../types/difficulty'
 import { useLanguage } from './useLanguage'
+import { describeDifficulty } from '../lib/difficultyText'
 
 export interface UseDifficultyReturn {
   currentDifficulty: DifficultyLevel
@@ -56,9 +57,9 @@ export function useDifficulty(): UseDifficultyReturn {
 
   // Use i18n descriptions
   const difficultyDescriptions: Record<DifficultyLevel, string> = {
-    easy: t.difficultyDesc.easy,
-    normal: t.difficultyDesc.normal,
-    hard: t.difficultyDesc.hard,
+    easy: describeDifficulty('easy', t),
+    normal: describeDifficulty('normal', t),
+    hard: describeDifficulty('hard', t),
   }
 
   return {

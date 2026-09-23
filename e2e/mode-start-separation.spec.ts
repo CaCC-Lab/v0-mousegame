@@ -14,12 +14,12 @@ test.describe('モード選択と開始の分離', () => {
     // 選んだことは見た目で分かる
     await expect(page.getByTestId('mode-select-practice')).toHaveAttribute('aria-pressed', 'true')
 
-    // まだ始まっていない: モード選択が出たままで、残り時間も減らない
-    const timer = page.getByText(/\d+分\d{2}秒/).first()
-    const before = await timer.innerText()
+    // まだ始まっていない: モード選択が出たままで、時間も果物も出ない
+    // （残り時間は遊んでいる間だけ出る。v1.1 計画 D6）
     await page.waitForTimeout(1500)
     await expect(page.getByTestId('mode-start')).toBeVisible()
-    expect(await timer.innerText()).toBe(before)
+    await expect(page.getByText(/\d+分\d{2}秒/)).toHaveCount(0)
+    await expect(page.getByTestId('game-area').locator('[data-fruit-id]')).toHaveCount(0)
   })
 
   test('「はじめる」を押すとゲームが始まる', async ({ page }) => {

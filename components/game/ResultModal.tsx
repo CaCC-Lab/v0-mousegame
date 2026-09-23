@@ -29,6 +29,8 @@ export interface ResultModalProps {
   starRating: StarRating
   lastSessionStats: SessionOperationStats | null
   onClose: () => void
+  /** 同じステージをもう一度遊ぶ。渡したときだけ「もういちど」を出す */
+  onRetry?: () => void
   /** 表示言語。省略時は日本語（既定の表示言語） */
   t?: typeof translations.ja
   labels?: {
@@ -46,6 +48,7 @@ export function ResultModal({
   starRating,
   lastSessionStats,
   onClose,
+  onRetry,
   t = translations.ja,
   labels,
 }: ResultModalProps): React.ReactElement | null {
@@ -145,10 +148,25 @@ export function ResultModal({
           )}
         </div>
 
+        {onRetry && (
+          <button
+            type="button"
+            data-testid="practice-retry"
+            className="mt-6 w-full rounded-[var(--radius-full)] px-4 py-3 text-white font-bold text-display shadow-playful"
+            style={{ backgroundColor: 'var(--color-secondary)' }}
+            onClick={onRetry}
+          >
+            {t.retry}
+          </button>
+        )}
         <button
           type="button"
-          className="mt-6 w-full rounded-[var(--radius-full)] px-4 py-3 text-white font-bold text-display shadow-playful"
-          style={{ backgroundColor: 'var(--color-secondary)' }}
+          className={
+            onRetry
+              ? 'mt-2 w-full rounded-[var(--radius-full)] px-4 py-2.5 font-semibold text-gray-600 hover:bg-gray-50'
+              : 'mt-6 w-full rounded-[var(--radius-full)] px-4 py-3 text-white font-bold text-display shadow-playful'
+          }
+          style={onRetry ? undefined : { backgroundColor: 'var(--color-secondary)' }}
           onClick={onClose}
         >
           {l.close}

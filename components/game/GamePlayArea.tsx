@@ -34,6 +34,8 @@ interface GamePlayAreaProps {
   t?: typeof translations.ja
   /** 誤操作したときのヒント（正解の操作を伝える） */
   missHint?: MissHint | null
+  /** コンボの数を出すか（アーケードは ArcadeHUD に出すので false） */
+  showStreakCount?: boolean
 }
 
 function DraggedFruitOverlay({
@@ -110,7 +112,8 @@ export function GamePlayArea({
   streak,
   lastStreakBonus,
   t,
-  missHint
+  missHint,
+  showStreakCount = true
 }: GamePlayAreaProps): React.ReactElement {
   const [draggedFruit, setDraggedFruit] = useState<FruitType | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -282,7 +285,7 @@ export function GamePlayArea({
 
       {typeof streak === 'number' && (
         <div className="absolute top-2 right-2 z-10">
-          <StreakIndicator streak={streak} lastBonus={lastStreakBonus ?? null} t={t} />
+          <StreakIndicator streak={streak} lastBonus={lastStreakBonus ?? null} t={t} showCount={showStreakCount} />
         </div>
       )}
 

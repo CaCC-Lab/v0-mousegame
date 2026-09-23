@@ -12,6 +12,7 @@ export const translations = {
     unmuteSound: 'おとをだす',
     volume: 'おんりょう',
     stageSelect: 'ステージ選択',
+    settings: 'せってい',
     dropArea: 'ドロップエリア',
     // 右端の細い帯に横書きで収まる短い語。
     // 「ドロップエリア」は縦書きにしないと入らず、縦書きは読みにくいと2人に言われた
@@ -91,6 +92,7 @@ export const translations = {
     feverCount: 'フィーバー',
     times: 'かい',
     retry: 'もういちど',
+    arcadeZeroHint: 'まずは 🍎 をクリックしてみよう',
     backToMenu: 'メニューへ',
     rankUp: 'しょうかく！',
     toNextRank: (points: number, rank: string) => `つぎの${rank}まで あと${points}てん`,
@@ -106,27 +108,17 @@ export const translations = {
     difficultyEasy: 'かんたん',
     difficultyNormal: 'ふつう',
     difficultyHard: 'むずかしい',
-    difficultyStats: {
-      fruits: '🍎 フルーツ',
-      time: '⏱️ 時間',
-      score: '📊 スコア',
-      few: '少ない',
-      standard: '標準',
-      many: '多い',
-      bonus: '+50%',
-      penalty: '-20%',
-      scoreBonus: '+20%',
-      scorePenalty: '-20%'
-    },
+    // {multiplier} は types/difficulty.ts の scoreMultiplier から差し込む（docs/game-spec.md §7）。
+    // 難易度で実際に変わるのは、れんしゅうの得点倍率だけ（時間・果物の数はステージの値が優先される）
     difficultyDesc: {
-      easy: 'フルーツが少なく、時間に余裕があります',
-      normal: 'バランスの取れた標準的な難易度です',
-      hard: 'フルーツが多く、時間制限が厳しくなります'
+      easy: 'れんしゅうで とれる てんすうが {multiplier}ばいに なるよ（アーケードは かわらないよ）',
+      normal: 'れんしゅうの てんすうは そのまま（{multiplier}ばい）だよ',
+      hard: 'れんしゅうで とれる てんすうが {multiplier}ばいに なるよ（アーケードは かわらないよ）'
     },
     
     // Game Info
     score: '得点:',
-    highScore: '最高得点:',
+    highScore: 'ベスト:',
     timeFormat: (minutes: number, seconds: number) => `${minutes}分${seconds.toString().padStart(2, '0')}秒`,
     
     // Help Dialog
@@ -164,15 +156,15 @@ export const translations = {
       powerUpFreezeTime: '❄️ じかんこおり: {seconds}びょうかん、タイマーがとまるよ',
     },
 
-    // ゲーミフィケーション（バッジ・レベル・連続成功）
+    // ゲーミフィケーション（バッジ・レベル・コンボ）
     // types/gamification.ts の定数はデータの識別子だけを持ち、
     // 画面に出す文言はここから引く（英語ロケールで日本語が混ざらないように）
     gamification: {
-      streak: '連続',
-      streakSuccess: '連続成功',
+      streak: 'コンボ',
+      streakSuccess: 'コンボ',
       amazingBonus: 'すごい！🌟',
       dailyPracticeTitle: 'きょうのれんしゅう',
-      daysStreakLabel: '連続日数',
+      daysStreakLabel: 'れんぞく日数',
       daysStreakUnit: '日れんぞく',
       goalComplete: 'クリア！',
       goalIncomplete: 'がんばろう！',
@@ -209,7 +201,7 @@ export const translations = {
       // プレイ中の凡例の見出し。すぐ上の収穫カウンターと役割を見分けるためのもの
       legendTitle: 'とりかた',
       // 連続成功が途切れた瞬間だけ出す。薄い表示のままだと気づけない
-      streakBroken: 'とぎれた！',
+      streakBroken: 'コンボがとぎれた！',
       dailyGoalCompleteTitle: 'きょうのれんしゅうクリア！',
       levelUpTitle: 'レベルアップ！',
       // 誤操作したときに出すヒント（{fruit} と {action} を差し替えて使う）
@@ -250,6 +242,7 @@ export const translations = {
     unmuteSound: 'Unmute sound',
     volume: 'Volume',
     stageSelect: 'Select Stage',
+    settings: 'Settings',
     dropArea: 'Drop Area',
     // Short label that fits the narrow strip horizontally
     dropAreaShort: 'DROP',
@@ -328,6 +321,7 @@ export const translations = {
     feverCount: 'Fevers',
     times: 'x',
     retry: 'Play again',
+    arcadeZeroHint: 'Start by clicking an 🍎 apple!',
     backToMenu: 'Back to menu',
     rankUp: 'Rank up!',
     toNextRank: (points: number, rank: string) => `${points} pts to ${rank}`,
@@ -343,27 +337,15 @@ export const translations = {
     difficultyEasy: 'Easy',
     difficultyNormal: 'Normal',
     difficultyHard: 'Hard',
-    difficultyStats: {
-      fruits: '🍎 Fruits',
-      time: '⏱️ Time',
-      score: '📊 Score',
-      few: 'Few',
-      standard: 'Standard',
-      many: 'Many',
-      bonus: '+50%',
-      penalty: '-20%',
-      scoreBonus: '+20%',
-      scorePenalty: '-20%'
-    },
     difficultyDesc: {
-      easy: 'Fewer fruits with more time to collect',
-      normal: 'Well-balanced standard difficulty',
-      hard: 'More fruits with stricter time limits'
+      easy: 'Points in Practice are x{multiplier} (Arcade is not affected)',
+      normal: 'Points in Practice are unchanged (x{multiplier})',
+      hard: 'Points in Practice are x{multiplier} (Arcade is not affected)'
     },
     
     // Game Info
     score: 'Score:',
-    highScore: 'High Score:',
+    highScore: 'Best:',
     timeFormat: (minutes: number, seconds: number) => `${minutes}:${seconds.toString().padStart(2, '0')}`,
     
     // Help Dialog
@@ -376,7 +358,7 @@ export const translations = {
       hardModeDesc: 'Moving Mode: Fruits run away! Chase and catch them',
       easyModeDesc: 'Still Mode: Fruits don\'t move, so you can play slowly',
       timeLimit: 'Time varies by stage (about 1 to 2.5 minutes)',
-      goal: 'Collect as many fruits as you can for a high score!',
+      goal: 'Collect as many fruits as you can and beat your best!',
       arcadeTitle: '🏆 Arcade Mode 🏆',
       arcadeDesc: 'How many points can you score in 60 seconds? Keep harvesting without a miss to build a Combo — your points go 2x, 3x and higher.',
       arcadeFever: 'Fill the gauge with combos to trigger FEVER: double points on top of your combo, and the field fills up with fruit.',
@@ -401,8 +383,8 @@ export const translations = {
 
     // Gamification (badges / levels / streaks)
     gamification: {
-      streak: 'Streak',
-      streakSuccess: 'Streak',
+      streak: 'Combo',
+      streakSuccess: 'Combo',
       amazingBonus: 'Amazing! 🌟',
       dailyPracticeTitle: "Today's practice",
       daysStreakLabel: 'Day streak',
@@ -442,7 +424,7 @@ export const translations = {
       // Heading for the in-play legend, so it is not mistaken for the harvest counter
       legendTitle: 'How to catch',
       // Shown only at the moment a streak is lost
-      streakBroken: 'Streak lost!',
+      streakBroken: 'Combo lost!',
       dailyGoalCompleteTitle: "Today's practice complete!",
       levelUpTitle: 'Level up!',
       // Shown when the player uses the wrong action ({fruit} / {action} are replaced)

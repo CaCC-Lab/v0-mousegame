@@ -241,6 +241,8 @@ test.describe('itch.io 公開前動作確認', () => {
     expect(baseURL).toBeTruthy()
     await gotoApp(page, baseURL!)
 
+    // 待機中の言語切り替えは「せってい」の中（v1.1 計画 D6）
+    await page.getByRole('button', { name: /せってい|Settings/ }).click()
     const langButton = page.getByRole('button', { name: /Language:/i })
     await expect(langButton).toBeVisible()
     await expect(langButton).toContainText('日本語')

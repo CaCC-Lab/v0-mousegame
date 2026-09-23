@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { DifficultySelector } from '../DifficultySelector'
 import { translations } from '@/lib/i18n/translations'
+import { DIFFICULTY_CONFIGS } from '@/types/difficulty'
 
 /**
  * DifficultySelectorの実装テスト（モックなし）
@@ -94,20 +95,33 @@ describe('DifficultySelector', () => {
     })
   })
 
-  describe('Difficulty Descriptions', () => {
-    it('displays description for current difficulty', () => {
-      render(<DifficultySelector {...mockProps} />)
+  describe('Difficulty Descriptions（v1.1 計画 G4・D3: 表示は実際に効くものだけ）', () => {
+    const levels = ['easy', 'normal', 'hard'] as const
 
-      expect(screen.getByText(translations.ja.difficultyDesc.normal)).toBeInTheDocument()
+    it('実際に変わる「れんしゅうの得点倍率」を、定数の値で出す', () => {
+      levels.forEach((level) => {
+        const { unmount } = render(<DifficultySelector {...mockProps} currentDifficulty={level} />)
+        const desc = screen.getByTestId('difficulty-description').textContent!
+        expect(desc).toContain(`${DIFFICULTY_CONFIGS[level].scoreMultiplier}ばい`)
+        expect(desc).not.toMatch(/[{}]/)
+        unmount()
+      })
     })
 
-    it('updates description when difficulty changes', () => {
-      const { rerender } = render(<DifficultySelector {...mockProps} />)
+    it('効いていない「時間」「フルーツの数」の説明は出さない', () => {
+      // ステージの制限時間と果物の数が優先されるため、難易度では変わらない（docs/game-spec.md §7）
+      levels.forEach((level) => {
+        const { container, unmount } = render(<DifficultySelector {...mockProps} currentDifficulty={level} />)
+        expect(container.textContent).not.toMatch(/時間|フルーツ|少な|多い|余裕|厳し/)
+        unmount()
+      })
+    })
 
-      expect(screen.getByText(translations.ja.difficultyDesc.normal)).toBeInTheDocument()
-
-      rerender(<DifficultySelector {...mockProps} currentDifficulty="hard" />)
-      expect(screen.getByText(translations.ja.difficultyDesc.hard)).toBeInTheDocument()
+    it('英語でも倍率を出す', () => {
+      render(<DifficultySelector {...mockProps} language="en" t={translations.en} currentDifficulty="hard" />)
+      expect(screen.getByTestId('difficulty-description').textContent).toContain(
+        `x${DIFFICULTY_CONFIGS.hard.scoreMultiplier}`
+      )
     })
   })
 

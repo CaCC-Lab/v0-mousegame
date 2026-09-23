@@ -1,5 +1,6 @@
 import React from 'react'
 import { DifficultyLevel } from '@/types/difficulty'
+import { describeDifficulty } from '@/lib/difficultyText'
 import { translations } from '@/lib/i18n/translations'
 
 interface DifficultySelectorProps {
@@ -17,7 +18,6 @@ const DIFFICULTY_COLORS = {
   hard: 'text-red-600 bg-red-50 border-red-200',
 } as const
 
-// Difficulty labels are now handled by translations
 
 export function DifficultySelector({
   currentDifficulty,
@@ -77,33 +77,9 @@ export function DifficultySelector({
         </select>
       </div>
 
-      {/* Difficulty Description */}
-      <div className="text-sm text-gray-600 italic" style={{ minHeight: '2.5rem' }}>
-        {t.difficultyDesc[currentDifficulty]}
-      </div>
-
-      {/* Difficulty Stats */}
-      <div className="text-xs text-gray-500" style={{ minHeight: '1.5rem' }}>
-        <div className="flex justify-between">
-          <span className="flex items-center gap-1">
-            <span className="inline-block" style={{ minWidth: '65px' }}>{t.difficultyStats.fruits}:</span>
-            <span className="font-medium" style={{ minWidth: '60px' }}>
-              {currentDifficulty === 'easy' ? t.difficultyStats.few : currentDifficulty === 'normal' ? t.difficultyStats.standard : t.difficultyStats.many}
-            </span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block" style={{ minWidth: '45px' }}>{t.difficultyStats.time}:</span>
-            <span className="font-medium" style={{ minWidth: '45px', textAlign: 'center' }}>
-              {currentDifficulty === 'easy' ? t.difficultyStats.bonus : currentDifficulty === 'normal' ? t.difficultyStats.standard : t.difficultyStats.penalty}
-            </span>
-          </span>
-          <span className="flex items-center gap-1">
-            <span className="inline-block" style={{ minWidth: '50px' }}>{t.difficultyStats.score}:</span>
-            <span className="font-medium" style={{ minWidth: '35px', textAlign: 'right' }}>
-              {currentDifficulty === 'easy' ? t.difficultyStats.scorePenalty : currentDifficulty === 'normal' ? t.difficultyStats.standard : t.difficultyStats.scoreBonus}
-            </span>
-          </span>
-        </div>
+      {/* 難易度で実際に変わるものだけを出す（v1.1 計画 G4・D3、docs/game-spec.md §7） */}
+      <div className="text-sm text-gray-600" data-testid="difficulty-description">
+        {describeDifficulty(currentDifficulty, t)}
       </div>
     </div>
   )
