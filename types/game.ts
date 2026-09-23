@@ -86,12 +86,23 @@ export const PLACEMENT_CONFIG = {
   reservedTopPercent: 7,
   /** 下端: 操作の凡例（とりかた）の帯 */
   reservedBottomPercent: 6,
+  /**
+   * 上下の帯の最低限の高さ（px）。低いプレイエリアでは百分率だけでは足りないので、大きいほうを使う。
+   * 実測（2026-09-24）: カウンターの帯 30px、凡例の帯 31px に余白を足した値
+   */
+  reservedTopPx: 36,
+  reservedBottomPx: 36,
   /** 左端からの余白 */
   minLeftPercent: 5,
   /** 果物どうしのすき間 */
   gapPercent: 1,
+  /**
+   * すき間の最低限（px）。低いプレイエリアでは高さの 1% が 3px しかなく、
+   * ブラウザによる描画の大きさの差を吸収できなかった（WebKit で 15 回中1回重なった）
+   */
+  gapPx: 6,
   /** 空きを探す回数。見つからなければ最も重なりの少ない候補を使う */
-  maxAttempts: 60,
+  maxAttempts: 150,
 } as const
 
 export function formatTime(seconds: number): string {

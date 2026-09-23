@@ -15,6 +15,8 @@ import {
   calculateScore,
   getRequiredInteraction,
   updateFruitPosition,
+  relayoutFruits,
+  type AreaSize,
 } from '@/lib/gameLogic'
 import { useLocalStorage } from './useLocalStorage'
 import { useSoundEffects } from './useSoundEffects'
@@ -58,6 +60,20 @@ export function useGameLogic() {
   const animationFrameRef = useRef<number>()
   const lastUpdateTimeRef = useRef<number>(0)
   const scoreRef = useRef<number>(0)
+  // 実際のプレイエリアの大きさ（px）。果物の配置に使う（docs/game-spec.md §3）。
+  // 画面側が測って setPlayAreaSize で知らせる。知らせが無いあいだは 1280×800 の埋め込みを基準にする
+  const playAreaSizeRef = useRef<AreaSize | undefined>(undefined)
+  const setPlayAreaSize = useCallback((width: number, height: number) => {
+    // 描画前（0×0）は測れていないので使わない
+    if (width <= 0 || height <= 0) return
+    const previous = playAreaSizeRef.current
+    const next = { width, height }
+    playAreaSizeRef.current = next
+    if (previous && Math.round(previous.width) === Math.round(width) && Math.round(previous.height) === Math.round(height)) return
+    // 大きさが変わったら（遊び始めてヘッダが折り返した、窓の大きさを変えた、など）、
+    // 重なった果物・帯にはみ出した果物だけを置き直す。問題の無い果物は動かさない
+    setFruits((prev) => (prev.length > 0 ? relayoutFruits(prev, next) : prev))
+  }, [])
   const timeLeftRef = useRef<number>(60)
   const harvestedFruitsRef = useRef<HarvestedFruits>(createInitialHarvestedFruits())
 
@@ -128,18 +144,18 @@ export function useGameLogic() {
       setTimeLeft(ARCADE_CONFIG.duration)
       timeLeftRef.current = ARCADE_CONFIG.duration
       // 最初の畑から4種類そろえて、どの操作でもすぐ点を取れるようにする
-      setFruits(generateBalancedFruits(ARCADE_CONFIG.fruitCount))
+      setFruits(generateBalancedFruits(ARCADE_CONFIG.fruitCount, playAreaSizeRef.current))
     } else {
       const currentStageInfo = stage.currentStageInfo
       if (currentStageInfo) {
         setTimeLeft(currentStageInfo.timeLimit)
         timeLeftRef.current = currentStageInfo.timeLimit
-        setFruits(generateFruits(currentStageInfo.difficulty.fruitCount))
+        setFruits(generateFruits(currentStageInfo.difficulty.fruitCount, [], playAreaSizeRef.current))
       } else {
         const adjustedTime = difficulty.getAdjustedGameTime(GAME_CONFIG.gameDuration)
         setTimeLeft(adjustedTime)
         timeLeftRef.current = adjustedTime
-        setFruits(generateFruits(difficulty.currentConfig.fruitCount))
+        setFruits(generateFruits(difficulty.currentConfig.fruitCount, [], playAreaSizeRef.current))
       }
     }
 
@@ -238,7 +254,8 @@ export function useGameLogic() {
     setFruits(prevFruits => {
       const updatedFruits = prevFruits.filter(f => f.id !== fruit.id)
       // アーケードは4種類が畑に揃い続けるように補充する（手が止まらないようにするため）
-      const spawn = (field: Fruit[]) => (isArcade ? generateFruitForField(field) : generateFruit(undefined, field))
+      const area = playAreaSizeRef.current
+      const spawn = (field: Fruit[]) => (isArcade ? generateFruitForField(field, area) : generateFruit(undefined, field, area))
 
       const newFruits = [...updatedFruits, spawn(updatedFruits)]
       // Task 7.3: 5回連続成功時にボーナスフルーツ追加
@@ -401,7 +418,7 @@ export function useGameLogic() {
     } else if (effect.type === 'extraFruits') {
       setFruits(prevFruits => {
         // 追加分も、いまある果物と重ならない位置に置く（docs/game-spec.md §3）
-        const newFruits = generateFruits(effect.value, prevFruits)
+        const newFruits = generateFruits(effect.value, prevFruits, playAreaSizeRef.current)
         return [...prevFruits, ...newFruits]
       })
     }
@@ -423,6 +440,7 @@ export function useGameLogic() {
     pauseGame,
     resetGame,
     handleFruitInteraction,
+    setPlayAreaSize,
     missHint,
     handlePowerUpClick,
     soundEffects,
