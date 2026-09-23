@@ -16,7 +16,7 @@ const geistMono = localFont({
 
 export const metadata: Metadata = {
   title: "フルーツハーベスト - Fruit Harvest Game",
-  description: "落下するフルーツをキャッチして高得点を目指すアクションゲーム。様々なフルーツを集めてステージをクリアしよう！",
+  description: "マウスのクリック・ダブルクリック・右クリック・ドラッグを、フルーツを収穫しながら練習できる子ども向け学習ゲーム。",
 };
 
 export default function RootLayout({

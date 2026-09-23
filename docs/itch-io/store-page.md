@@ -100,7 +100,7 @@ educational, kids, mouse, practice, learning, cursor, html5, casual, family-frie
 ## 🍎 Practice mouse control, the fun way
 
 Fruit Harvest is a small educational game for practicing mouse control.
-Each falling fruit is harvested with a different action:
+Each fruit is harvested with a different action:
 
 - 🍎 **Apple** … click
 - 🫐 **Blueberry** … double-click
@@ -112,7 +112,7 @@ so the hit detection is deliberately forgiving.
 
 ### Features
 
-- **6 stages** with changing fruit types and speed (1-2.5 minutes per run)
+- **6 stages** — more fruits and bigger goals as you go (1-2.5 minutes per run)
 - **Progress tracking** — per-action success counts, levels and badges
 - **Daily practice** — one goal per action, every day
 - **Difficulty options** — normal / hard, and a moving-target mode
@@ -122,7 +122,7 @@ so the hit detection is deliberately forgiving.
 ### How to play
 
 1. Press "Start"
-2. Harvest each falling fruit with its matching mouse action
+2. Harvest each fruit with its matching mouse action
 3. Check your result when the timer runs out (1-2.5 minutes, depending on the stage)
 
 For right-click practice, the fullscreen button (bottom right) works best.
@@ -137,12 +137,18 @@ For right-click practice, the fullscreen button (bottom right) works best.
 ソースコードは MIT ライセンスで公開しています。
 GitHub: https://github.com/CaCC-Lab/v0-mousegame
 
-フルーツの絵柄には Noto Color Emoji（SIL Open Font License 1.1）を使用しています。
+### AI の利用について
+
+フルーツの絵（`public/sprites/` の4枚）は、画像生成AI（OpenAI gpt-5.4。Codex 経由で依頼）で作り、人が確認して作り直しを指示したものです。効果音はプログラムで合成しており、AI 生成の音声・音楽は使っていません。プログラムの多くは AI コーディング支援（Claude Code など）を使って書いています。
 
 This game is free to play. If you find it useful, an optional tip helps
 support further development — you choose the amount.
 
 The source code is open source under the MIT License.
+
+### Use of AI
+
+The fruit artwork (the four images in `public/sprites/`) was made with an AI image generator (OpenAI gpt-5.4, requested via Codex) and reviewed and revised by a human. Sound effects are synthesized in code; no AI-generated audio or music is used. Much of the code was written with AI coding assistants (such as Claude Code).
 ```
 
 ---
@@ -153,7 +159,7 @@ The source code is open source under the MIT License.
 | --- | --- | --- | --- |
 | **Cover image** | `docs/itch-io/cover.png` | 630 × 500 | 必須。一覧・埋め込みカードに表示される |
 | Screenshot 1 | `docs/screenshots/01-idle-screen.png` | — | ゲーム開始前の全体像 |
-| Screenshot 2 | `docs/screenshots/02-playing.png` | — | プレイ中。フルーツが落ちている様子 |
+| Screenshot 2 | `docs/screenshots/02-playing.png` | — | プレイ中。フルーツを取っている様子 |
 | Screenshot 3 | `docs/screenshots/04-result-modal.png` | — | 結果画面 |
 | Screenshot 4 | `docs/screenshots/05-gamification-overview.png` | — | 練習記録・レベル |
 | Screenshot 5 | `docs/screenshots/06-collection-fruits.png` | — | 図鑑 |
@@ -169,7 +175,8 @@ node scripts/render-cover.mjs
 
 ## 5. 公開前チェックリスト
 
-- [ ] `npm run build:itch` を実行し `dist-itch/fruit-harvest-itch.zip` を生成した
+- [ ] `npm run build:itch` を実行し `dist-itch/fruit-harvest-itch-<短いハッシュ>.zip` を生成した
+- [ ] itch.io の **AI 生成コンテンツの申告**（Generated with AI）で「画像: あり」「音声: なし」を設定した（上の「AI の利用について」と同じ内容）
 - [ ] zip を「This file will be played in the browser」に設定した
 - [ ] Viewport を 1280 × 800、fullscreen を ON にした
 - [ ] 価格を「$0 or donate」にした
