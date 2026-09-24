@@ -20,7 +20,7 @@ CrazyGames の審査は「プレイヤーを何分つかまえておけるか」
 | 項目 | これまで（教育路線） | CrazyGames 向け |
 | --- | --- | --- |
 | 一言説明 | mouse practice for kids | casual harvest arcade |
-| 主役 | 4つのマウス操作を覚える | 60秒でどれだけ稼げるか |
+| 主役 | 4つのマウス操作を覚える | 取るほど時間が延びる。どこまで続けられるか（v1.2） |
 | 数字の見せ方 | 習熟度・バッジ | スコア・コンボ・段位 |
 | 練習モードの扱い | 主役 | 「ゆっくり練習したい人向け」として併記 |
 
@@ -39,26 +39,28 @@ Fruit Harvest Arcade
 ### Short description（〜160字目安）
 
 ```
-Chain combos, trigger Fever, and harvest as much fruit as you can in 60 seconds. Four ways to pick: click, double-click, right-click and drag. Beat your best and climb the ranks.
+Every fruit you pick adds time. Chain combos, hit Bonus Time, and see how long you can keep going. Four ways to pick: click, double-click, right-click and drag.
 ```
 
 ### Long description
 
 ```
-Fruit Harvest Arcade is a fast 60-second score attack.
+Fruit Harvest Arcade starts with 30 seconds on the clock — and every fruit you pick adds a little more.
+Mistakes take time away, and the fruits start moving once you get going.
 
 Every fruit is picked a different way — click an apple, double-click a blueberry,
 right-click a lemon, and drag a watermelon to the drop zone. Keep picking without a
-miss and your combo multiplier climbs, all the way to 5x. Fill the Fever gauge and
+miss and your combo multiplier climbs, all the way to 5x. Fill the Bonus Time gauge and
 the whole field lights up: double points on top of your combo, and fruit pouring in.
 
-Your personal best sets your rank, from Bronze all the way to Diamond. One run takes
-a minute, so there is always time for one more.
+Every run ends with your next goal and the move you missed most, with a one-click
+way to practice it. The better you get, the longer each run lasts.
 
 Prefer to take it slow? Practice mode is still here: six stages that teach every
 mouse move at your own pace.
 
-- 60-second arcade runs with combo multipliers and Fever time
+- Time-attack runs: every catch adds time, every mistake costs some
+- Combo multipliers up to 5x and Bonus Time
 - Personal best and five ranks to climb
 - Four distinct controls — great for sharpening your mouse skills
 - Plays on touch too: tap, double tap, long press and drag
@@ -77,7 +79,7 @@ Keyboard: arrow keys to select, Enter to pick, Space to pause.
 ### Tags 候補
 
 ```
-arcade, casual, score-attack, combo, one-minute, fruit, clicker, skill, mobile-friendly
+arcade, casual, time-attack, combo, fruit, clicker, skill, mouse, mobile-friendly
 ```
 
 ---
@@ -87,14 +89,14 @@ arcade, casual, score-attack, combo, one-minute, fruit, clicker, skill, mobile-f
 そのまま使う予定はない。CrazyGames の文言を訳したものとして残す。
 
 ```
-60びょうで、どれだけフルーツをあつめられる？
+とると じかんが のびる。どこまで つづけられる？
 
 りんごはクリック、ブルーベリーはダブルクリック、レモンは右クリック、
 スイカはドラッグ。つづけてとるほどコンボがのびて、てんすうは最大5ばい。
-ゲージがたまれば「フィーバー」で、さらに2ばい。
+ゲージがたまれば「ボーナスタイム」で、さらに2ばい。
 
-じこベストにおうじて、ブロンズからダイヤまで段位があがる。
-1回1分だから、もう1回がとまらない。
+まちがえると じかんが へる。たくさん とると フルーツが うごきだす。
+おわったら「つぎの めあて」と「にがてな そうさ」がわかる。
 ```
 
 ---
@@ -104,7 +106,8 @@ arcade, casual, score-attack, combo, one-minute, fruit, clicker, skill, mobile-f
 Issue #42 の合格ラインに対応する。
 
 - [x] ロード後10秒以内にプレイ到達（開いた画面のプレイエリアがそのままモード選択）
-- [x] コンボ→フィーバー→段位更新のループが成立している
+- [x] コンボ→ボーナスタイム→段位更新のループが成立している
+- [x] 腕前で1プレイの長さが変わる（v1.2。`docs/v1.2-plan.md` の計測）
 - [x] 英語で完全に遊べる（`?lang=en` および言語切替）
 - [x] モバイルで全4操作が成立する（タップ／2回タップ／長押し／なぞる）
 - [x] デバッグページなし・アプリ由来の console 出力なし

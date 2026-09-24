@@ -104,25 +104,29 @@ test.describe('G5: 開始直後の果物が、他の果物や凡例に隠れな�
 test.describe('G12: ?debug=1 の診断と ?test=1 の自動プレイ', () => {
   test.setTimeout(120_000)
 
-  test('?test=1&debug=1 で、4操作すべてが成功し、ミス 0 で結果画面まで行く', async ({ page, browserName }) => {
-    // ヘッドレスの WebKit（Linux・ソフトウェア描画）では、0.4 秒ごとに収穫が続くとページ全体の処理が遅れ、
-    // 約 80 秒でゲーム時間が約 30 秒しか進まない（1並列でも同じ。2026-09-24 実測）。
-    // 実機の Safari で起きるかは未確認（docs/v1.1-tasks.md「実装中に分かったこと」）
-    test.fixme(browserName === 'webkit', 'ヘッドレス WebKit では収穫が続くと処理が追いつかない。実機 Safari で要確認')
+  test('?test=1&debug=1&bot=beginner で、4操作すべてを使って結果画面まで行く', async ({ page, browserName }) => {
+    // チャレンジは時間をかせぐ型（v1.2 D1）なので、ミスしない expert は約 5 分続く。
+    // 約 90 秒で終わる beginner（1.5 秒ごと・ミス 20%）で通す。
+    // ヘッドレスの WebKit（Linux・ソフトウェア描画）では、収穫が続くと演出の描画でタイマーごと遅れ、
+    // 単独で流しても 180 秒で終わらない（何も操作しなければ遅れない。2026-09-24 実測）。実機 Safari は未確認
+    test.fixme(browserName === 'webkit', 'ヘッドレス WebKit では収穫が続くとタイマーが遅れる。実機 Safari で要確認')
+    test.setTimeout(200_000)
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
 
-    await page.goto('/?test=1&debug=1')
+    await page.goto('/?test=1&debug=1&bot=beginner')
     const panel = page.getByTestId('debug-panel')
     await expect(panel).toBeVisible()
     await expect(panel).toContainText('mode: arcade')
 
-    await expect(page.getByRole('dialog').filter({ hasText: /アーケードけっか/ })).toBeVisible({ timeout: 80_000 })
+    await expect(page.getByRole('dialog').filter({ hasText: /チャレンジけっか/ })).toBeVisible({ timeout: 180_000 })
     for (const action of ['click', 'doubleClick', 'rightClick', 'drop']) {
       const value = Number(await panel.getByTestId(`debug-ok-${action}`).textContent())
       expect(value).toBeGreaterThanOrEqual(1)
     }
-    expect(Number(await panel.getByTestId('debug-miss').textContent())).toBe(0)
+    // beginner は5回に1回まちがえる。ミスは数として出て、結果には「にがてな そうさ」が出る
+    expect(Number(await panel.getByTestId('debug-miss').textContent())).toBeGreaterThan(0)
+    await expect(page.getByTestId('arcade-weak-operation')).toBeVisible()
     expect(errors).toEqual([])
   })
 
@@ -177,7 +181,7 @@ test.describe('G8: 0点でも次にやることが出る（D1）', () => {
   test('アーケードを放置して0点で終わると、ランクではなく「まずは 🍎 をクリックしてみよう」が出る', async ({ page }) => {
     await page.goto('/?lang=ja')
     await startArcade(page)
-    const result = page.getByRole('dialog').filter({ hasText: /アーケードけっか/ })
+    const result = page.getByRole('dialog').filter({ hasText: /チャレンジけっか/ })
     await expect(result).toBeVisible({ timeout: 80_000 })
     await expect(result.getByTestId('arcade-zero-hint')).toContainText('まずは 🍎 をクリックしてみよう')
     await expect(result.getByTestId('arcade-result-rank')).toHaveCount(0)
@@ -270,3 +274,40 @@ test.describe('小さい画面でも果物が重ならない（v1.1 残作業）
   })
 })
 
+
+test.describe('v1.2 G8: 800 幅でもプレイエリアが画面の半分以上（D8）', () => {
+  test.use({ viewport: { width: 800, height: 600 } })
+
+  test('チャレンジ中のプレイエリアの高さが 400px 以上。ゲージはプレイエリアの上端にあり、ヘッダのベストは隠れる', async ({ page }) => {
+    await page.goto('/?lang=ja')
+    await startArcadeByMouse(page)
+    await page.waitForTimeout(500)
+    const m = await page.evaluate(() => {
+      const area = document.querySelector('[data-testid="game-area"]')!.getBoundingClientRect()
+      const gauges = [...document.querySelectorAll('[role="progressbar"]')].filter((e) => (e as HTMLElement).offsetParent !== null)
+      const gauge = gauges[0]?.getBoundingClientRect()
+      return { areaH: Math.round(area.height), areaTop: area.top, areaBottom: area.bottom, gaugeTop: gauge?.top, visibleGauges: gauges.length }
+    })
+    console.log(`G8 measurement: ${JSON.stringify(m)}`)
+    expect(m.areaH).toBeGreaterThanOrEqual(400)
+    expect(m.visibleGauges).toBe(1)
+    expect(m.gaugeTop!).toBeGreaterThanOrEqual(m.areaTop)
+    await expect(page.getByText('ベスト:')).toBeHidden()
+  })
+})
+
+test.describe('v1.2 D8: 広い画面ではヘッダにゲージとベスト', () => {
+  test('1280×800 ではゲージはヘッダにあり、ベストが見える', async ({ page }) => {
+    await page.goto('/?lang=ja')
+    await startArcadeByMouse(page)
+    await page.waitForTimeout(500)
+    const m = await page.evaluate(() => {
+      const area = document.querySelector('[data-testid="game-area"]')!.getBoundingClientRect()
+      const gauges = [...document.querySelectorAll('[role="progressbar"]')].filter((e) => (e as HTMLElement).offsetParent !== null)
+      return { areaTop: area.top, gaugeTop: gauges[0]?.getBoundingClientRect().top, visibleGauges: gauges.length }
+    })
+    expect(m.visibleGauges).toBe(1)
+    expect(m.gaugeTop!).toBeLessThan(m.areaTop)
+    await expect(page.getByText('ベスト:')).toBeVisible()
+  })
+})

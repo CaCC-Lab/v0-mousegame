@@ -26,7 +26,7 @@ import { useStage } from './useStage'
 import { useOperationStats } from './useOperationStats'
 import { useGamification } from './useGamification'
 import { useArcadeMode } from './useArcadeMode'
-import { calculateArcadePoints } from '@/lib/arcadeManager'
+import { calculateArcadePoints, addHarvestTime, subtractMissTime } from '@/lib/arcadeManager'
 import { ARCADE_CONFIG, ArcadeResult, GameMode } from '@/types/arcade'
 
 const INITIAL_HARVESTED_FRUITS: HarvestedFruits = {
@@ -60,6 +60,10 @@ export function useGameLogic() {
   const animationFrameRef = useRef<number>()
   const lastUpdateTimeRef = useRef<number>(0)
   const scoreRef = useRef<number>(0)
+  // チャレンジ（arcade）の状態（v1.2 D1・D2・D4）
+  const arcadeHarvestCountRef = useRef(0)
+  const arcadeMissesByOperationRef = useRef<Record<InteractionType, number>>({ click: 0, doubleClick: 0, rightClick: 0, drop: 0 })
+  const [arcadeFruitsMoving, setArcadeFruitsMoving] = useState(false)
   // 実際のプレイエリアの大きさ（px）。果物の配置に使う（docs/game-spec.md §3）。
   // 画面側が測って setPlayAreaSize で知らせる。知らせが無いあいだは 1280×800 の埋め込みを基準にする
   const playAreaSizeRef = useRef<AreaSize | undefined>(undefined)
@@ -109,7 +113,9 @@ export function useGameLogic() {
 
   // Sync refs with state
   useEffect(() => { scoreRef.current = score }, [score])
-  useEffect(() => { timeLeftRef.current = timeLeft }, [timeLeft])
+  // 残り時間の正本は timeLeftRef（小数を持つ）。state の timeLeft は表示用に切り上げた整数。
+  // 以前は state から ref へ書き戻していて、チャレンジで 0.3 秒の増加が毎回 1 秒に化けていた（v1.2 の計測で発見）。
+  // ref を変えるところで state も一緒に更新する
   useEffect(() => { harvestedFruitsRef.current = harvestedFruits }, [harvestedFruits])
   useEffect(() => { isEffectActiveRef.current = isEffectActive }, [isEffectActive])
   useEffect(() => { stopSpawningRef.current = stopSpawning }, [stopSpawning])
@@ -141,8 +147,12 @@ export function useGameLogic() {
     if (nextMode === 'arcade') {
       setArcadeResult(null)
       arcade.reset()
-      setTimeLeft(ARCADE_CONFIG.duration)
-      timeLeftRef.current = ARCADE_CONFIG.duration
+      // 時間をかせぐ型: 30 秒から始まり、取ると増え、ミスで減る（docs/game-spec.md §4.2）
+      setTimeLeft(ARCADE_CONFIG.startTimeSec)
+      timeLeftRef.current = ARCADE_CONFIG.startTimeSec
+      arcadeHarvestCountRef.current = 0
+      arcadeMissesByOperationRef.current = { click: 0, doubleClick: 0, rightClick: 0, drop: 0 }
+      setArcadeFruitsMoving(false)
       // 最初の畑から4種類そろえて、どの操作でもすぐ点を取れるようにする
       setFruits(generateBalancedFruits(ARCADE_CONFIG.fruitCount, playAreaSizeRef.current))
     } else {
@@ -194,6 +204,7 @@ export function useGameLogic() {
     modeRef.current = 'practice'
     setArcadeResult(null)
     arcade.reset()
+    setArcadeFruitsMoving(false)
     setScore(0)
     setTimeLeft(60)
     timeLeftRef.current = 60
@@ -216,8 +227,13 @@ export function useGameLogic() {
 
     if (basePoints <= 0) {
       operationStatsRef.current.recordFailure(action)
-      // アーケードでは操作を間違えるとコンボが途切れる（点は減らさない）
-      if (isArcade) arcadeRef.current.registerMiss()
+      // チャレンジでは操作を間違えるとコンボが途切れ、残り時間が減る（点は減らさない）
+      if (isArcade) {
+        arcadeRef.current.registerMiss()
+        arcadeMissesByOperationRef.current[getRequiredInteraction(fruit.type)] += 1
+        timeLeftRef.current = subtractMissTime(timeLeftRef.current)
+        setTimeLeft(Math.ceil(timeLeftRef.current))
+      }
       // 何が正解だったかをその場で伝える。
       // 黙って0点にされると、初見のプレイヤーは何を直せばいいのか分からない
       missHintSeqRef.current += 1
@@ -236,6 +252,14 @@ export function useGameLogic() {
 
     // この収穫に適用されたコンボ倍率・フィーバー状態（アーケードのみ）
     const bonus = isArcade ? arcadeRef.current.registerHarvest() : null
+
+    // チャレンジ: 取ると残り時間が増える。一定の数を取ったら果物が動き出す（段差は1か所）
+    if (isArcade) {
+      timeLeftRef.current = addHarvestTime(timeLeftRef.current, arcadeHarvestCountRef.current)
+      arcadeHarvestCountRef.current += 1
+      setTimeLeft(Math.ceil(timeLeftRef.current))
+      if (arcadeHarvestCountRef.current >= ARCADE_CONFIG.moveAfterHarvests) setArcadeFruitsMoving(true)
+    }
 
     let adjustedPoints = bonus
       ? calculateArcadePoints(basePoints, bonus.comboMultiplier, bonus.isFever)
@@ -295,8 +319,11 @@ export function useGameLogic() {
     }
   }, [gameState, soundEffects, difficulty, getEffectValue, timeLeft, setHighScore])
 
+  // うごくモード、またはチャレンジで段差を越えたら果物が動く
+  const fruitsMove = isHardMode || (mode === 'arcade' && arcadeFruitsMoving)
+
   const moveFruits = useCallback(() => {
-    if (gameState !== 'playing' || !isHardMode) return
+    if (gameState !== 'playing' || !fruitsMove) return
 
     const now = performance.now()
     let deltaTime = (now - lastUpdateTimeRef.current) / 1000
@@ -308,7 +335,7 @@ export function useGameLogic() {
     setFruits(prevFruits => prevFruits.map(fruit => updateFruitPosition(fruit, deltaTime)))
 
     animationFrameRef.current = requestAnimationFrame(moveFruits)
-  }, [gameState, isHardMode, getEffectValue])
+  }, [gameState, fruitsMove, getEffectValue])
 
   /**
    * 時間切れの後始末。
@@ -324,7 +351,12 @@ export function useGameLogic() {
     stopSpawningRef.current()
 
     if (modeRef.current === 'arcade') {
-      const outcome = arcadeRef.current.commitResult(scoreRef.current)
+      const misses = arcadeMissesByOperationRef.current
+      const worst = (Object.keys(misses) as InteractionType[]).reduce<InteractionType | null>(
+        (best, op) => (misses[op] > 0 && (best === null || misses[op] > misses[best]) ? op : best),
+        null
+      )
+      const outcome = { ...arcadeRef.current.commitResult(scoreRef.current), weakOperation: worst, endReason: 'timeUp' as const }
       setArcadeResult(outcome)
 
       // アーケードもマウス操作の練習には違いないので、累積統計・習熟度・バッジには反映する。
@@ -381,7 +413,8 @@ export function useGameLogic() {
       const prevTime = timeLeftRef.current
       const newTime = prevTime - 1
       timeLeftRef.current = Math.max(0, newTime)
-      setTimeLeft(timeLeftRef.current)
+      // チャレンジでは取るたびに小数の秒が増えるので、表示は切り上げた整数にする
+      setTimeLeft(Math.ceil(timeLeftRef.current))
 
       if (newTime <= 0) {
         finishGame(prevTime)
@@ -391,9 +424,9 @@ export function useGameLogic() {
     return () => clearInterval(timer)
   }, [gameState, finishGame])
 
-  // Animation effect for hard mode
+  // Animation effect for hard mode（チャレンジで段差を越えたときも）
   useEffect(() => {
-    if (gameState !== 'playing' || !isHardMode) return
+    if (gameState !== 'playing' || !fruitsMove) return
 
     lastUpdateTimeRef.current = performance.now()
     animationFrameRef.current = requestAnimationFrame(moveFruits)
@@ -403,7 +436,7 @@ export function useGameLogic() {
         cancelAnimationFrame(animationFrameRef.current)
       }
     }
-  }, [gameState, isHardMode, moveFruits])
+  }, [gameState, fruitsMove, moveFruits])
 
   const handlePowerUpClick = useCallback((powerUpId: string) => {
     if (gameState !== 'playing') return
@@ -414,7 +447,8 @@ export function useGameLogic() {
     soundEffects.playCollectSound()
 
     if (effect.type === 'timeExtension') {
-      setTimeLeft(prevTime => prevTime + Math.floor(effect.value / 1000))
+      timeLeftRef.current = timeLeftRef.current + Math.floor(effect.value / 1000)
+      setTimeLeft(Math.ceil(timeLeftRef.current))
     } else if (effect.type === 'extraFruits') {
       setFruits(prevFruits => {
         // 追加分も、いまある果物と重ならない位置に置く（docs/game-spec.md §3）
@@ -440,6 +474,7 @@ export function useGameLogic() {
     pauseGame,
     resetGame,
     handleFruitInteraction,
+    arcadeFruitsMoving,
     setPlayAreaSize,
     missHint,
     handlePowerUpClick,

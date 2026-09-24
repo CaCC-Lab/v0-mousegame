@@ -40,7 +40,7 @@ test.describe('放置で結果画面まで行く', () => {
   // 60 秒のラウンドを待つ
   test.setTimeout(120_000)
 
-  test('アーケードを何も操作せず放置すると、時間切れで結果画面が出る', async ({ page }) => {
+  test('チャレンジを何も操作せず放置すると、時間切れで結果画面が出る', async ({ page }) => {
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
 
@@ -55,7 +55,7 @@ test.describe('放置で結果画面まで行く', () => {
     expect(pixels.darkRatio).toBeLessThan(0.5)
 
     // 時間切れで結果モーダルが出る（60 秒 + 余裕）
-    const result = page.getByRole('dialog').filter({ hasText: /アーケードけっか|Arcade Result/i })
+    const result = page.getByRole('dialog').filter({ hasText: /チャレンジけっか|Challenge Result/i })
     await expect(result).toBeVisible({ timeout: 80_000 })
     await expect(result.getByRole('button', { name: /もういちど|Play again/i })).toBeVisible()
 

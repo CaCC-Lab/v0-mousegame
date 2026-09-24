@@ -6,6 +6,7 @@ import { useGameLogic } from '@/hooks/useGameLogic'
 import { useKeyboardControls } from '@/hooks/useKeyboardControls'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useAnimation } from '@/hooks/useAnimation'
+import { useMediaQuery } from '@/hooks/useMediaQuery'
 import { StageSelector } from './StageSelector'
 import {
   ScoreBar,
@@ -71,6 +72,7 @@ export function FruitHarvestGame(): React.ReactElement {
     pauseGame,
     resetGame,
     handleFruitInteraction,
+    arcadeFruitsMoving,
     setPlayAreaSize,
     missHint,
     handlePowerUpClick,
@@ -144,6 +146,19 @@ export function FruitHarvestGame(): React.ReactElement {
   // 待機中の画面は「題名・モード2枚・はじめる」だけにする（docs/game-spec.md §4.3、v1.1 計画 D6）。
   // 得点・時間・ベスト・ステージ目標・凡例・コンボは、遊んでいる最中の表示なので開始してから出す
   const showPlayHud = gameState !== 'idle'
+  // 幅 1024px 以上ならボーナスタイムのゲージをヘッダに、未満ならプレイエリアの上端に置く（v1.2 D8）。
+  // 同じ部品を2か所に置いて CSS で隠すと読み上げで2回読まれるので、どちらか1つだけを描く
+  const isWide = useMediaQuery('(min-width: 1024px)')
+
+  const arcadeHud = (
+    <ArcadeHUD
+      combo={arcade.combo}
+      comboMultiplier={arcade.comboMultiplier}
+      feverGauge={arcade.feverGauge}
+      isFever={arcade.isFever}
+      t={t}
+    />
+  )
 
   // はじめてフィーバーに入ったときだけ、何が起きたのかを一度だけ説明する。
   // プレイテストでは「Feverが何なのか最後まで分からなかった」まま終わっていた
@@ -182,6 +197,26 @@ export function FruitHarvestGame(): React.ReactElement {
     resetAnimations()
     startGame('practice')
   }, [startGame, resetAnimations])
+
+  // 結果の「にがてな そうさ」から、れんしゅうを始める（v1.2 D4）
+  const handlePracticeWeak = useCallback(() => {
+    resetAnimations()
+    setShowFeverIntro(false)
+    setSelectedMode('practice')
+    startGame('practice')
+  }, [startGame, resetAnimations])
+
+  // チャレンジで果物が動き出した瞬間に一度だけ知らせる（段差を見て分かるように。v1.2 D2）
+  const [showMovingNotice, setShowMovingNotice] = useState(false)
+  useEffect(() => {
+    if (!arcadeFruitsMoving) return
+    setShowMovingNotice(true)
+    const timer = setTimeout(() => setShowMovingNotice(false), 2500)
+    return () => {
+      clearTimeout(timer)
+      setShowMovingNotice(false)
+    }
+  }, [arcadeFruitsMoving])
 
   const handleArcadeClose = useCallback(() => {
     resetGame()
@@ -548,13 +583,9 @@ export function FruitHarvestGame(): React.ReactElement {
               )}
             </div>
             {isArcade && showPlayHud && (
-              <ArcadeHUD
-                combo={arcade.combo}
-                comboMultiplier={arcade.comboMultiplier}
-                feverGauge={arcade.feverGauge}
-                isFever={arcade.isFever}
-                t={t}
-              />
+              // 幅 1024px 以上だけヘッダに置く。狭い幅ではヘッダが折り返してプレイエリアが縮むので、
+              // プレイエリア上端のカウンターの列に移す（v1.2 D8）
+              isWide && arcadeHud
             )}
             <HelpDialog t={t} />
           </div>
@@ -582,7 +613,8 @@ export function FruitHarvestGame(): React.ReactElement {
             />
             {/* pointer-events-none でクリックを下のフルーツへ通す */}
             {showPlayHud && (
-            <div className="absolute top-1.5 inset-x-0 z-20 pointer-events-none space-y-1">
+            <div className="absolute top-1.5 inset-x-0 z-20 pointer-events-none flex flex-wrap items-center justify-center gap-2 px-2">
+              {isArcade && !isWide && arcadeHud}
               <HarvestedFruitsDisplay
                 harvestedFruits={harvestedFruits}
                 score={score}
@@ -605,6 +637,18 @@ export function FruitHarvestGame(): React.ReactElement {
 
             {/* 遊び終わって待機画面に戻ったら残さない（モード選択と重なる） */}
             <FeverIntro show={isArcade && showFeverIntro && gameState === 'playing'} t={t} />
+
+            {isArcade && showMovingNotice && gameState === 'playing' && (
+              <div className="absolute inset-x-0 top-1/3 z-30 flex justify-center pointer-events-none">
+                <div
+                  role="status"
+                  data-testid="fruits-moving-notice"
+                  className="rounded-[var(--radius-full)] bg-black/60 px-5 py-2 text-display text-xl font-bold text-white shadow-lg"
+                >
+                  🏃 {t.fruitsStartMoving}
+                </div>
+              </div>
+            )}
 
             {/* フィーバー中は画面全体を熱くする（クリックは通す） */}
             {isArcade && arcade.isFever && (
@@ -630,7 +674,8 @@ export function FruitHarvestGame(): React.ReactElement {
               // 画面が低いとカード2枚が入りきらずプレイエリアからはみ出し、
               // 下の操作ボタンに重なってタップを奪ってしまう。
               // オーバーレイ内でスクロールさせて外へ出さない
-              <div className="absolute inset-0 z-30 flex items-center justify-center overflow-y-auto bg-black/35 py-3">
+              // 右端のドロップエリア（w-20）の手前に収める。狭い幅でカードがドロップエリアに重なっていた（v1.2 D8）
+              <div className="absolute inset-y-0 left-0 right-20 z-30 flex items-center justify-center overflow-y-auto bg-black/35 py-3">
                 <ModeSelector
                   onSelectMode={handleSelectMode}
                   onStart={handleStart}
@@ -654,7 +699,8 @@ export function FruitHarvestGame(): React.ReactElement {
             // 待機中はプレイエリア上のモード選択が開始の入口。
             // アーケードの結果表示中は結果の「もういちど」が入口。
             // ここにも「はじめる」があると、どちらを押せばいいのか分からなくなる（docs/game-spec.md §4.3）
-            showStart={gameState !== 'idle'}
+            // 遊んでいる間の「はじめる」は押せないので出さない。一時停止中だけ、やり直しの入口として出す
+            showStart={gameState === 'paused'}
             // アーケードにステージは無いので、遊んでいる間はステージ選択を押せない
             stageSelectDisabled={isArcade && gameState !== 'idle'}
             onPause={pauseGame}
@@ -684,6 +730,7 @@ export function FruitHarvestGame(): React.ReactElement {
         language={language}
         onRetry={handleArcadeRetry}
         onClose={handleArcadeClose}
+        onPracticeWeak={handlePracticeWeak}
         rewardedAvailable={isRewardedBoostAvailable()}
         onRewardedBoost={handleRewardedBoost}
         t={t}

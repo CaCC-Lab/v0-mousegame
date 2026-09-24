@@ -18,7 +18,8 @@ describe('ArcadeHUD のフィーバーゲージ', () => {
   it('何のゲージなのか名前が読める', () => {
     render(<ArcadeHUD {...base} feverGauge={0} />)
 
-    expect(screen.getByTestId('fever-label')).toHaveTextContent('フィーバー')
+    // 画面での名前は「ボーナスタイム」（v1.2 D5。コードでは fever）
+    expect(screen.getByTestId('fever-label')).toHaveTextContent('ボーナスタイム')
   })
 
   it('溜まっていないときは、どうすれば溜まるのかを示す', () => {
@@ -38,7 +39,7 @@ describe('ArcadeHUD のフィーバーゲージ', () => {
   it('英語でも読める', () => {
     render(<ArcadeHUD {...base} t={translations.en} feverGauge={0} />)
 
-    expect(screen.getByTestId('fever-label')).toHaveTextContent(/Fever/i)
+    expect(screen.getByTestId('fever-label')).toHaveTextContent(/Bonus Time/i)
     expect(screen.getByTestId('fever-hint').textContent).not.toMatch(/[ぁ-んァ-ヶ一-龠]/)
   })
 

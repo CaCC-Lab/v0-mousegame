@@ -44,7 +44,7 @@ describe('待機中のヘッダと Enter での開始は、選んでいるモー
     })
 
     // アーケードの HUD（フィーバーゲージ）が出て、ステージ目標は出ない
-    expect(screen.getByRole('progressbar', { name: 'フィーバーゲージ' })).toBeInTheDocument()
+    expect(screen.getByRole('progressbar', { name: 'ボーナスタイムのゲージ' })).toBeInTheDocument()
     expect(screen.queryByText(/ステージ目標/)).not.toBeInTheDocument()
   })
 
@@ -57,7 +57,7 @@ describe('待機中のヘッダと Enter での開始は、選んでいるモー
       fireEvent.keyDown(window, { key: 'Enter' })
     })
 
-    expect(screen.queryByRole('progressbar', { name: 'フィーバーゲージ' })).not.toBeInTheDocument()
+    expect(screen.queryByRole('progressbar', { name: 'ボーナスタイムのゲージ' })).not.toBeInTheDocument()
     expect(screen.getByText(/ステージ目標/)).toBeInTheDocument()
   })
 })
