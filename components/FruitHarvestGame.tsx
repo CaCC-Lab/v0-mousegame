@@ -42,33 +42,16 @@ import {
   createDebugStats,
   recordInteraction,
   chooseAutoPlayMove,
-  AUTOPLAY_INTERVAL_MS,
+  BOT_PROFILES,
   type DebugFlags,
 } from '@/lib/debugTools'
 import { DebugPanel } from './game/DebugPanel'
+import { getRequiredInteraction } from '@/lib/gameLogic'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
   animate: { scale: 1, opacity: 1 },
   transition: { duration: 0.5, delay: 0.2 }
-}
-
-/**
- * Determines the correct interaction type for a fruit based on its type.
- */
-function getInteractionTypeForFruit(fruitType: Fruit['type']): InteractionType {
-  switch (fruitType) {
-    case 'apple':
-      return 'click'
-    case 'blueberry':
-      return 'doubleClick'
-    case 'lemon':
-      return 'rightClick'
-    case 'watermelon':
-      return 'click'
-    default:
-      return 'click'
-  }
 }
 
 export function FruitHarvestGame(): React.ReactElement {
@@ -88,6 +71,7 @@ export function FruitHarvestGame(): React.ReactElement {
     pauseGame,
     resetGame,
     handleFruitInteraction,
+    setPlayAreaSize,
     missHint,
     handlePowerUpClick,
     soundEffects,
@@ -121,6 +105,21 @@ export function FruitHarvestGame(): React.ReactElement {
   const prevMasteryRef = useRef(gamification.masteryLevels)
   const levelUpTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const gameAreaRef = useRef<HTMLDivElement>(null)
+
+  // プレイエリアの実際の大きさを配置に知らせる（小さい画面で果物が重ならないように。docs/game-spec.md §3）
+  useEffect(() => {
+    const area = gameAreaRef.current
+    if (!area) return
+    const report = () => {
+      const rect = area.getBoundingClientRect()
+      setPlayAreaSize(rect.width, rect.height)
+    }
+    report()
+    if (typeof ResizeObserver === 'undefined') return
+    const observer = new ResizeObserver(report)
+    observer.observe(area)
+    return () => observer.disconnect()
+  }, [setPlayAreaSize])
 
   const isArcade = mode === 'arcade'
   const showArcadeResult = isArcade && arcadeResult !== null
@@ -205,7 +204,7 @@ export function FruitHarvestGame(): React.ReactElement {
 
   // 検証用の入口（?debug=1 / ?test=1。docs/game-spec.md §10）。
   // URL はクライアントでだけ読む（静的エクスポートの HTML と食い違わないように）
-  const [debugFlags, setDebugFlags] = useState<DebugFlags>({ debug: false, test: false })
+  const [debugFlags, setDebugFlags] = useState<DebugFlags>({ debug: false, test: false, bot: 'expert' })
   const [debugStats, setDebugStats] = useState(createDebugStats)
   useEffect(() => {
     setDebugFlags(readDebugFlags(window.location.search))
@@ -262,13 +261,14 @@ export function FruitHarvestGame(): React.ReactElement {
   useEffect(() => {
     if (!debugFlags.test || gameState !== 'playing') return
     let step = 0
+    const profile = BOT_PROFILES[debugFlags.bot]
     const timer = setInterval(() => {
-      const move = chooseAutoPlayMove(fruitsRef.current, step)
+      const move = chooseAutoPlayMove(fruitsRef.current, step, { missRate: profile.missRate })
       step += 1
       if (move) handleFruitClickRef.current(move.fruit, move.action)
-    }, AUTOPLAY_INTERVAL_MS)
+    }, profile.intervalMs)
     return () => clearInterval(timer)
-  }, [debugFlags.test, gameState])
+  }, [debugFlags.test, debugFlags.bot, gameState])
 
   const handleKeyboardEnter = useCallback(() => {
     if (gameState === 'idle') {
@@ -279,7 +279,9 @@ export function FruitHarvestGame(): React.ReactElement {
 
     if (gameState === 'playing' && selectedFruitIndex >= 0 && selectedFruitIndex < fruits.length) {
       const selectedFruit = fruits[selectedFruitIndex]
-      const interactionType = getInteractionTypeForFruit(selectedFruit.type)
+      // キーボードではドラッグできないので、選んで Enter が「正しい操作をした」ことの代わりになる。
+      // 操作は得点計算と同じ対応表から引く（以前は独自の表でスイカを click にしていて、必ずミスになっていた）
+      const interactionType = getRequiredInteraction(selectedFruit.type)
       handleFruitClick(selectedFruit, interactionType)
       setSelectedFruitIndex(-1)
     }

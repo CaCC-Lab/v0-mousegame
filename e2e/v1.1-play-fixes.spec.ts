@@ -229,3 +229,44 @@ test.describe('開始してもページがスクロールしない', () => {
     expect(scrolled.filter((y) => y !== 0)).toEqual([])
   })
 })
+
+test.describe('小さい画面でも果物が重ならない（v1.1 残作業）', () => {
+  test.setTimeout(180_000)
+  // 800×600 ではプレイエリアが 768×312px。1280×800 基準で配置していた間は、
+  // 15回開始×12個で重なり 29 組・覆われ 4 個・凡例と重なり 18 個だった（2026-09-24 実測）
+  test.use({ viewport: { width: 800, height: 600 } })
+
+  test('800×600 でアーケードを15回開始して、重なり・覆われ・凡例との重なりがすべて 0', async ({ page }) => {
+    const total = { n: 0, pairs: 0, covered: 0, underLegend: 0 }
+    for (let run = 0; run < 15; run++) {
+      await page.goto('/')
+      await startArcadeByMouse(page)
+      await expect(page.locator('[data-fruit-id]').first()).toBeVisible()
+      await page.waitForTimeout(600)
+      const m = await page.evaluate(() => {
+        const legend = [...document.querySelectorAll('div')]
+          .find((d) => d.className.includes('bottom-1.5') && d.textContent?.includes('とりかた'))
+          ?.firstElementChild?.getBoundingClientRect()
+        const hit = (a: DOMRect, b: DOMRect) => a.left < b.right && b.left < a.right && a.top < b.bottom && b.top < a.bottom
+        const els = [...document.querySelectorAll<HTMLElement>('[role="button"][data-fruit-id]')]
+        const rects = els.map((e) => e.getBoundingClientRect())
+        let pairs = 0
+        for (let i = 0; i < rects.length; i++) for (let j = i + 1; j < rects.length; j++) if (hit(rects[i], rects[j])) pairs++
+        let covered = 0
+        els.forEach((e, i) => {
+          const r = rects[i]
+          const top = document.elementFromPoint(r.left + r.width / 2, r.top + r.height / 2)
+          if (top?.closest('[data-fruit-id]') !== e) covered++
+        })
+        return { n: els.length, pairs, covered, underLegend: legend ? rects.filter((r) => hit(r, legend)).length : -1 }
+      })
+      total.n += m.n
+      total.pairs += m.pairs
+      total.covered += m.covered
+      total.underLegend += m.underLegend
+    }
+    console.log(`small viewport measurement: ${JSON.stringify(total)}`)
+    expect(total).toEqual({ n: 180, pairs: 0, covered: 0, underLegend: 0 })
+  })
+})
+
