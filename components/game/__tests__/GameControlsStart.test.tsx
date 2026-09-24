@@ -11,8 +11,10 @@ import { translations } from '@/lib/i18n/translations'
  * 下部のボタン列からは開始ボタンを外して導線をひとつにする。
  */
 describe('GameControls の開始ボタン', () => {
+  // 待機中の操作列は「せってい」だけ（GameControlsSettings.test.tsx、v1.1 計画 D6）。
+  // 開始ボタンの出し分けは、操作列が出ている一時停止中で確かめる
   const baseProps = {
-    gameState: 'idle' as const,
+    gameState: 'paused' as const,
     isHardMode: false,
     language: 'ja' as const,
     difficulty: {

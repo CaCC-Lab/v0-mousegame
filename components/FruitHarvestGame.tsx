@@ -102,7 +102,6 @@ export function FruitHarvestGame(): React.ReactElement {
   const { language, toggleLanguage, t } = useLanguage()
   const {
     particles,
-    combo,
     triggerAnimation,
     onFruitCollected,
     reset: resetAnimations
@@ -143,6 +142,10 @@ export function FruitHarvestGame(): React.ReactElement {
   // （アーケードを選んでいるのにステージ目標が出ていると、どちらのルールか迷う。docs/game-spec.md §4.3）
   const hudIsArcade = gameState === 'idle' ? selectedMode === 'arcade' : isArcade
 
+  // 待機中の画面は「題名・モード2枚・はじめる」だけにする（docs/game-spec.md §4.3、v1.1 計画 D6）。
+  // 得点・時間・ベスト・ステージ目標・凡例・コンボは、遊んでいる最中の表示なので開始してから出す
+  const showPlayHud = gameState !== 'idle'
+
   // はじめてフィーバーに入ったときだけ、何が起きたのかを一度だけ説明する。
   // プレイテストでは「Feverが何なのか最後まで分からなかった」まま終わっていた
   const [showFeverIntro, setShowFeverIntro] = useState(false)
@@ -173,6 +176,12 @@ export function FruitHarvestGame(): React.ReactElement {
     resetAnimations()
     setShowFeverIntro(false)
     startGame('arcade')
+  }, [startGame, resetAnimations])
+
+  const handlePracticeRetry = useCallback(() => {
+    setShowResultModal(false)
+    resetAnimations()
+    startGame('practice')
   }, [startGame, resetAnimations])
 
   const handleArcadeClose = useCallback(() => {
@@ -352,13 +361,19 @@ export function FruitHarvestGame(): React.ReactElement {
   // Show ResultModal when game ends (playing → idle transition with score > 0)
   const prevGameStateRef = useRef(gameState)
   useEffect(() => {
-    if (prevGameStateRef.current === 'playing' && gameState === 'idle' && score > 0) {
+    // 時間切れで終わったとき（timeLeft === 0）は、0点でもリザルトを出す。
+    // 何も出ずにメニューへ戻ると、0点だった理由も次にやることも分からない（docs/game-spec.md §5）。
+    // リセットで戻ったとき（timeLeft は初期値に戻る）は、0点なら出さない
+    const endedByTime = timeLeft === 0
+    if (prevGameStateRef.current === 'playing' && gameState === 'idle' && (score > 0 || endedByTime)) {
       // アーケードは専用の結果画面を出すため、練習用の結果モーダルは開かない
       if (!isArcade) {
         setShowResultModal(true)
       }
       // AC-8.4: プレイした日にスタンプ（モードを問わず「今日あそんだ」記録は残す）
-      dailyPractice.stampToday()
+      if (score > 0) {
+        dailyPractice.stampToday()
+      }
     }
     prevGameStateRef.current = gameState
   // dailyPractice.stampToday は today 依存の useCallback だが、日付跨ぎ中のゲーム終了は極めて稀
@@ -519,18 +534,18 @@ export function FruitHarvestGame(): React.ReactElement {
               {t.gameTitle}
             </h1>
             <div className="flex-1 min-w-0">
+              {showPlayHud && (
               <ScoreBar
                 score={score}
                 highScore={hudIsArcade ? arcade.best : highScore}
                 timeLeft={timeLeft}
-                streak={hudIsArcade ? undefined : operationStats.streak}
                 gameState={gameState}
-                combo={combo}
                 stage={hudIsArcade ? null : stage}
                 t={t}
               />
+              )}
             </div>
-            {isArcade && (
+            {isArcade && showPlayHud && (
               <ArcadeHUD
                 combo={arcade.combo}
                 comboMultiplier={arcade.comboMultiplier}
@@ -557,10 +572,14 @@ export function FruitHarvestGame(): React.ReactElement {
               onTriggerAnimation={triggerAnimation}
               onFruitCollected={onFruitCollected}
               gameAreaRef={gameAreaRef}
-              streak={operationStats.streak}
+              // コンボの数はモードごとに1か所（アーケードは ArcadeHUD。docs/game-spec.md §8）。
+              // 途切れた瞬間の表示はアーケードでも出す
+              streak={showPlayHud ? operationStats.streak : undefined}
+              showStreakCount={!isArcade}
               lastStreakBonus={operationStats.lastStreakBonus}
             />
             {/* pointer-events-none でクリックを下のフルーツへ通す */}
+            {showPlayHud && (
             <div className="absolute top-1.5 inset-x-0 z-20 pointer-events-none space-y-1">
               <HarvestedFruitsDisplay
                 harvestedFruits={harvestedFruits}
@@ -569,15 +588,18 @@ export function FruitHarvestGame(): React.ReactElement {
                 t={t}
               />
             </div>
+            )}
 
             {/*
               どのフルーツに何をすればいいかを、遊んでいる間ずっと見えるところに置く。
               上の収穫カウンターの真下だと役割を取り違えられたので、
               プレイエリアの下端に離して置く（ドロップエリアの手前まで）
             */}
+            {showPlayHud && (
             <div className="absolute bottom-1.5 left-0 right-20 z-20 px-2 pointer-events-none">
               <OperationLegend t={t} />
             </div>
+            )}
 
             {/* 遊び終わって待機画面に戻ったら残さない（モード選択と重なる） */}
             <FeverIntro show={isArcade && showFeverIntro && gameState === 'playing'} t={t} />
@@ -672,6 +694,7 @@ export function FruitHarvestGame(): React.ReactElement {
         starRating={lastStarRating}
         lastSessionStats={gamification.previousSessionStats}
         onClose={() => setShowResultModal(false)}
+        onRetry={handlePracticeRetry}
       />
 
       <BadgeNotification

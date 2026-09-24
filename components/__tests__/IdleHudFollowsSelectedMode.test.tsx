@@ -24,11 +24,13 @@ describe('待機中のヘッダと Enter での開始は、選んでいるモー
     expect(screen.queryByText('フルーツ畑')).not.toBeInTheDocument()
   })
 
-  it('れんしゅうを選ぶと、ステージの表示とステージ目標が出る', async () => {
+  it('れんしゅうを選んで始めると、ステージの表示とステージ目標が出る', async () => {
+    // 待機中はヘッダ自体を出さない（v1.1 計画 D6）。遊び始めたときに選んだモードの表示になる
     const user = userEvent.setup()
     render(<FruitHarvestGame />)
 
     await user.click(screen.getByTestId('mode-select-practice'))
+    await user.click(screen.getByTestId('mode-start'))
 
     expect(screen.getByText(/ステージ目標/)).toBeInTheDocument()
     expect(screen.getByText('フルーツ畑')).toBeInTheDocument()

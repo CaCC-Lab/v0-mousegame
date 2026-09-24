@@ -60,6 +60,8 @@ test.describe('英語ロケール', () => {
     await page.goto('/')
     await expect(page.getByRole('heading', { name: /Fruit Harvest Game/ })).toBeVisible()
 
+    // 待機中のステージ選択は「Settings」の中（v1.1 計画 D6）
+    await page.getByRole('button', { name: /Settings/ }).click()
     await page.getByRole('button', { name: /Select Stage/i }).click()
     // ステージ選択のオーバーレイは dialog ロールを持たないため、見出しから辿る
     const heading = page.getByRole('heading', { name: /Select Stage/i })

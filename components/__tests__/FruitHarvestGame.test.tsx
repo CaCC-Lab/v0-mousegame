@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, waitFor } from '@testing-library/react'
+import { render, screen, waitFor, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { FruitHarvestGame } from '../FruitHarvestGame'
 
@@ -7,6 +7,10 @@ import { FruitHarvestGame } from '../FruitHarvestGame'
  * FruitHarvestGameの統合テスト
  * CLAUDE.md規約に従い、モックを使用せず実際の実装をテストします
  */
+// 得点・時間・カウンターは遊んでいる間だけ出る。待機中の音量・言語・難易度は「せってい」の中（v1.1 計画 D6）
+const startPlaying = () => fireEvent.click(screen.getByTestId('mode-start'))
+const openSettings = () => fireEvent.click(screen.getByRole('button', { name: /せってい|Settings/ }))
+
 describe('FruitHarvestGame', () => {
   beforeEach(() => {
     localStorage.clear()
@@ -30,6 +34,7 @@ describe('FruitHarvestGame', () => {
 
     it('renders all fruits counters', () => {
       const { container } = render(<FruitHarvestGame />)
+      startPlaying()
       // フルーツカウンターのスプライトが表示されていることを確認
       const fruitTypes = ['apple', 'blueberry', 'lemon', 'watermelon']
 
@@ -41,6 +46,7 @@ describe('FruitHarvestGame', () => {
 
     it('displays score and high score', () => {
       render(<FruitHarvestGame />)
+      startPlaying()
       // 複数のスコア表示がある場合は最初のものを取得
       const scoreElements = screen.getAllByText((content) => 
         content.includes('Score:') || content.includes('得点:')
@@ -48,13 +54,14 @@ describe('FruitHarvestGame', () => {
       expect(scoreElements.length).toBeGreaterThan(0)
       
       const highScoreElement = screen.getByText((content) => 
-        content.includes('High Score:') || content.includes('最高得点:')
+        content.includes('Best:') || content.includes('ベスト:')
       )
       expect(highScoreElement).toBeInTheDocument()
     })
 
     it('displays timer', () => {
       render(<FruitHarvestGame />)
+      startPlaying()
       // タイマー表示（3:00 または 1:00 など）
       const timerElement = screen.getByText((content) => 
         /\d+:\d{2}/.test(content)
@@ -366,10 +373,11 @@ describe('FruitHarvestGame', () => {
       // 待機中のヘッダは選んでいるモードに従う（既定はアーケード）。
       // れんしゅうの最高得点は、れんしゅうを選んだときに出る（docs/game-spec.md §4.3）
       await userEvent.setup().click(screen.getByTestId('mode-select-practice'))
+      startPlaying()
 
       // High score label and value may be in separate elements
       const highScoreLabel = await screen.findByText((content) =>
-        content.includes('High Score') || content.includes('最高得点')
+        content.includes('Best') || content.includes('ベスト')
       )
       expect(highScoreLabel).toBeInTheDocument()
 
@@ -406,6 +414,7 @@ describe('FruitHarvestGame', () => {
   describe('sound effects', () => {
     it('sound controls are accessible', () => {
       render(<FruitHarvestGame />)
+      openSettings()
       
       const buttons = screen.getAllByRole('button')
       const soundButton = buttons.find(btn => {
@@ -418,6 +427,7 @@ describe('FruitHarvestGame', () => {
 
     it('volume slider exists', async () => {
       render(<FruitHarvestGame />)
+      openSettings()
       
       // サウンドコントロールの近くにボリュームスライダーがあるか確認
       const sliders = screen.getAllByRole('slider')

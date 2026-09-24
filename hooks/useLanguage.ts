@@ -2,16 +2,21 @@ import { useEffect } from 'react'
 import { useLocalStorage } from './useLocalStorage'
 import { translations, Language } from '@/lib/i18n/translations'
 
+/**
+ * ブラウザの言語設定から表示言語を決める。
+ * 日本語なら日本語、それ以外は英語（CrazyGames の「英語フォールバック」の要件。v1.1 計画 D8）。
+ */
+export function languageFromBrowser(browserLanguage: string | undefined): Language {
+  return browserLanguage?.toLowerCase().startsWith('ja') ? 'ja' : 'en'
+}
+
 export function useLanguage() {
-  // Detect browser language
+  // ブラウザの言語から決める（日本語以外は英語。docs/game-spec.md §9）
   const getBrowserLanguage = (): Language => {
     if (typeof window !== 'undefined' && window.navigator) {
-      const browserLang = window.navigator.language.toLowerCase()
-      if (browserLang.startsWith('en')) {
-        return 'en'
-      }
+      return languageFromBrowser(window.navigator.language)
     }
-    // Default to Japanese
+    // 静的エクスポートの HTML は日本語で書き出す（クライアントで判定し直す）
     return 'ja'
   }
 
@@ -37,6 +42,22 @@ export function useLanguage() {
   // localStorage へは直接書き込む（state 側は setLanguage で更新）。
   useEffect(() => {
     const urlLang = getUrlLanguage()
+    if (!urlLang) {
+      // 保存済みの設定も URL 指定も無ければ、ブラウザの言語に合わせる。
+      // 静的エクスポートの HTML は日本語で書き出されるので、初回描画との食い違いを
+      // React が描き直すのに任せず、読み込み後に明示的に切り替える（WebKit で1回取りこぼした）
+      let stored: string | null = null
+      try {
+        stored = window.localStorage.getItem('fruitHarvestLanguage')
+      } catch {
+        // 読めなければブラウザの言語に合わせる
+      }
+      const browserLang = getBrowserLanguage()
+      if (stored === null && browserLang !== language) {
+        setLanguage(browserLang)
+      }
+      return
+    }
     if (urlLang) {
       try {
         window.localStorage.setItem('fruitHarvestLanguage', JSON.stringify(urlLang))
@@ -54,6 +75,11 @@ export function useLanguage() {
   // Ensure we always have valid translations
   const currentLanguage: Language = language === 'en' || language === 'ja' ? language : 'ja'
   const t = translations[currentLanguage]
+
+  // <html lang> を表示している言語に合わせる（読み上げ・ブラウザの自動翻訳が正しく働くように）
+  useEffect(() => {
+    document.documentElement.lang = currentLanguage
+  }, [currentLanguage])
 
   // Toggle between languages
   const toggleLanguage = () => {

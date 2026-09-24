@@ -37,9 +37,10 @@ describe('FruitHarvestGame Integration Tests', () => {
       const startButton = findButtonByPattern(/Start|はじめる/i)
       expect(startButton).toBeInTheDocument()
 
-      // 時間表示（初期形式: X:XX）
-      const timeElement = screen.getByText(/\d:\d{2}/)
-      expect(timeElement).toBeInTheDocument()
+      // 時間表示は遊んでいる間だけ出る（待機中の画面は題名・モード・はじめる。v1.1 計画 D6）
+      expect(screen.queryByText(/\d:\d{2}/)).not.toBeInTheDocument()
+      fireEvent.click(screen.getByTestId('mode-start'))
+      expect(screen.getByText(/\d:\d{2}/)).toBeInTheDocument()
     })
 
   })
@@ -217,9 +218,10 @@ describe('FruitHarvestGame Integration Tests', () => {
       // 初回レンダリング
       const { unmount } = render(<FruitHarvestGame />)
 
-      // 初期ハイスコア（label and 0）
+      // 初期ハイスコア（label and 0）。ヘッダは遊んでいる間だけ出る（v1.1 計画 D6）
+      fireEvent.click(screen.getByTestId('mode-start'))
       const highScoreLabel = screen.getByText((content) =>
-        content.includes('High Score') || content.includes('最高得点')
+        content.includes('Best') || content.includes('ベスト')
       )
       expect(highScoreLabel).toBeInTheDocument()
 
@@ -234,6 +236,8 @@ describe('FruitHarvestGame Integration Tests', () => {
       // 待機中のヘッダは選んでいるモードに従う（既定はアーケード）。
       // れんしゅうの最高得点は、れんしゅうを選んだときに出る（docs/game-spec.md §4.3）
       fireEvent.click(screen.getByTestId('mode-select-practice'))
+      // ヘッダの数値は遊んでいる間だけ出る（v1.1 計画 D6）
+      fireEvent.click(screen.getByTestId('mode-start'))
 
       // 保存されたハイスコアが表示される
       expect(screen.getByText('100')).toBeInTheDocument()

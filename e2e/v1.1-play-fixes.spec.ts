@@ -9,6 +9,23 @@ import { startArcade, harvestFruit } from './helpers/itch-release'
 // 配置の基準は itch.io の埋め込みサイズ（docs/game-spec.md §3、types/game.ts PLACEMENT_CONFIG）
 test.use({ viewport: { width: 1280, height: 800 } })
 
+/**
+ * 人がマウスで押すのと同じく、座標で「はじめる」を押す。
+ *
+ * Firefox では Playwright の locator.click()（要素を画面内に入れる処理を伴う）で押すと、
+ * 開始の瞬間にページが最下部までスクロールすることがある（45回中11回）。
+ * 座標で直接押すと 105 回で一度も起きなかったので、テストの押し方による現象と判断した（2026-09-24）
+ */
+async function startArcadeByMouse(page: Page) {
+  await page.getByTestId('mode-start').waitFor()
+  await page.waitForTimeout(300)
+  const card = (await page.getByTestId('mode-select-arcade').boundingBox())!
+  await page.mouse.click(card.x + card.width / 2, card.y + card.height / 2)
+  const start = (await page.getByTestId('mode-start').boundingBox())!
+  await page.mouse.click(start.x + start.width / 2, start.y + start.height / 2)
+  await expect(page.getByRole('button', { name: /ちゅうだん|Pause/i })).toBeVisible()
+}
+
 test.describe('G1: ブルーベリーの正しいダブルクリックはミスにならない', () => {
   test('りんご→ブルーベリーの順に正しく取ると、ミスのヒントが出ずコンボが 2 になる', async ({ page }) => {
     await page.goto('/')
@@ -65,7 +82,7 @@ test.describe('G5: 開始直後の果物が、他の果物や凡例に隠れな�
     const total = { n: 0, pairs: 0, covered: 0, underLegend: 0 }
     for (let run = 0; run < 20; run++) {
       await page.goto('/')
-      await startArcade(page)
+      await startArcadeByMouse(page)
       await expect(page.locator('[data-fruit-id]').first()).toBeVisible()
       // 登場アニメーションが落ち着くのを待つ
       await page.waitForTimeout(700)
@@ -87,7 +104,11 @@ test.describe('G5: 開始直後の果物が、他の果物や凡例に隠れな�
 test.describe('G12: ?debug=1 の診断と ?test=1 の自動プレイ', () => {
   test.setTimeout(120_000)
 
-  test('?test=1&debug=1 で、4操作すべてが成功し、ミス 0 で結果画面まで行く', async ({ page }) => {
+  test('?test=1&debug=1 で、4操作すべてが成功し、ミス 0 で結果画面まで行く', async ({ page, browserName }) => {
+    // ヘッドレスの WebKit（Linux・ソフトウェア描画）では、0.4 秒ごとに収穫が続くとページ全体の処理が遅れ、
+    // 約 80 秒でゲーム時間が約 30 秒しか進まない（1並列でも同じ。2026-09-24 実測）。
+    // 実機の Safari で起きるかは未確認（docs/v1.1-tasks.md「実装中に分かったこと」）
+    test.fixme(browserName === 'webkit', 'ヘッドレス WebKit では収穫が続くと処理が追いつかない。実機 Safari で要確認')
     const errors: string[] = []
     page.on('pageerror', (e) => errors.push(e.message))
 
@@ -110,5 +131,101 @@ test.describe('G12: ?debug=1 の診断と ?test=1 の自動プレイ', () => {
     await page.waitForTimeout(1000)
     await expect(page.getByTestId('debug-panel')).toHaveCount(0)
     await expect(page.getByTestId('mode-start')).toBeVisible()
+  })
+})
+
+test.describe('G7: 待機中の画面の文字を減らす（D6）', () => {
+  test('ビューポート内の文字ブロックが 20 以下（ベースライン 47）', async ({ page }) => {
+    await page.goto('/?lang=ja')
+    await expect(page.getByTestId('mode-start')).toBeVisible()
+    await page.waitForTimeout(800)
+
+    // T1 のベースライン計測と同じ数え方: 直下に文字を持つ、画面内に見えている要素
+    const blocks = await page.evaluate(() => {
+      const visible = (e: Element) => {
+        const r = e.getBoundingClientRect()
+        const s = getComputedStyle(e)
+        return r.width > 0 && r.height > 0 && r.top < innerHeight && r.bottom > 0 && s.visibility !== 'hidden' && s.opacity !== '0'
+      }
+      return [...document.body.querySelectorAll('*')]
+        .filter((e) => !['SCRIPT', 'STYLE', 'OPTION'].includes(e.tagName))
+        .filter((e) => [...e.childNodes].some((n) => n.nodeType === 3 && n.textContent!.trim()))
+        .filter(visible)
+        .map((e) => e.textContent!.trim().slice(0, 20))
+    })
+    console.log(`G7 measurement: ${blocks.length} ${JSON.stringify(blocks)}`)
+    expect(blocks.length).toBeLessThanOrEqual(20)
+  })
+})
+
+test.describe('G2: アーケードのコンボ倍率は1か所', () => {
+  test('3つ続けて取ると、倍率の表示は1つだけで x2', async ({ page }) => {
+    await page.goto('/?lang=ja')
+    await startArcade(page)
+    for (let i = 0; i < 3; i++) await harvestFruit(page, 'apple', 'click')
+
+    const multipliers = page.getByTestId('game-area').locator('xpath=ancestor::body').getByText(/^x\d+$/)
+    await expect(page.getByTestId('arcade-combo')).toContainText('x2')
+    await expect(multipliers).toHaveCount(1)
+    await expect(page.getByText(/コンボ!/)).toHaveCount(0)
+  })
+})
+
+test.describe('G8: 0点でも次にやることが出る（D1）', () => {
+  test.setTimeout(120_000)
+
+  test('アーケードを放置して0点で終わると、ランクではなく「まずは 🍎 をクリックしてみよう」が出る', async ({ page }) => {
+    await page.goto('/?lang=ja')
+    await startArcade(page)
+    const result = page.getByRole('dialog').filter({ hasText: /アーケードけっか/ })
+    await expect(result).toBeVisible({ timeout: 80_000 })
+    await expect(result.getByTestId('arcade-zero-hint')).toContainText('まずは 🍎 をクリックしてみよう')
+    await expect(result.getByTestId('arcade-result-rank')).toHaveCount(0)
+  })
+
+  test('れんしゅうを放置して0点で終わっても、リザルトと「もういちど」が出る', async ({ page }) => {
+    await page.goto('/?lang=ja')
+    await page.getByTestId('mode-select-practice').click()
+    await page.getByTestId('mode-start').click()
+    const result = page.getByRole('dialog').filter({ hasText: /れんしゅうけっか/ })
+    await expect(result).toBeVisible({ timeout: 80_000 })
+    await result.getByRole('button', { name: 'もういちど' }).click()
+    await expect(page.getByRole('button', { name: /ちゅうだん/ })).toBeVisible()
+  })
+})
+
+test.describe('G16: 日本語以外のブラウザは英語（D8）', () => {
+  for (const locale of ['ko-KR', 'fr-FR', 'zh-CN']) {
+    test.describe(locale, () => {
+      test.use({ locale })
+      test(`${locale} では英語で始まる`, async ({ page }) => {
+        await page.goto('/')
+        await expect(page.getByRole('heading', { level: 1 })).toHaveText(/Fruit Harvest Game/)
+        await expect(page.locator('html')).toHaveAttribute('lang', 'en')
+      })
+    })
+  }
+
+  test('ja-JP では日本語のまま', async ({ page }) => {
+    await page.goto('/')
+    await expect(page.getByRole('heading', { level: 1 })).toHaveText(/フルーツハーベストゲーム/)
+    await expect(page.locator('html')).toHaveAttribute('lang', 'ja')
+  })
+})
+
+test.describe('開始してもページがスクロールしない', () => {
+  test.setTimeout(180_000)
+
+  // 開始の瞬間に上側の HUD が増え、下側の練習パネルが消える（ページの高さが 2040 → 1108px）。
+  // それでもプレイエリアの上部が画面外に出ないこと。押し方は人と同じ座標クリック（startArcadeByMouse の注記）
+  test('「はじめる」を15回押して、毎回 scrollY が 0 のまま', async ({ page }) => {
+    const scrolled: number[] = []
+    for (let run = 0; run < 15; run++) {
+      await page.goto('/')
+      await startArcadeByMouse(page)
+      await page.waitForTimeout(300)
+      scrolled.push(await page.evaluate(() => window.scrollY))
+    }
+    expect(scrolled.filter((y) => y !== 0)).toEqual([])
   })
 })

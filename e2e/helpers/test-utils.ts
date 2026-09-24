@@ -17,6 +17,11 @@ export async function resetGame(page: Page) {
 }
 
 
+/** 待機中の操作（ステージ選択・言語・音量・難易度・うごくモード）は「せってい」の中（v1.1 計画 D6） */
+export async function openSettings(page: Page) {
+  await page.getByRole('button', { name: /せってい|Settings/ }).click()
+}
+
 export async function toggleLanguage(page: Page) {
   const languageButton = page.getByRole('button', { name: /JA|EN/ })
   await languageButton.click()

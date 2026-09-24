@@ -1,8 +1,8 @@
 "use client"
 
-import React from 'react'
+import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Play, Pause, RefreshCw, Zap, Languages, LucideIcon } from 'lucide-react'
+import { Play, Pause, RefreshCw, Zap, Languages, Settings, LucideIcon } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { DifficultySelector } from '../DifficultySelector'
@@ -191,11 +191,70 @@ export function GameControls({
   stageSelectDisabled = false,
   t
 }: GameControlsProps): React.ReactElement {
+  const [settingsOpen, setSettingsOpen] = useState(false)
+
+  const sound = (
+    <div className="bg-white rounded-[var(--radius-lg)] px-2 py-1 shadow">
+      <SoundControls
+        soundEnabled={soundEffects.soundEnabled}
+        volume={soundEffects.volume}
+        onToggleSound={soundEffects.toggleSound}
+        onVolumeChange={soundEffects.setVolume}
+      />
+    </div>
+  )
+  const languageToggle = <LanguageToggle language={language} onToggleLanguage={onToggleLanguage} t={t} />
+
+  // 待機中は「せってい」1つに畳む（docs/game-spec.md §4.3、v1.1 計画 D6）。
+  // 遊ぶ前の画面にさいかい・リセット・難易度などが並ぶと、何を押せばいいのか分からなくなる。
+  // 開始の入口はプレイエリアのモード選択（はじめる）だけにする
+  if (gameState === 'idle') {
+    return (
+      <div className="relative shrink-0 px-3 py-2 flex flex-col gap-2 items-center" style={{ background: 'var(--color-cream-dark)' }}>
+        <Button
+          onClick={() => setSettingsOpen((open) => !open)}
+          variant="outline"
+          size="sm"
+          aria-expanded={settingsOpen}
+          aria-controls="game-settings-panel"
+          className="flex items-center font-semibold hover-lift bg-white"
+        >
+          <Settings className="w-4 h-4 mr-1.5" aria-hidden />
+          {t.settings}
+        </Button>
+        {settingsOpen && (
+          <div id="game-settings-panel" className="flex flex-col gap-2 items-center">
+            <div className="flex flex-wrap gap-2 justify-center items-center">
+              <ControlButton
+                index={0}
+                config={{
+                  action: onStageSelect,
+                  disabled: stageSelectDisabled,
+                  icon: Zap,
+                  label: t.stageSelect,
+                  color: 'var(--color-purple)',
+                }}
+              />
+              {languageToggle}
+              {sound}
+            </div>
+            <DifficultySettings
+              difficulty={difficulty}
+              gameState={gameState}
+              isHardMode={isHardMode}
+              onHardModeChange={onHardModeChange}
+              language={language}
+              t={t}
+            />
+          </div>
+        )}
+      </div>
+    )
+  }
+
   const controlButtons = getControlButtons(gameState, onStart, onPause, onReset, onStageSelect, t, showStart, stageSelectDisabled)
 
-  // プレイエリアを最大化するため、操作は1行のスリムなバーに収める。
-  // 難易度などの設定はプレイ中に変更できない（selectはdisabled）ため、
-  // 待機中（idle）のときだけ2行目として表示する
+  // 遊んでいる間の操作は1行のスリムなバーに収める（プレイエリアを最大化するため）
   return (
     // relative: 高さが足りない環境でプレイエリアがはみ出しても、
     // 操作ボタンが下に隠れないよう描画順を上にする
@@ -204,36 +263,9 @@ export function GameControls({
         {controlButtons.map((config, index) => (
           <ControlButton key={config.label} config={config} index={index} />
         ))}
-
-        <LanguageToggle
-          language={language}
-          onToggleLanguage={onToggleLanguage}
-          t={t}
-        />
-
-        <div className="bg-white rounded-[var(--radius-lg)] px-2 py-1 shadow">
-          <SoundControls
-            soundEnabled={soundEffects.soundEnabled}
-            volume={soundEffects.volume}
-            onToggleSound={soundEffects.toggleSound}
-            onVolumeChange={soundEffects.setVolume}
-          />
-        </div>
+        {languageToggle}
+        {sound}
       </div>
-
-      {gameState === 'idle' && (
-        // 高さの低い画面（スマホ横向きなど）では設定を畳み、プレイエリアを確保する
-        <div className="flex flex-wrap gap-3 justify-center items-center [@media(max-height:520px)]:hidden">
-          <DifficultySettings
-            difficulty={difficulty}
-            gameState={gameState}
-            isHardMode={isHardMode}
-            onHardModeChange={onHardModeChange}
-            language={language}
-            t={t}
-          />
-        </div>
-      )}
     </div>
   )
 }

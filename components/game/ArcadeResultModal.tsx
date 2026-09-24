@@ -4,6 +4,7 @@ import React from 'react'
 import { motion } from 'framer-motion'
 import { RotateCcw, Home, Sparkles } from 'lucide-react'
 import { ArcadeResult, RankProgress, RankTierId, RANK_TIERS } from '@/types/arcade'
+import { getRankProgress } from '@/lib/arcadeManager'
 import { translations } from '@/lib/i18n/translations'
 
 type TranslationType = typeof translations.ja | typeof translations.en
@@ -11,7 +12,11 @@ type TranslationType = typeof translations.ja | typeof translations.en
 export interface ArcadeResultModalProps {
   open: boolean
   result: ArcadeResult | null
-  rankProgress: RankProgress
+  /**
+   * ベストに対する段位の進捗。結果画面では使わない（段位と「あと N てん」は今回のスコアから出す。
+   * docs/game-spec.md §5、v1.1 計画 D2）。呼び出し側の互換のために残している
+   */
+  rankProgress?: RankProgress
   language: 'ja' | 'en'
   onRetry: () => void
   onClose: () => void
@@ -51,7 +56,6 @@ function StatCell({
 export function ArcadeResultModal({
   open,
   result,
-  rankProgress,
   language,
   onRetry,
   onClose,
@@ -61,8 +65,12 @@ export function ArcadeResultModal({
 }: ArcadeResultModalProps): React.ReactElement | null {
   if (!open || !result) return null
 
-  const tier = rankTier(result.rank)
-  const nextTier = rankProgress.next ? rankTier(rankProgress.next) : null
+  // 段位と「あと N てん」は今回のスコアから出す（D2）。ベストは上の欄に残る
+  const thisRun = getRankProgress(result.score)
+  const tier = rankTier(thisRun.current)
+  const nextTier = thisRun.next ? rankTier(thisRun.next) : null
+  // 0点では段位を出さず、次にやることを出す（D1）
+  const isZero = result.score <= 0
 
   return (
     <div
@@ -116,6 +124,14 @@ export function ArcadeResultModal({
           />
         </div>
 
+        {isZero ? (
+          <p
+            data-testid="arcade-zero-hint"
+            className="mt-4 rounded-[var(--radius-md)] bg-amber-50 px-4 py-3 text-center text-base font-bold text-amber-700"
+          >
+            {t.arcadeZeroHint}
+          </p>
+        ) : (
         <div className="mt-4 rounded-[var(--radius-lg)] border-2 border-gray-100 px-4 py-3">
           <div className="flex items-center gap-2">
             <span className="text-2xl" aria-hidden>{tier.emoji}</span>
@@ -129,7 +145,7 @@ export function ArcadeResultModal({
             <div
               className="h-full rounded-full"
               style={{
-                width: `${Math.round(rankProgress.ratio * 100)}%`,
+                width: `${Math.round(thisRun.ratio * 100)}%`,
                 background: 'linear-gradient(90deg,#4ECDC4,#FFD23F)',
               }}
             />
@@ -137,10 +153,11 @@ export function ArcadeResultModal({
 
           <div className="mt-1.5 text-xs font-semibold text-gray-600" data-testid="arcade-rank-progress">
             {nextTier
-              ? t.toNextRank(rankProgress.pointsToNext, nextTier.label[language])
+              ? t.toNextRank(thisRun.pointsToNext, nextTier.label[language])
               : t.maxRankReached}
           </div>
         </div>
+        )}
 
         <button
           type="button"

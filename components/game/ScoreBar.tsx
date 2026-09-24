@@ -11,16 +11,13 @@ interface ScoreBarProps {
   score: number
   highScore: number
   timeLeft: number
-  /** 連続成功（ゲーミフィケーション） */
-  streak?: number
   gameState: GameState
-  combo: { multiplier: number }
   stage: {
     isHydrated: boolean
     currentStage: number
     currentStageInfo: Stage | null
   } | null
-  // ステージ名と連続成功の見出しも翻訳辞書から引くため、辞書全体を受け取る
+  // ステージ名の見出しも翻訳辞書から引くため、辞書全体を受け取る
   t: typeof translations.ja
 }
 
@@ -30,9 +27,12 @@ interface ScoreBarProps {
  * プレイエリアを最大化するため、大きなバーではなく
  * 1行に収まるコンパクトなチップの並びとして表示する。
  * 自前の背景は持たず、親（HUDバー）の上に載る。
+ *
+ * コンボは出さない。コンボの表示はモードごとに1か所（アーケードは ArcadeHUD、
+ * れんしゅうはプレイエリアの StreakIndicator）にまとめている（docs/game-spec.md §8）
  */
 
-function ScoreSection({ score, combo, t }: Pick<ScoreBarProps, 'score' | 'combo' | 't'>): React.ReactElement {
+function ScoreSection({ score, t }: Pick<ScoreBarProps, 'score' | 't'>): React.ReactElement {
   return (
     <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-[var(--radius-md)]">
       <span className="text-lg" aria-hidden>&#11088;</span>
@@ -41,15 +41,6 @@ function ScoreSection({ score, combo, t }: Pick<ScoreBarProps, 'score' | 'combo'
       <span data-testid="score-value" className="text-display text-xl font-bold text-white drop-shadow">
         {score.toLocaleString()}
       </span>
-      {combo.multiplier > 1 && (
-        <motion.span
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="text-xs font-bold px-2 py-0.5 rounded-full bg-[var(--color-accent)] text-[var(--color-purple)]"
-        >
-          x{combo.multiplier} {t.combo}!
-        </motion.span>
-      )}
     </div>
   )
 }
@@ -103,9 +94,7 @@ export function ScoreBar({
   score,
   highScore,
   timeLeft,
-  streak,
   gameState,
-  combo,
   stage,
   t
 }: ScoreBarProps): React.ReactElement {
@@ -114,15 +103,7 @@ export function ScoreBar({
     // 得点と残り時間（プレイ中に必ず要るもの）以外は sm 以上でだけ出す。
     // testid で参照している要素は消さず、表示だけ切り替える
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 min-w-0">
-      <ScoreSection score={score} combo={combo} t={t} />
-      {typeof streak === 'number' && (
-        <div
-          data-testid="scorebar-streak"
-          className="hidden sm:block text-white text-xs font-semibold whitespace-nowrap"
-        >
-          {t.gamification.streakSuccess}: {streak}
-        </div>
-      )}
+      <ScoreSection score={score} t={t} />
       <div className="hidden sm:contents">
         <StageSection stage={stage} t={t} />
       </div>

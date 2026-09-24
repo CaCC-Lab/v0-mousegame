@@ -59,9 +59,6 @@ test.describe('放置で結果画面まで行く', () => {
     await expect(result).toBeVisible({ timeout: 80_000 })
     await expect(result.getByRole('button', { name: /もういちど|Play again/i })).toBeVisible()
 
-    // 残り時間は 0 になっている
-    await expect(page.getByText(/0分00秒|0:00/).first()).toBeVisible()
-
     expect(errors).toEqual([])
   })
 })

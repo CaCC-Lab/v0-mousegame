@@ -9,9 +9,14 @@ export interface StreakIndicatorProps {
   lastBonus: StreakBonus | null
   /** 表示言語。省略時は日本語（既定の表示言語） */
   t?: typeof translations.ja
+  /**
+   * コンボの数を出すか（既定は出す）。アーケードでは数を ArcadeHUD に出すので出さない
+   * （コンボの表示は1か所。docs/game-spec.md §8）。途切れた瞬間の表示は、どちらでも出す
+   */
+  showCount?: boolean
 }
 
-export function StreakIndicator({ streak, lastBonus, t = translations.ja }: StreakIndicatorProps): React.ReactElement {
+export function StreakIndicator({ streak, lastBonus, t = translations.ja, showCount = true }: StreakIndicatorProps): React.ReactElement {
   // 積み上げていたものが0に戻った瞬間だけ、はっきり伝える。
   // 薄い枠のままだと「ミスって0になったのに気づくのが遅れた」と言われた
   const [isBroken, setIsBroken] = useState(false)
@@ -32,6 +37,7 @@ export function StreakIndicator({ streak, lastBonus, t = translations.ja }: Stre
 
   return (
     <div className="flex flex-col gap-2">
+      {showCount && (
       <div
         data-testid="streak-count"
         data-broken={isBroken ? 'true' : undefined}
@@ -42,6 +48,7 @@ export function StreakIndicator({ streak, lastBonus, t = translations.ja }: Stre
       >
         {t.gamification.streak}: {streak}
       </div>
+      )}
 
       {isBroken && (
         <div
