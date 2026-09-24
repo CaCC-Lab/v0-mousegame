@@ -39,8 +39,12 @@ interface GameControlsProps {
    * ここからは外して導線をひとつにする（省略時は従来どおり出す）
    */
   showStart?: boolean
-  /** ステージ選択を押せなくするか（アーケード中など。省略時は押せる） */
-  stageSelectDisabled?: boolean
+  /**
+   * ステージ選択を出さないか（チャレンジ中。省略時は出す）。
+   * 以前は押せないだけで出していたが、無効の見た目は伝わらず「チャレンジ中にステージ選択は矛盾」と
+   * 初見テストで2回続けて指摘された（docs/audits/20260924-ai-first-look-v1.2.md）
+   */
+  hideStageSelect?: boolean
   t: TranslationType
 }
 
@@ -60,7 +64,7 @@ function getControlButtons(
   onStageSelect: () => void,
   t: GameControlsProps['t'],
   showStart: boolean,
-  stageSelectDisabled: boolean
+  hideStageSelect: boolean
 ): ControlButtonConfig[] {
   return [
     ...(showStart
@@ -86,13 +90,15 @@ function getControlButtons(
       label: t.reset,
       color: 'var(--color-berry)'
     },
-    {
-      action: onStageSelect,
-      disabled: stageSelectDisabled,
-      icon: Zap,
-      label: t.stageSelect,
-      color: 'var(--color-purple)'
-    }
+    ...(hideStageSelect
+      ? []
+      : [{
+          action: onStageSelect,
+          disabled: false,
+          icon: Zap,
+          label: t.stageSelect,
+          color: 'var(--color-purple)'
+        }])
   ]
 }
 
@@ -188,7 +194,7 @@ export function GameControls({
   onHardModeChange,
   onToggleLanguage,
   showStart = true,
-  stageSelectDisabled = false,
+  hideStageSelect = false,
   t
 }: GameControlsProps): React.ReactElement {
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -229,7 +235,7 @@ export function GameControls({
                 index={0}
                 config={{
                   action: onStageSelect,
-                  disabled: stageSelectDisabled,
+                  disabled: false,
                   icon: Zap,
                   label: t.stageSelect,
                   color: 'var(--color-purple)',
@@ -252,7 +258,7 @@ export function GameControls({
     )
   }
 
-  const controlButtons = getControlButtons(gameState, onStart, onPause, onReset, onStageSelect, t, showStart, stageSelectDisabled)
+  const controlButtons = getControlButtons(gameState, onStart, onPause, onReset, onStageSelect, t, showStart, hideStageSelect)
 
   // 遊んでいる間の操作は1行のスリムなバーに収める（プレイエリアを最大化するため）
   return (

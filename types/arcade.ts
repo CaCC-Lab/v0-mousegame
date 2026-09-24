@@ -122,6 +122,8 @@ export interface ArcadeResult {
   weakOperation?: InteractionType | null
   /** 終わった理由（v1.2 G3）。チャレンジは時間をかせぐ型なので、終わり方は時間切れだけ */
   endReason?: 'timeUp'
+  /** 今回続いた時間（ゲーム内の秒）。「◯びょう つづいた！」に使う */
+  playedSec?: number
 }
 
 export interface RankProgress {

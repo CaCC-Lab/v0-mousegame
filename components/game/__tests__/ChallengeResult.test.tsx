@@ -42,9 +42,9 @@ describe('チャレンジの結果画面', () => {
     expect(screen.getByTestId('arcade-end-reason')).toHaveTextContent('じかんぎれ！')
   })
 
-  it('次の目標を出す（0点なら 100 点）', () => {
+  it('次の目標を出す（0点なら「まずは 1こ とろう」。100 点は遠いと初見テストで分かり決め直した）', () => {
     renderModal(result())
-    expect(screen.getByTestId('arcade-next-target')).toHaveTextContent('つぎは 100てんを めざそう')
+    expect(screen.getByTestId('arcade-next-target')).toHaveTextContent('まずは 1こ とろう')
   })
 
   it('0点は目立たせない（大きな赤で出さない）', () => {

@@ -702,7 +702,7 @@ export function FruitHarvestGame(): React.ReactElement {
             // 遊んでいる間の「はじめる」は押せないので出さない。一時停止中だけ、やり直しの入口として出す
             showStart={gameState === 'paused'}
             // アーケードにステージは無いので、遊んでいる間はステージ選択を押せない
-            stageSelectDisabled={isArcade && gameState !== 'idle'}
+            hideStageSelect={isArcade && gameState !== 'idle'}
             onPause={pauseGame}
             onReset={resetGame}
             onStageSelect={() => setShowStageSelector(true)}

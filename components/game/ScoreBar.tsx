@@ -66,14 +66,19 @@ function StageSection({ stage, t }: Pick<ScoreBarProps, 'stage' | 't'>): React.R
 
 function TimerSection({ timeLeft, gameState, t }: Pick<ScoreBarProps, 'timeLeft' | 'gameState' | 't'>): React.ReactElement {
   const isLowTime = timeLeft < 10 && gameState === 'playing'
+  // 残り 5 秒以下は色でも知らせる（チャレンジでは残り時間がいちばん大事な数字。初見テスト）
+  const isUrgent = timeLeft <= 5 && gameState === 'playing'
 
   return (
     <motion.div
-      className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-[var(--radius-md)]"
+      data-testid="time-left"
+      data-urgent={isUrgent ? 'true' : undefined}
+      className={`flex items-center gap-1.5 backdrop-blur-sm px-2.5 py-1 rounded-[var(--radius-md)] ${isUrgent ? 'bg-red-500' : 'bg-white/20'}`}
       animate={{ scale: isLowTime ? [1, 1.1, 1] : 1 }}
       transition={{ duration: 0.5, repeat: isLowTime ? Infinity : 0 }}
     >
       <Timer className="w-4 h-4 text-white" aria-hidden />
+      <span className="text-xs font-semibold text-white/90 whitespace-nowrap">{t.timeLeftLabel}</span>
       <span className="text-display text-lg font-bold text-white whitespace-nowrap">
         {t.timeFormat(Math.floor(timeLeft / 60), timeLeft % 60)}
       </span>

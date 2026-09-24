@@ -104,6 +104,13 @@ export function ArcadeResultModal({
           </p>
         )}
 
+        {typeof result.playedSec === 'number' && (
+          // 遊びの約束「どこまで つづけられるかな？」に、まず答える（v1.2 のあとの初見テスト 1番目）
+          <p data-testid="arcade-played-seconds" className="mt-1 text-center text-display text-xl font-bold" style={{ color: 'var(--color-secondary-dark, #0f766e)' }}>
+            {t.playedSeconds.replace('{seconds}', String(result.playedSec))}
+          </p>
+        )}
+
         {/* 0点を大きな赤で出すと叱られたように感じる（初見テスト）。0点は控えめに出す（v1.2 D6） */}
         <div
           className="mt-2 text-center text-display font-bold tabular-nums"
@@ -120,7 +127,10 @@ export function ArcadeResultModal({
 
         {/* 次の目標を1つだけ出す。「もういちど」の理由になる（v1.2 D6） */}
         <p data-testid="arcade-next-target" className="mt-1 text-center text-base font-bold" style={{ color: 'var(--color-purple)' }}>
-          🎯 {t.nextTarget.replace('{points}', nextArcadeTarget(result.score, result.best).toLocaleString())}
+          🎯{' '}
+          {Math.max(result.score, result.best) <= 0
+            ? t.nextTargetFirst // 0点から「つぎは 100てん」は遠い。届く目標を出す
+            : t.nextTarget.replace('{points}', nextArcadeTarget(result.score, result.best).toLocaleString())}
         </p>
 
         {result.isNewBest && (

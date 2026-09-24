@@ -83,6 +83,10 @@ export const translations = {
     practiceTagline: 'ステージをすすんで、マウスそうさをマスターしよう',
     arcadeResultTitle: 'チャレンジけっか',
     endReasonTimeUp: 'じかんぎれ！',
+    // {seconds} は今回続いた秒数
+    playedSeconds: '{seconds}びょう つづいた！',
+    nextTargetFirst: 'まずは 1こ とろう',
+    timeLeftLabel: 'のこり',
     // {points} はリザルトで計算した次の目標点
     nextTarget: 'つぎは {points}てんを めざそう',
     weakOperationTitle: 'にがてな そうさ',
@@ -319,6 +323,9 @@ export const translations = {
     practiceTagline: 'Clear stages and master every mouse move',
     arcadeResultTitle: 'Challenge Result',
     endReasonTimeUp: 'Time up!',
+    playedSeconds: 'You lasted {seconds}s!',
+    nextTargetFirst: 'First, catch one fruit!',
+    timeLeftLabel: 'Left',
     nextTarget: 'Next goal: {points} pts',
     weakOperationTitle: 'Needs practice',
     practiceWeakOperation: 'Practice it',
