@@ -15,6 +15,7 @@ import type { StreakBonus } from '@/types/gamification'
 import { StreakIndicator } from './StreakIndicator'
 import { translations } from '@/lib/i18n/translations'
 import type { MissHint } from '@/types/game'
+import { isValidHarvestAction } from '@/lib/gameLogic'
 
 interface GamePlayAreaProps {
   fruits: FruitType[]
@@ -117,7 +118,8 @@ export function GamePlayArea({
 
   const handleFruitClickWithAnimation = useCallback((fruit: FruitType, action: InteractionType) => {
     const gameArea = gameAreaRef.current
-    if (gameArea) {
+    // 誤操作では収穫の演出を出さない（docs/game-spec.md §2）。判定そのものは useGameLogic が行う
+    if (gameArea && isValidHarvestAction(fruit.type, action)) {
       const fruitElement = gameArea.querySelector(`[data-fruit-id="${fruit.id}"]`)
       if (fruitElement) {
         const rect = fruitElement.getBoundingClientRect()

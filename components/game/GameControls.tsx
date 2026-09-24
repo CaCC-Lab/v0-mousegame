@@ -39,6 +39,8 @@ interface GameControlsProps {
    * ここからは外して導線をひとつにする（省略時は従来どおり出す）
    */
   showStart?: boolean
+  /** ステージ選択を押せなくするか（アーケード中など。省略時は押せる） */
+  stageSelectDisabled?: boolean
   t: TranslationType
 }
 
@@ -57,7 +59,8 @@ function getControlButtons(
   onReset: () => void,
   onStageSelect: () => void,
   t: GameControlsProps['t'],
-  showStart: boolean
+  showStart: boolean,
+  stageSelectDisabled: boolean
 ): ControlButtonConfig[] {
   return [
     ...(showStart
@@ -85,7 +88,7 @@ function getControlButtons(
     },
     {
       action: onStageSelect,
-      disabled: false,
+      disabled: stageSelectDisabled,
       icon: Zap,
       label: t.stageSelect,
       color: 'var(--color-purple)'
@@ -185,9 +188,10 @@ export function GameControls({
   onHardModeChange,
   onToggleLanguage,
   showStart = true,
+  stageSelectDisabled = false,
   t
 }: GameControlsProps): React.ReactElement {
-  const controlButtons = getControlButtons(gameState, onStart, onPause, onReset, onStageSelect, t, showStart)
+  const controlButtons = getControlButtons(gameState, onStart, onPause, onReset, onStageSelect, t, showStart, stageSelectDisabled)
 
   // プレイエリアを最大化するため、操作は1行のスリムなバーに収める。
   // 難易度などの設定はプレイ中に変更できない（selectはdisabled）ため、

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion'
 import { Fruit as FruitType, FRUIT_NAME } from '@/types/game'
 import { FruitSprite } from './game/FruitSprite'
 import {
+  MOUSE_CONFIG,
   TOUCH_CONFIG,
   classifyTap,
   exceedsDragThreshold,
@@ -296,15 +297,33 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
     lastTapAtRef.current = 0
   }, [clearLongPressTimer, clearPendingTapTimer])
 
-  const handleClick = useCallback(() => {
+  const handleClick = useCallback((e: React.MouseEvent) => {
     if (shouldIgnoreMouseEvent()) return
+
+    // ブルーベリーは「ダブルクリックの途中のクリック」をミスとして数えない（docs/game-spec.md §2）。
+    // 1回目は保留し、2回目（detail >= 2）と dblclick が来たら取り消す。
+    // 来なければ待ち時間のあとでクリックとして判定する（＝ミスのヒントが出る）。
+    if (fruit.type === 'blueberry') {
+      if (e.detail >= 2) {
+        clearPendingTapTimer()
+        return
+      }
+      clearPendingTapTimer()
+      pendingTapTimerRef.current = setTimeout(() => {
+        pendingTapTimerRef.current = null
+        onClick()
+      }, MOUSE_CONFIG.doubleClickWaitMs)
+      return
+    }
+
     onClick()
-  }, [shouldIgnoreMouseEvent, onClick])
+  }, [shouldIgnoreMouseEvent, fruit.type, clearPendingTapTimer, onClick])
 
   const handleDoubleClick = useCallback(() => {
     if (shouldIgnoreMouseEvent()) return
+    clearPendingTapTimer()
     onDoubleClick()
-  }, [shouldIgnoreMouseEvent, onDoubleClick])
+  }, [shouldIgnoreMouseEvent, clearPendingTapTimer, onDoubleClick])
 
   const handleMouseDown = (e: React.MouseEvent) => {
     if (shouldIgnoreMouseEvent()) return

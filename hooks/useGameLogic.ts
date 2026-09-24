@@ -238,7 +238,7 @@ export function useGameLogic() {
     setFruits(prevFruits => {
       const updatedFruits = prevFruits.filter(f => f.id !== fruit.id)
       // アーケードは4種類が畑に揃い続けるように補充する（手が止まらないようにするため）
-      const spawn = (field: Fruit[]) => (isArcade ? generateFruitForField(field) : generateFruit())
+      const spawn = (field: Fruit[]) => (isArcade ? generateFruitForField(field) : generateFruit(undefined, field))
 
       const newFruits = [...updatedFruits, spawn(updatedFruits)]
       // Task 7.3: 5回連続成功時にボーナスフルーツ追加
@@ -400,7 +400,8 @@ export function useGameLogic() {
       setTimeLeft(prevTime => prevTime + Math.floor(effect.value / 1000))
     } else if (effect.type === 'extraFruits') {
       setFruits(prevFruits => {
-        const newFruits = Array.from({ length: effect.value }, () => generateFruit())
+        // 追加分も、いまある果物と重ならない位置に置く（docs/game-spec.md §3）
+        const newFruits = generateFruits(effect.value, prevFruits)
         return [...prevFruits, ...newFruits]
       })
     }

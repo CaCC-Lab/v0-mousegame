@@ -13,7 +13,8 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog"
 import type { translations } from '@/lib/i18n/translations'
-import type { Fruit as FruitType } from '@/types/game'
+import { GAME_SCORES, type Fruit as FruitType } from '@/types/game'
+import { POWERUP_CONFIGS, POWERUP_SPAWN_INTERVAL, POWERUP_LIFETIME, type PowerUpType } from '@/types/powerup'
 import { FruitSprite } from './FruitSprite'
 
 interface HelpDialogProps {
@@ -37,45 +38,64 @@ interface FruitHelpInfo {
 const FRUIT_HELP_DATA: FruitHelpInfo[] = [
   {
     type: 'apple',
-    points: 10,
+    points: GAME_SCORES.apple,
     cardClass: 'bg-red-50 border-red-200 hover:border-red-400',
     nameClass: 'text-red-700',
     pointsClass: 'text-red-600',
   },
   {
     type: 'blueberry',
-    points: 20,
+    points: GAME_SCORES.blueberry,
     cardClass: 'bg-blue-50 border-blue-200 hover:border-blue-400',
     nameClass: 'text-blue-700',
     pointsClass: 'text-blue-600',
   },
   {
     type: 'lemon',
-    points: 15,
+    points: GAME_SCORES.lemon,
     cardClass: 'bg-yellow-50 border-yellow-200 hover:border-yellow-400',
     nameClass: 'text-yellow-700',
     pointsClass: 'text-yellow-600',
   },
   {
     type: 'watermelon',
-    points: 25,
+    points: GAME_SCORES.watermelon,
     cardClass: 'bg-green-50 border-green-200 hover:border-green-400',
     nameClass: 'text-green-700',
     pointsClass: 'text-green-600',
   },
 ]
 
-/** 説明文の一覧に並べるパワーアップの翻訳キー */
-const POWER_UP_KEYS = [
-  'powerUpSpeedBoost',
-  'powerUpScoreMultiplier',
-  'powerUpSlowMotion',
-  'powerUpMagnet',
-  'powerUpShield',
-  'powerUpTimeExtension',
-  'powerUpExtraFruits',
-  'powerUpFreezeTime',
-] as const
+/**
+ * パワーアップの種類 → 説明文の翻訳キー。
+ * 並べる種類は POWERUP_CONFIGS（実装）から取るので、実装に無い種類は出ない。
+ */
+const POWER_UP_TEXT_KEY: Record<PowerUpType, keyof HelpDialogProps['t']['helpContent']> = {
+  speedBoost: 'powerUpSpeedBoost',
+  scoreMultiplier: 'powerUpScoreMultiplier',
+  timeExtension: 'powerUpTimeExtension',
+  extraFruits: 'powerUpExtraFruits',
+  freezeTime: 'powerUpFreezeTime',
+}
+
+const toSeconds = (ms: number): string => String(ms / 1000)
+
+/** 説明文の {…} を types/powerup.ts の定数で埋める（docs/game-spec.md §6） */
+export function formatPowerUpText(template: string, type: PowerUpType): string {
+  const { effect } = POWERUP_CONFIGS[type]
+  // じかんえんちょうは「効果時間」ではなく「増える時間」が value に入っている
+  const seconds = type === 'timeExtension' ? toSeconds(effect.value) : toSeconds(effect.duration)
+  return template
+    .replace(/\{seconds\}/g, seconds)
+    .replace(/\{count\}/g, String(effect.value))
+    .replace(/\{multiplier\}/g, String(effect.value))
+}
+
+export function formatPowerUpDesc(template: string): string {
+  return template
+    .replace(/\{interval\}/g, toSeconds(POWERUP_SPAWN_INTERVAL))
+    .replace(/\{lifetime\}/g, toSeconds(POWERUP_LIFETIME))
+}
 
 /**
  * 「🍎 りんご: 〜」「とまるモード: 〜」のような見出し部分を取り除く。
@@ -222,11 +242,20 @@ export function HelpDialog({ t }: HelpDialogProps): React.ReactElement {
               <h4 className="text-display font-bold text-lg text-pink-700 mb-3 text-center">
                 {t.helpContent.powerUpTitle}
               </h4>
-              <p className="text-sm text-gray-600 mb-4 text-center">{t.helpContent.powerUpDesc}</p>
+              <p className="text-sm text-gray-600 mb-4 text-center" data-testid="help-powerup-desc">
+                {formatPowerUpDesc(t.helpContent.powerUpDesc)}
+              </p>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {POWER_UP_KEYS.map((key) => (
-                  <div key={key} className="p-3 bg-white rounded-[var(--radius-lg)]">
-                    <div className="text-base">{t.helpContent[key]}</div>
+                {(Object.keys(POWERUP_CONFIGS) as PowerUpType[]).map((type) => (
+                  <div
+                    key={type}
+                    className="p-3 bg-white rounded-[var(--radius-lg)]"
+                    data-testid="help-powerup"
+                    data-type={type}
+                  >
+                    <div className="text-base">
+                      {formatPowerUpText(t.helpContent[POWER_UP_TEXT_KEY[type]] as string, type)}
+                    </div>
                   </div>
                 ))}
               </div>

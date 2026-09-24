@@ -5,20 +5,14 @@ import {
   InteractionType,
   GAME_SCORES,
   PLAY_AREA_WIDTH,
-  GAME_CONFIG
+  GAME_CONFIG,
+  PLACEMENT_CONFIG,
 } from '@/types/game'
 
 const FRUIT_TYPES: FruitType[] = ['apple', 'blueberry', 'lemon', 'watermelon']
 const FRUIT_SIZES: FruitSize[] = ['small', 'medium', 'large']
 
 const INITIAL_VELOCITY_RANGE = 30
-
-/**
- * Generates a random number within the range [0, max).
- */
-function randomInRange(max: number): number {
-  return Math.random() * max
-}
 
 /**
  * Generates a random velocity component.
@@ -34,18 +28,84 @@ function randomElement<T>(array: T[]): T {
   return array[Math.floor(Math.random() * array.length)]
 }
 
+/** 果物が画面上で占める範囲（プレイエリアに対する百分率） */
+export interface Footprint {
+  left: number
+  top: number
+  right: number
+  bottom: number
+}
+
+/** 果物の大きさを百分率で見積もる（基準は PLACEMENT_CONFIG.referenceAreaPx） */
+function footprintSize(size: Fruit['size']): { width: number; height: number } {
+  const px = PLACEMENT_CONFIG.fruitSizePx[size]
+  return {
+    width: (px / PLACEMENT_CONFIG.referenceAreaPx.width) * 100,
+    height: (px / PLACEMENT_CONFIG.referenceAreaPx.height) * 100,
+  }
+}
+
+export function fruitFootprint(fruit: Pick<Fruit, 'x' | 'y' | 'size'>): Footprint {
+  const { width, height } = footprintSize(fruit.size)
+  return { left: fruit.x, top: fruit.y, right: fruit.x + width, bottom: fruit.y + height }
+}
+
+/** 2つの範囲が gap 以内に近づいているか（接しているだけでも近すぎれば重なり扱い） */
+export function footprintsOverlap(a: Footprint, b: Footprint, gap = 0): boolean {
+  return a.left < b.right + gap && b.left < a.right + gap && a.top < b.bottom + gap && b.top < a.bottom + gap
+}
+
+function overlapArea(a: Footprint, b: Footprint): number {
+  const w = Math.min(a.right, b.right) - Math.max(a.left, b.left)
+  const h = Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top)
+  return w > 0 && h > 0 ? w * h : 0
+}
+
+/**
+ * 既存の果物・凡例・カウンター・ドロップエリアと重ならない位置を選ぶ（docs/game-spec.md §3）。
+ * 空きが見つからなければ、試した中で最も重なりの少ない位置を返す（果物が出ないよりはよい）。
+ */
+function findPlacement(size: Fruit['size'], existing: readonly Fruit[]): { x: number; y: number } {
+  const { width, height } = footprintSize(size)
+  const minX = PLACEMENT_CONFIG.minLeftPercent
+  const maxX = PLAY_AREA_WIDTH - width
+  const minY = PLACEMENT_CONFIG.reservedTopPercent
+  const maxY = GAME_CONFIG.gameHeight - PLACEMENT_CONFIG.reservedBottomPercent - height
+  const others = existing.map(fruitFootprint)
+
+  let best: { x: number; y: number } = { x: minX, y: minY }
+  let bestOverlap = Infinity
+  for (let attempt = 0; attempt < PLACEMENT_CONFIG.maxAttempts; attempt++) {
+    const x = minX + Math.random() * (maxX - minX)
+    const y = minY + Math.random() * (maxY - minY)
+    const candidate = { left: x, top: y, right: x + width, bottom: y + height }
+    if (!others.some((o) => footprintsOverlap(candidate, o, PLACEMENT_CONFIG.gapPercent))) {
+      return { x, y }
+    }
+    const total = others.reduce((sum, o) => sum + overlapArea(candidate, o), 0)
+    if (total < bestOverlap) {
+      bestOverlap = total
+      best = { x, y }
+    }
+  }
+  return best
+}
+
 /**
  * Generates a single fruit with random properties.
  *
  * @param type 種類を指定する場合に渡す（省略時はランダム）
+ * @param existing いま畑にある果物。これと重ならない位置に置く
  */
-export function generateFruit(type?: FruitType): Fruit {
+export function generateFruit(type?: FruitType, existing: readonly Fruit[] = []): Fruit {
+  const size = randomElement(FRUIT_SIZES)
+  const { x, y } = findPlacement(size, existing)
   return {
     id: Math.random(),
     type: type ?? randomElement(FRUIT_TYPES),
-    size: randomElement(FRUIT_SIZES),
-    x: randomInRange(PLAY_AREA_WIDTH - 10) + 5,
-    y: randomInRange(GAME_CONFIG.gameHeight - 10) + 5,
+    size,
+    x,
+    y,
     dx: randomVelocity(),
     dy: randomVelocity(),
   }
@@ -68,14 +128,18 @@ export function generateFruitForField(existing: Fruit[]): Fruit {
   const fewest = Math.min(...FRUIT_TYPES.map(type => counts.get(type) ?? 0))
   const candidates = FRUIT_TYPES.filter(type => (counts.get(type) ?? 0) === fewest)
 
-  return generateFruit(randomElement(candidates))
+  return generateFruit(randomElement(candidates), existing)
 }
 
 /**
- * Generates multiple fruits.
+ * Generates multiple fruits.（互いに重ならないよう1つずつ置く）
  */
-export function generateFruits(count: number): Fruit[] {
-  return Array.from({ length: count }, generateFruit)
+export function generateFruits(count: number, existing: readonly Fruit[] = []): Fruit[] {
+  const fruits: Fruit[] = []
+  for (let i = 0; i < count; i++) {
+    fruits.push(generateFruit(undefined, [...existing, ...fruits]))
+  }
+  return fruits
 }
 
 /**

@@ -363,6 +363,9 @@ describe('FruitHarvestGame', () => {
       localStorage.setItem('fruitHarvestHighScore', '999')
 
       render(<FruitHarvestGame />)
+      // 待機中のヘッダは選んでいるモードに従う（既定はアーケード）。
+      // れんしゅうの最高得点は、れんしゅうを選んだときに出る（docs/game-spec.md §4.3）
+      await userEvent.setup().click(screen.getByTestId('mode-select-practice'))
 
       // High score label and value may be in separate elements
       const highScoreLabel = await screen.findByText((content) =>
