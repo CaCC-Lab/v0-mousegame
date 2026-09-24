@@ -5,6 +5,9 @@
 
 ストアページに入力する文章・タグ・画像は [itch-io/store-page.md](itch-io/store-page.md) にまとめてある。
 
+> **公開状況**: 2026-08-05 に https://cacc-lab.itch.io/fruit-harvest で公開済み
+> （`opportunity-pipeline/SHIPPING.md` の DONE）。以後の更新は **§9 の手順**（前の版を残す）で行う。
+
 > 本書の itch.io 側の仕様は [公式ドキュメント](https://itch.io/docs/creators/html5) と
 > [支払いドキュメント](https://itch.io/docs/creators/payments) の記載に基づく（2026-07 時点）。
 > 画面の文言や手数料は変わることがあるため、実際の表示を優先すること。
@@ -56,8 +59,17 @@ npm run build:itch
 
 | パス | 用途 |
 | --- | --- |
-| `dist-itch/fruit-harvest-itch.zip` | itch.io にアップロードするファイル |
+| `dist-itch/fruit-harvest-itch-<短いハッシュ>.zip` | itch.io にアップロードするファイル。名前はビルドしたコミット |
 | `dist-itch/build/` | zip の中身。ローカル検証用 |
+| `dist-itch/build/build-info.json` | どのコミットから作ったか（commit・dirty・builtAt・version）。zip にも入る |
+
+ビルドは次のとき**失敗する**（古い版や、どのコミットとも一致しない版を出さないため。v1.1 計画 G13）:
+
+- app/・components/ などビルドに効くファイルに未コミットの変更がある（試しに作るだけなら `ALLOW_DIRTY=1 npm run build:itch`。zip 名に `-dirty` が付く）
+- `out/` が HEAD のコミットより古い
+- 配布物の定数（`feverGaugeMax`）がソースと一致しない
+
+以前の zip は消さずに `dist-itch/` に残る（§9-2 で戻すときに使える）。
 
 このスクリプトは以下を自動で行う:
 
@@ -122,7 +134,7 @@ python3 -m http.server 8765 --directory /tmp/itch-check
 
 ## 5. ゲーム本体をアップロードする
 
-1. **Uploads** セクションで `dist-itch/fruit-harvest-itch.zip` をアップロードする
+1. **Uploads** セクションで `dist-itch/fruit-harvest-itch-<短いハッシュ>.zip` をアップロードする
 2. アップロード完了後、そのファイルの **「This file will be played in the browser」に必ずチェックを入れる**
    — これを忘れるとブラウザで起動せず、ダウンロード配布になってしまう
 
@@ -175,7 +187,7 @@ python3 -m http.server 8765 --directory /tmp/itch-check
 
 1. ページ下部の **Visibility & access** を **Public** にする
 2. **Save & view page**
-3. 公開 URL（`https://<ユーザー名>.itch.io/fruit-harvest`）を確認する
+3. 公開 URL（`https://cacc-lab.itch.io/fruit-harvest`）を確認する
 
 公開後の任意作業:
 
@@ -184,18 +196,60 @@ python3 -m http.server 8765 --directory /tmp/itch-check
 
 ---
 
-## 9. 更新するとき
+## 9. 更新するとき（前の版を残して、すぐ戻せるようにする）
+
+v1.1 計画 G14。「公開してみて。すぐ戻せる？」に即答できる状態を保つ。
+以前は既存の zip を **Replace file** で差し替えていたため、前の版がどこにも残らなかった。
+
+### 9-1. 新しい版を出す
+
+1. 変更は PR でマージ済みであること。master を最新にする
+
+   ```bash
+   git switch master && git pull
+   npm run build:itch        # 未コミットの変更や古い out/ があれば止まる
+   ```
+
+2. 出す版にタグを付けて push する（タグ名 = `itch-v<版>`。例 `itch-v1.1.0`）
+
+   ```bash
+   git tag -a itch-v1.1.0 -m "itch.io 公開版 v1.1.0"
+   git push origin itch-v1.1.0
+   ```
+
+3. itch.io の Edit game → **Uploads** で **Upload files** から新しい zip を**追加**する（既存の zip は消さない・差し替えない）
+4. 新しい zip の「**This file will be played in the browser**」に✅、前の zip はこのチェックを外す
+5. 前の zip は「**Hide this file and prevent it from being downloaded**」に✅（ダウンロード欄に出さない）
+6. Save して公開ページで起動を確認する
+7. 起動しているのが新しい版かを **build-info.json** で確かめる: ゲームの iframe を新しいタブで開き、
+   URL の `index.html` を `build-info.json` に変えて開く。`commit` がタグのコミットと一致すればよい
+
+   ```bash
+   git rev-list -n 1 itch-v1.1.0   # これと build-info.json の commit を比べる
+   ```
+
+アップロード済みの zip は直近の **3 版**まで残し、それより古いものは削除してよい。
+
+### 9-2. 前の版に戻す
+
+1. itch.io の Edit game → **Uploads** で、前の版の zip の「This file will be played in the browser」に✅、今の版は外す
+2. Save して、9-1 の 7 と同じく build-info.json の `commit` が前のタグと一致することを確かめる
+
+前の版の zip を itch.io から消してしまっていた場合は、タグから作り直してアップロードする:
 
 ```bash
-npm run build:itch
+git switch --detach itch-v1.0.1
+npm ci && npm run build:itch
+git switch master
 ```
 
-1. Edit game → Uploads で、既存の zip の **Replace file** から新しい zip を差し替える
-2. 「This file will be played in the browser」のチェックが外れていないか確認する
-3. Save
+### 9-3. リハーサルの記録
 
-ファイルを削除して新規追加すると Embed 設定がリセットされることがあるため、
-**差し替え（Replace）を使う**のが安全。
+itch.io の管理画面の操作は人が行う（自動化しない）。手順を変えたら1回リハーサルして記録する。
+
+| 日付 | やったこと | 所要時間 | 気づいたこと |
+|---|---|---|---|
+| （未実施） | 9-1 → 9-2 を通しで行い、build-info.json で切り替わりを確認する | — | 「Hide this file」の文言・場所が画面と合っているかも確認する |
 
 ---
 
@@ -229,4 +283,4 @@ npm run build:itch
 | 右クリック | iframe 内ではブラウザのコンテキストメニューが出ることがある。全画面表示を案内している |
 | データ保存 | ハイスコアや練習記録は localStorage に保存される。itch.io の埋め込み iframe 単位で保持されるため、ブラウザや端末をまたぐと引き継がれない |
 | 音声 | 効果音は Web Audio API で合成している。音源ファイルは同梱していない |
-| ヘルプの表記 | ゲーム内ヘルプに「じかんは３ぷんかん！」とあるが、実際の制限時間はステージごとに 60〜150 秒。修正する場合は `lib/i18n/translations.ts` |
+| パワーアップの説明 | v1.1 でヘルプの秒数・個数を `types/powerup.ts` の定数から差し込む形にした。数値を変えるときは定数だけを直す（`docs/game-spec.md` §6） |

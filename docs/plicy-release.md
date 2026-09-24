@@ -25,7 +25,7 @@ itch.io 用と同じものを使う。
 npm run build:itch
 ```
 
-→ `dist-itch/fruit-harvest-itch.zip`
+→ `dist-itch/fruit-harvest-itch-<短いハッシュ>.zip`（名前はビルドしたコミット。中の `build-info.json` にも残る）
 
 ### そのまま使える理由
 
@@ -43,7 +43,7 @@ PLiCy がどちらの形で配信しても動く。
 
 | 要件 | 対応状況 |
 | --- | --- |
-| zip でアップロード | ✅ `fruit-harvest-itch.zip` |
+| zip でアップロード | ✅ `fruit-harvest-itch-<短いハッシュ>.zip` |
 | 起動ページが `index.html` | ✅ zip 直下にある（ビルド時に検査している） |
 | 暗号化した zip は不可 | ✅ 暗号化していない |
 | iframe の使用禁止 | ✅ 使っていない |
@@ -183,7 +183,17 @@ npm run shots    # スクリーンショット7枚
 
    日本語の文字はもともとフォールバック書体で表示されているため、
    影響はラテン文字（数字・英字）の書体に限られる。
-   気になる場合は Fredoka / Nunito も同梱できる（絵文字フォントは同梱済み）。
+   気になる場合は Fredoka / Nunito も同梱できる（フルーツは画像なので書体の影響を受けない）。
+
+---
+
+## AI の利用の申告
+
+PLiCy の投稿フォームに AI 利用の申告欄があれば、itch.io と同じ内容で申告する（`docs/itch-io/store-page.md`「AI の利用について」）。
+
+- 画像: あり。フルーツの絵（`public/sprites/` の4枚）は画像生成AI（OpenAI gpt-5.4。Codex 経由で依頼）で作り、人が確認して作り直しを指示した
+- 音声・音楽: なし（効果音はプログラムで合成）
+- プログラム: AI コーディング支援（Claude Code など）を使って書いた
 
 ---
 
