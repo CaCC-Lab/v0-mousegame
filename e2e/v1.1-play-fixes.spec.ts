@@ -83,3 +83,32 @@ test.describe('G5: 開始直後の果物が、他の果物や凡例に隠れな�
     expect(total.underLegend).toBe(0)
   })
 })
+
+test.describe('G12: ?debug=1 の診断と ?test=1 の自動プレイ', () => {
+  test.setTimeout(120_000)
+
+  test('?test=1&debug=1 で、4操作すべてが成功し、ミス 0 で結果画面まで行く', async ({ page }) => {
+    const errors: string[] = []
+    page.on('pageerror', (e) => errors.push(e.message))
+
+    await page.goto('/?test=1&debug=1')
+    const panel = page.getByTestId('debug-panel')
+    await expect(panel).toBeVisible()
+    await expect(panel).toContainText('mode: arcade')
+
+    await expect(page.getByRole('dialog').filter({ hasText: /アーケードけっか/ })).toBeVisible({ timeout: 80_000 })
+    for (const action of ['click', 'doubleClick', 'rightClick', 'drop']) {
+      const value = Number(await panel.getByTestId(`debug-ok-${action}`).textContent())
+      expect(value).toBeGreaterThanOrEqual(1)
+    }
+    expect(Number(await panel.getByTestId('debug-miss').textContent())).toBe(0)
+    expect(errors).toEqual([])
+  })
+
+  test('指定しなければ診断は出ず、自動では始まらない', async ({ page }) => {
+    await page.goto('/')
+    await page.waitForTimeout(1000)
+    await expect(page.getByTestId('debug-panel')).toHaveCount(0)
+    await expect(page.getByTestId('mode-start')).toBeVisible()
+  })
+})

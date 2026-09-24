@@ -37,6 +37,15 @@ import type { MasteryLevel } from '@/types/gamification'
 import type { GameMode } from '@/types/arcade'
 import { useDailyPractice } from '@/hooks/useDailyPractice'
 import { isRewardedBoostAvailable, requestRewardedBoost } from '@/lib/ads/rewardedBoost'
+import {
+  readDebugFlags,
+  createDebugStats,
+  recordInteraction,
+  chooseAutoPlayMove,
+  AUTOPLAY_INTERVAL_MS,
+  type DebugFlags,
+} from '@/lib/debugTools'
+import { DebugPanel } from './game/DebugPanel'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
@@ -185,7 +194,28 @@ export function FruitHarvestGame(): React.ReactElement {
     }
   }, [stage, resetGame, resetAnimations])
 
+  // 検証用の入口（?debug=1 / ?test=1。docs/game-spec.md §10）。
+  // URL はクライアントでだけ読む（静的エクスポートの HTML と食い違わないように）
+  const [debugFlags, setDebugFlags] = useState<DebugFlags>({ debug: false, test: false })
+  const [debugStats, setDebugStats] = useState(createDebugStats)
+  useEffect(() => {
+    setDebugFlags(readDebugFlags(window.location.search))
+  }, [])
+  const debugEnabled = debugFlags.debug || debugFlags.test
+
+  // 新しいプレイが始まったら数え直す
+  const debugPrevGameStateRef = useRef(gameState)
+  useEffect(() => {
+    if (debugPrevGameStateRef.current === 'idle' && gameState === 'playing') {
+      setDebugStats(createDebugStats())
+    }
+    debugPrevGameStateRef.current = gameState
+  }, [gameState])
+
   const handleFruitClick = useCallback((fruit: Fruit, action: InteractionType) => {
+    if (debugEnabled && gameState === 'playing') {
+      setDebugStats((stats) => recordInteraction(stats, fruit.type, action))
+    }
     handleFruitInteraction(fruit, action)
     // AC-8.2: 収穫成功時にリアルタイムで目標更新。
     // ただし「きょうのれんしゅう」は練習モードの日課なので、
@@ -196,7 +226,40 @@ export function FruitHarvestGame(): React.ReactElement {
     }
   // dailyPractice.updateGoals/operationStats.getLatestSessionStats は useCallback([]) で安定参照
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [handleFruitInteraction, isArcade])
+  }, [handleFruitInteraction, isArcade, debugEnabled, gameState])
+
+  // ?test=1: 自動でアーケードを1回遊び、結果画面で止まる。
+  // 最新の畑と操作関数は ref から読む（1手ごとにタイマーを張り直さない）
+  const fruitsRef = useRef(fruits)
+  fruitsRef.current = fruits
+  const handleFruitClickRef = useRef(handleFruitClick)
+  handleFruitClickRef.current = handleFruitClick
+  const autoPlayStartedRef = useRef(false)
+  // startGame は描画のたびに作り直されることがある。依存に入れると、毎フレームの再描画で
+  // 開始の待ちが張り直され続けて発火しない（実ブラウザで確認）ので ref から呼ぶ
+  const startGameRef = useRef(startGame)
+  startGameRef.current = startGame
+
+  useEffect(() => {
+    if (!debugFlags.test || gameState !== 'idle' || autoPlayStartedRef.current) return
+    const timer = setTimeout(() => {
+      autoPlayStartedRef.current = true
+      setSelectedMode('arcade')
+      startGameRef.current('arcade')
+    }, 300)
+    return () => clearTimeout(timer)
+  }, [debugFlags.test, gameState])
+
+  useEffect(() => {
+    if (!debugFlags.test || gameState !== 'playing') return
+    let step = 0
+    const timer = setInterval(() => {
+      const move = chooseAutoPlayMove(fruitsRef.current, step)
+      step += 1
+      if (move) handleFruitClickRef.current(move.fruit, move.action)
+    }, AUTOPLAY_INTERVAL_MS)
+    return () => clearInterval(timer)
+  }, [debugFlags.test, gameState])
 
   const handleKeyboardEnter = useCallback(() => {
     if (gameState === 'idle') {
@@ -685,6 +748,17 @@ export function FruitHarvestGame(): React.ReactElement {
         onClose={handleCloseStageClear}
         t={t}
       />
+
+      {debugEnabled && (
+        <DebugPanel
+          mode={gameState === 'idle' ? selectedMode : mode}
+          gameState={gameState}
+          timeLeft={timeLeft}
+          combo={arcade.combo}
+          comboMultiplier={arcade.comboMultiplier}
+          stats={debugStats}
+        />
+      )}
     </div>
     </MotionConfig>
   )
