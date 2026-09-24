@@ -30,11 +30,11 @@ describe('結果表示中・アーケード中の背後の操作', () => {
     })
   }
 
-  it('アーケード中は「ステージ選択」を押せない', () => {
+  it('チャレンジ中は「ステージ選択」を出さない（無効表示は伝わらなかった）', () => {
     render(<FruitHarvestGame />)
     startArcade()
 
-    expect(screen.getByRole('button', { name: /ステージ選択/ })).toBeDisabled()
+    expect(screen.queryByRole('button', { name: /ステージ選択/ })).not.toBeInTheDocument()
   })
 
   it('アーケードの結果が出ているあいだ、結果の外に押せる「はじめる」は無い', () => {

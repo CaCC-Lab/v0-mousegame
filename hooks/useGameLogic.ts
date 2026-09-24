@@ -62,6 +62,8 @@ export function useGameLogic() {
   const scoreRef = useRef<number>(0)
   // チャレンジ（arcade）の状態（v1.2 D1・D2・D4）
   const arcadeHarvestCountRef = useRef(0)
+  // チャレンジで続いた時間（ゲーム内の秒。タイマーが刻んだ回数）
+  const arcadePlayedSecRef = useRef(0)
   const arcadeMissesByOperationRef = useRef<Record<InteractionType, number>>({ click: 0, doubleClick: 0, rightClick: 0, drop: 0 })
   const [arcadeFruitsMoving, setArcadeFruitsMoving] = useState(false)
   // 実際のプレイエリアの大きさ（px）。果物の配置に使う（docs/game-spec.md §3）。
@@ -151,6 +153,7 @@ export function useGameLogic() {
       setTimeLeft(ARCADE_CONFIG.startTimeSec)
       timeLeftRef.current = ARCADE_CONFIG.startTimeSec
       arcadeHarvestCountRef.current = 0
+      arcadePlayedSecRef.current = 0
       arcadeMissesByOperationRef.current = { click: 0, doubleClick: 0, rightClick: 0, drop: 0 }
       setArcadeFruitsMoving(false)
       // 最初の畑から4種類そろえて、どの操作でもすぐ点を取れるようにする
@@ -356,7 +359,12 @@ export function useGameLogic() {
         (best, op) => (misses[op] > 0 && (best === null || misses[op] > misses[best]) ? op : best),
         null
       )
-      const outcome = { ...arcadeRef.current.commitResult(scoreRef.current), weakOperation: worst, endReason: 'timeUp' as const }
+      const outcome = {
+        ...arcadeRef.current.commitResult(scoreRef.current),
+        weakOperation: worst,
+        endReason: 'timeUp' as const,
+        playedSec: arcadePlayedSecRef.current,
+      }
       setArcadeResult(outcome)
 
       // アーケードもマウス操作の練習には違いないので、累積統計・習熟度・バッジには反映する。
@@ -412,6 +420,7 @@ export function useGameLogic() {
 
       const prevTime = timeLeftRef.current
       const newTime = prevTime - 1
+      if (modeRef.current === 'arcade') arcadePlayedSecRef.current += 1
       timeLeftRef.current = Math.max(0, newTime)
       // チャレンジでは取るたびに小数の秒が増えるので、表示は切り上げた整数にする
       setTimeLeft(Math.ceil(timeLeftRef.current))
