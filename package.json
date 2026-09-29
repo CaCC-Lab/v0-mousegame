@@ -59,7 +59,7 @@
     "@types/react-dom": "^18",
     "axe-playwright": "^2.0.0",
     "concurrently": "^9.1.2",
-    "electron": "^43.2.0",
+    "electron": "^43.5.0",
     "electron-builder": "^26.15.3",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
