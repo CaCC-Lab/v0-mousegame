@@ -370,11 +370,15 @@ export function FruitHarvestGame(): React.ReactElement {
     setSelectedFruitIndex(bestIndex)
   }, [gameState, fruits, selectedFruitIndex])
 
+  // 結果・ステージクリアなどを出しているあいだは、キーボードでゲームを始めたり取ったりしない
+  // （以前は Enter で結果が消え、ステージクリアを出したまま裏で同じステージが始まっていた。docs/game-spec.md §4.3）。
+  // これらのモーダルはフォーカスを中に持たないので、useKeyboardControls のダイアログ判定だけでは防げない
+  const isModalOpen = showArcadeResult || showResultModal || showStageClearMessage || showStageSelector || showCollection
   const { gameContainerRef } = useKeyboardControls({
     onSpacePress: handleKeyboardSpace,
     onEnterPress: handleKeyboardEnter,
     onArrowKeys: handleArrowKeys
-  }, (gameState === 'playing' || gameState === 'paused' || gameState === 'idle') && !showCollection)
+  }, (gameState === 'playing' || gameState === 'paused' || gameState === 'idle') && !isModalOpen)
 
   // Stage completion check
   useEffect(() => {
