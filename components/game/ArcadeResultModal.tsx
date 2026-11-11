@@ -87,7 +87,7 @@ export function ArcadeResultModal({
         initial={{ scale: 0.9, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}
         transition={{ type: 'spring', bounce: 0.35 }}
-        className="max-w-md w-full rounded-[var(--radius-xl)] bg-white p-6 shadow-xl"
+        className="max-h-[calc(100dvh-2rem)] max-w-md w-full overflow-y-auto rounded-[var(--radius-xl)] bg-white p-6 shadow-xl"
       >
         <h2
           id="arcade-result-title"

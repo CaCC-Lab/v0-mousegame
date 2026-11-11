@@ -154,6 +154,16 @@ describe('初見の判断: 0点の結果', () => {
     expect(screen.getByTestId('arcade-result-score')).not.toHaveClass('text-xl')
   })
 
+  it('FL-A-10: 低い画面では結果の中をスクロールして「もういちど」に届く', () => {
+    // Given: 0点で、続いた時間と苦手な操作が同時に出る（モーダルが一番高い）
+    // When: 結果を出す
+    // Then: 画面の高さで頭打ちになり、中を縦にスクロールできる
+    renderResult(result({ score: 0, playedSec: 35, weakOperation: 'click' }))
+    const panel = screen.getByRole('dialog').firstElementChild
+    expect(panel).toHaveClass('max-h-[calc(100dvh-2rem)]', 'overflow-y-auto')
+    expect(screen.getByTestId('arcade-retry')).toBeInTheDocument()
+  })
+
   it('FL-A-03: 続いた時間が無い 0 点でも落ちず、0 は text-xl', () => {
     // Given: playedSec を渡さない
     // When: 結果を出す
@@ -228,6 +238,16 @@ describe('初見の判断: コンボの1行と2語', () => {
     expect(effect).toHaveClass('bg-white')
     expect(effect.className).toContain('var(--color-purple)')
     expect(effect).not.toHaveClass('text-white')
+  })
+
+  it('FL-A-11: 英語のゲージ見出しは 190px の箱の中で折れる', () => {
+    // Given: 英語。見出しとヒントを足すと固定幅の箱からはみ出す
+    // When: HUD を描く
+    // Then: 見出しの行は一列固定ではなく、箱の中で折れる
+    render(<ArcadeHUD {...hud} t={translations.en} feverGauge={0} isFever={false} />)
+    const row = screen.getByTestId('fever-hint').parentElement
+    expect(row).toHaveClass('flex-wrap')
+    expect(row).not.toHaveClass('whitespace-nowrap')
   })
 
   it('FL-A-06: ボーナスタイム中も1行は残し、ヒントは2ばいのまま', () => {

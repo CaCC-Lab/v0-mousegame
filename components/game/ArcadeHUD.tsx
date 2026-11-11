@@ -67,7 +67,7 @@ export function ArcadeHUD({
           aria-hidden
         />
         <div className="flex flex-col min-w-0 flex-1 gap-0.5">
-          <div className="flex items-baseline gap-1.5 whitespace-nowrap leading-none">
+          <div className="flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5 leading-none">
             <span data-testid="fever-label" className="text-[11px] font-bold text-white">
               {t.fever}
             </span>
