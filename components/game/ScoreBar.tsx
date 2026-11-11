@@ -34,9 +34,9 @@ interface ScoreBarProps {
 
 function ScoreSection({ score, t }: Pick<ScoreBarProps, 'score' | 't'>): React.ReactElement {
   return (
-    <div className="flex items-center gap-1.5 bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-[var(--radius-md)]">
+    <div className="flex shrink-0 items-center gap-1.5 whitespace-nowrap bg-white/20 backdrop-blur-sm px-2.5 py-1 rounded-[var(--radius-md)]">
       <span className="text-lg" aria-hidden>&#11088;</span>
-      <span className="text-xs font-semibold text-white/80">{t.score}</span>
+      <span className="text-xs font-semibold text-white/80 whitespace-nowrap">{t.score}</span>
       {/* 隣の時間表示と地続きの文字列になるため、得点だけを取り出せる目印を持たせる */}
       <span data-testid="score-value" className="text-display text-xl font-bold text-white drop-shadow">
         {score.toLocaleString()}

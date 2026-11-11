@@ -23,6 +23,7 @@ import { FruitSprite } from './game/FruitSprite'
 import { ResultModal } from './game/ResultModal'
 import { ModeSelector } from './game/ModeSelector'
 import { ArcadeHUD } from './game/ArcadeHUD'
+import { DROP_BAND_INSET_CLASS } from '@/lib/dropBand'
 import { ArcadeResultModal } from './game/ArcadeResultModal'
 import { BadgeNotification } from './game/BadgeNotification'
 import { BadgeDisplay } from './game/BadgeDisplay'
@@ -634,7 +635,7 @@ export function FruitHarvestGame(): React.ReactElement {
               プレイエリアの下端に離して置く（ドロップエリアの手前まで）
             */}
             {showPlayHud && (
-            <div className="absolute bottom-1.5 left-0 right-[7.5rem] z-20 px-2 pointer-events-none">
+            <div className={`absolute bottom-1.5 left-0 ${DROP_BAND_INSET_CLASS} z-20 px-2 pointer-events-none`}>
               <OperationLegend t={t} />
             </div>
             )}
@@ -679,7 +680,7 @@ export function FruitHarvestGame(): React.ReactElement {
               // 下の操作ボタンに重なってタップを奪ってしまう。
               // オーバーレイ内でスクロールさせて外へ出さない
               // 右端の帯（w-[7.5rem]。「スイカをここへ」が1行で収まる幅）の手前に収める
-              <div className="absolute inset-y-0 left-0 right-[7.5rem] z-30 flex items-center justify-center overflow-y-auto bg-black/35 py-3">
+              <div className={`absolute inset-y-0 left-0 ${DROP_BAND_INSET_CLASS} z-30 flex items-center justify-center overflow-y-auto bg-black/35 py-3`}>
                 <ModeSelector
                   onSelectMode={handleSelectMode}
                   onStart={handleStart}

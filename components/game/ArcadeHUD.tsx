@@ -35,7 +35,7 @@ export function ArcadeHUD({
   const gaugeRatio = Math.min(100, (feverGauge / ARCADE_CONFIG.feverGaugeMax) * 100)
 
   return (
-    <div className="flex items-center gap-2 min-w-0">
+    <div data-testid="arcade-hud" className="flex max-w-full flex-wrap items-center gap-x-2 gap-y-1">
       {combo >= COMBO_DISPLAY_THRESHOLD && (
         <motion.div
           data-testid="arcade-combo"
@@ -43,7 +43,7 @@ export function ArcadeHUD({
           initial={{ scale: 1.35 }}
           animate={{ scale: 1 }}
           transition={{ type: 'spring', bounce: 0.5, duration: 0.35 }}
-          className="flex items-baseline gap-1 rounded-[var(--radius-md)] bg-white/25 px-2.5 py-1 text-white whitespace-nowrap"
+          className="flex shrink-0 items-baseline gap-1 rounded-[var(--radius-md)] bg-white/25 px-2.5 py-1 text-white whitespace-nowrap"
         >
           <span className="text-display text-xl font-bold">{combo}</span>
           <span className="text-xs font-semibold opacity-90">{t.combo}</span>
@@ -61,7 +61,7 @@ export function ArcadeHUD({
         「Feverが何なのか最後まで分からなかった」と言われた。
         名前と、どうすれば溜まるのか（溜まったら何が起きるのか）を添える
       */}
-      <div className="flex items-center gap-1.5 w-[190px] md:w-[240px] rounded-[var(--radius-md)] bg-black/15 px-2 py-1">
+      <div data-testid="fever-gauge-box" className="flex shrink-0 items-center gap-1.5 w-[190px] md:w-[240px] rounded-[var(--radius-md)] bg-black/15 px-2 py-1">
         <Flame
           className={`w-4 h-4 shrink-0 ${isFever ? 'text-yellow-300' : 'text-white'}`}
           aria-hidden
@@ -101,7 +101,7 @@ export function ArcadeHUD({
       </div>
       <span
         data-testid="combo-effect"
-        className="whitespace-nowrap text-[11px] font-bold leading-tight text-white"
+        className="basis-full sm:basis-auto shrink-0 whitespace-nowrap rounded-[var(--radius-md)] bg-white px-1.5 py-0.5 text-[11px] font-bold leading-tight text-[color:var(--color-purple)]"
       >
         {t.comboEffect}
       </span>
@@ -112,7 +112,7 @@ export function ArcadeHUD({
           initial={{ scale: 0.6, opacity: 0 }}
           animate={{ scale: [1, 1.08, 1], opacity: 1 }}
           transition={{ scale: { duration: 0.6, repeat: Infinity } }}
-          className="text-display text-sm font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
+          className="shrink-0 text-display text-sm font-bold px-2.5 py-1 rounded-full whitespace-nowrap"
           style={{ backgroundColor: 'var(--color-accent)', color: 'var(--color-berry)' }}
         >
           🔥 {t.fever}

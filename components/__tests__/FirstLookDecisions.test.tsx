@@ -206,6 +206,30 @@ describe('初見の判断: コンボの1行と2語', () => {
     expect(screen.getByTestId('combo-effect').textContent).not.toMatch(/[ぁ-んァ-ヶ一-龠]/)
   })
 
+  it('FL-A-08: 狭い幅でも説明は別行に折れ、ゲージは縮まない', () => {
+    // Given: コンボ表示とボーナスタイムのバナーが同時に出る
+    // When: HUD を描く
+    // Then: 説明は狭い幅で親いっぱいになり、広い幅ではゲージの横に戻る。ゲージは縮まない
+    render(<ArcadeHUD {...hud} combo={3} comboMultiplier={2} feverGauge={50} isFever />)
+    const hudRoot = screen.getByTestId('arcade-hud')
+    const effect = screen.getByTestId('combo-effect')
+    expect(hudRoot).toHaveClass('flex-wrap')
+    expect(effect).toHaveClass('basis-full', 'sm:basis-auto')
+    expect(screen.getByTestId('fever-gauge-box')).toHaveClass('shrink-0')
+    expect(screen.getByTestId('arcade-fever-banner')).toHaveClass('shrink-0')
+  })
+
+  it('FL-A-09: 説明の文字は白ではなく、明るい背景の上の濃い色', () => {
+    // Given: 説明を出す
+    // When: HUD を描く
+    // Then: 白文字のままヘッダやプレイエリアに載せず、白地に濃い文字を載せる
+    render(<ArcadeHUD {...hud} feverGauge={0} isFever={false} />)
+    const effect = screen.getByTestId('combo-effect')
+    expect(effect).toHaveClass('bg-white')
+    expect(effect.className).toContain('var(--color-purple)')
+    expect(effect).not.toHaveClass('text-white')
+  })
+
   it('FL-A-06: ボーナスタイム中も1行は残し、ヒントは2ばいのまま', () => {
     // Given: ボーナスタイム中
     // When: HUD を描く
@@ -221,7 +245,9 @@ describe('初見の判断: コンボの1行と2語', () => {
     // When: 描く
     // Then: 「てんすう:」で、「得点:」ではない
     render(<ScoreBar score={0} highScore={0} timeLeft={20} gameState="playing" stage={null} t={ja} />)
-    expect(screen.getByText('てんすう:')).toBeInTheDocument()
+    const label = screen.getByText('てんすう:')
+    expect(label).toBeInTheDocument()
+    expect(label).toHaveClass('whitespace-nowrap')
     expect(screen.queryByText('得点:')).not.toBeInTheDocument()
   })
 

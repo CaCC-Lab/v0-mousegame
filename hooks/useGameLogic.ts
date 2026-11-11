@@ -335,7 +335,7 @@ export function useGameLogic() {
     const speedBoostMultiplier = getEffectValue('speedBoost')
     deltaTime *= speedBoostMultiplier
 
-    setFruits(prevFruits => prevFruits.map(fruit => updateFruitPosition(fruit, deltaTime)))
+    setFruits(prevFruits => prevFruits.map(fruit => updateFruitPosition(fruit, deltaTime, playAreaSizeRef.current)))
 
     animationFrameRef.current = requestAnimationFrame(moveFruits)
   }, [gameState, fruitsMove, getEffectValue])

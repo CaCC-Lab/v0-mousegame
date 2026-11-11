@@ -3,6 +3,7 @@
 import React from 'react'
 import { ArrowDown } from 'lucide-react'
 import { translations } from '@/lib/i18n/translations'
+import { DROP_BAND_WIDTH_CLASS } from '@/lib/dropBand'
 import { FruitSprite } from './FruitSprite'
 
 export interface DropAreaProps {
@@ -29,7 +30,7 @@ export function DropArea({ t = translations.ja }: DropAreaProps): React.ReactEle
       data-testid="drop-area"
       role="img"
       aria-label={t.dropArea}
-      className="drop-area absolute right-0 top-0 bottom-0 w-[7.5rem] flex flex-col justify-center items-center gap-1.5 border-l-4 border-dashed border-white/50"
+      className={`drop-area absolute right-0 top-0 bottom-0 ${DROP_BAND_WIDTH_CLASS} flex flex-col justify-center items-center gap-1.5 border-l-4 border-dashed border-white/50`}
       style={{ background: 'var(--gradient-berry)' }}
     >
       <FruitSprite type="watermelon" size={30} decorative />

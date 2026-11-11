@@ -8,6 +8,7 @@ import {
   GAME_CONFIG,
   PLACEMENT_CONFIG,
 } from '@/types/game'
+import { DROP_BAND_PX } from '@/lib/dropBand'
 
 const FRUIT_TYPES: FruitType[] = ['apple', 'blueberry', 'lemon', 'watermelon']
 const FRUIT_SIZES: FruitSize[] = ['small', 'medium', 'large']
@@ -40,6 +41,23 @@ export interface Footprint {
 export interface AreaSize {
   width: number
   height: number
+}
+
+/** 幅か高さが測れていないときは、埋め込みの基準に戻す（0 で割らない） */
+function resolvedArea(area?: AreaSize): AreaSize {
+  if (!area || !(area.width > 0) || !(area.height > 0)) return PLACEMENT_CONFIG.referenceAreaPx
+  return area
+}
+
+/**
+ * 果物の右端にしてよい百分率。
+ * 16% と、帯の実幅（DROP_BAND_PX）の大きいほうを空ける。
+ * 狭い画面では 16% が帯より狭く、果物が帯の裏に入る。
+ */
+export function playableRightPercent(area?: AreaSize): number {
+  const safe = resolvedArea(area)
+  const fromBand = 100 - (DROP_BAND_PX / safe.width) * 100
+  return Math.min(PLAY_AREA_WIDTH, fromBand)
 }
 
 /** 果物の大きさを、プレイエリアに対する百分率で見積もる */
@@ -90,11 +108,12 @@ export function reservedBandsPercent(area: AreaSize = PLACEMENT_CONFIG.reference
 
 /** 果物を置いてよい範囲（左上の座標の範囲） */
 function placementBounds(size: Fruit['size'], area?: AreaSize) {
-  const { width, height } = footprintSize(size, area)
-  const bands = reservedBandsPercent(area)
+  const safe = resolvedArea(area)
+  const { width, height } = footprintSize(size, safe)
+  const bands = reservedBandsPercent(safe)
   return {
     minX: PLACEMENT_CONFIG.minLeftPercent,
-    maxX: PLAY_AREA_WIDTH - width,
+    maxX: playableRightPercent(safe) - width,
     minY: bands.top,
     maxY: GAME_CONFIG.gameHeight - bands.bottom - height,
     width,
@@ -261,16 +280,21 @@ function clamp(value: number, min: number, max: number): number {
 /**
  * Updates fruit position and handles boundary collisions.
  */
-export function updateFruitPosition(fruit: Fruit, deltaTime: number): Fruit {
+export function updateFruitPosition(fruit: Fruit, deltaTime: number, area?: AreaSize): Fruit {
   let newX = fruit.x + fruit.dx * deltaTime
   let newY = fruit.y + fruit.dy * deltaTime
   let newDx = fruit.dx
   let newDy = fruit.dy
 
-  // Horizontal boundary collision
-  if (newX <= 0 || newX >= PLAY_AREA_WIDTH) {
-    newDx *= -1
-    newX = clamp(newX, 0, PLAY_AREA_WIDTH)
+  // 右端は帯の実幅まで。果物の本体が帯に入らないよう、左上の上限は帯の左から幅を引いた位置
+  const safe = resolvedArea(area)
+  const maxX = Math.max(0, playableRightPercent(safe) - footprintSize(fruit.size, safe).width)
+  if (newX <= 0) {
+    newDx = Math.abs(newDx)
+    newX = 0
+  } else if (newX >= maxX) {
+    newDx = -Math.abs(newDx)
+    newX = maxX
   }
 
   // Vertical boundary collision
