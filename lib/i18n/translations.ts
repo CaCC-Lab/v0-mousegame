@@ -11,12 +11,12 @@ export const translations = {
     muteSound: 'おとをけす',
     unmuteSound: 'おとをだす',
     volume: 'おんりょう',
-    stageSelect: 'ステージ選択',
+    stageSelect: 'ステージをえらぶ',
     settings: 'せってい',
     dropArea: 'ドロップエリア',
     // 右端の細い帯に横書きで収まる短い語。
     // 「ドロップエリア」は縦書きにしないと入らず、縦書きは読みにくいと2人に言われた
-    dropAreaShort: 'ここへ',
+    dropAreaShort: 'スイカをここへ',
     stageGoals: 'ステージ目標:',
     scoreText: 'スコア:',
     fruitsText: 'フルーツ:',
@@ -99,6 +99,8 @@ export const translations = {
     feverGauge: 'ボーナスタイムのゲージ',
     // ゲージの意味と発動条件を、遊んでいる最中に読めるようにするための短い一言
     feverHintCharging: 'コンボでたまる',
+    // ゲージの横に置く。コンボが何かを、遊んでいる最中に1行で伝える（2026-11-11）
+    comboEffect: 'つづけてとるとてんすうアップ',
     feverHintActive: 'てんすう2ばい！',
     maxCombo: 'さいだいコンボ',
     feverCount: 'ボーナスタイム',
@@ -129,7 +131,7 @@ export const translations = {
     },
     
     // Game Info
-    score: '得点:',
+    score: 'てんすう:',
     highScore: 'ベスト:',
     timeFormat: (minutes: number, seconds: number) => `${minutes}分${seconds.toString().padStart(2, '0')}秒`,
     
@@ -337,6 +339,7 @@ export const translations = {
     feverGauge: 'Bonus Time gauge',
     // Short line so players can learn what the gauge is while playing
     feverHintCharging: 'Chain combos to fill',
+    comboEffect: 'Catch in a row to score more',
     feverHintActive: 'Double points!',
     maxCombo: 'Max combo',
     feverCount: 'Bonus Times',

@@ -14,12 +14,12 @@ test.describe('Fruit Harvest Game Flow', () => {
     await expect(page.getByRole('application', { name: 'フルーツハーベストゲーム' })).toBeVisible()
     
     // 待機中の画面は題名・モード・はじめる（v1.1 計画 D6）。得点は遊んでいる間だけ出る
-    await expect(page.getByText('得点:', { exact: true })).toHaveCount(0)
+    await expect(page.getByText('てんすう:', { exact: true })).toHaveCount(0)
 
     // Check if start button is visible
     await expect(page.getByRole('button', { name: /はじめる|Start/ })).toBeVisible()
     await page.getByRole('button', { name: /はじめる|Start/ }).click()
-    await expect(page.getByText('得点:', { exact: true })).toBeVisible()
+    await expect(page.getByText('てんすう:', { exact: true })).toBeVisible()
   })
 
   test('should start and play the game', async ({ page }) => {
@@ -54,7 +54,7 @@ test.describe('Fruit Harvest Game Flow', () => {
     }
     
     // Check if score changes (might be 0 if wrong interaction type)
-    await expect(page.getByText('得点:', { exact: true })).toBeVisible()
+    await expect(page.getByText('てんすう:', { exact: true })).toBeVisible()
   })
 
   test('should pause and resume the game', async ({ page }) => {

@@ -38,4 +38,15 @@ describe('待機中の画面', () => {
     expect(screen.getByText(/\d+分\d+秒/)).toBeInTheDocument()
     expect(screen.getByText('とりかた')).toBeInTheDocument()
   })
+
+  it('得点の行は、狭い幅でもタイトルの横で潰れない', () => {
+    // Given: 遊び始めたヘッダ
+    render(<FruitHarvestGame />)
+    // When: はじめる
+    act(() => screen.getByTestId('mode-start').click())
+    // Then: 得点の置き場は幅いっぱいに折り返す（sm 以上では横に並ぶ）
+    const slot = screen.getByTestId('score-slot')
+    expect(slot).toHaveClass('basis-full')
+    expect(slot).toContainElement(screen.getByTestId('score-value'))
+  })
 })
