@@ -1,6 +1,6 @@
-import { generateBalancedFruits, fruitFootprint, playableRightPercent, relayoutFruits, updateFruitPosition } from '../gameLogic'
+import { generateBalancedFruits, fruitFootprint, playableRightPercent, relayoutFruits, reservedBandsPercent, updateFruitPosition } from '../gameLogic'
 import { DROP_BAND_PX } from '../dropBand'
-import { PLAY_AREA_WIDTH, type Fruit } from '@/types/game'
+import { PLACEMENT_CONFIG, PLAY_AREA_WIDTH, type Fruit } from '@/types/game'
 
 /**
  * 右端の帯（7.5rem = 120px）と果物の右境界（レビュー #84）。
@@ -89,6 +89,98 @@ describe('ドロップ帯の実幅を配置の右端にする', () => {
     // When: 右端を求める
     // Then: 84
     expect(playableRightPercent({ width, height: 400 })).toBeCloseTo(PLAY_AREA_WIDTH)
+  })
+
+  it('DB-N-05: 文字を大きくして帯が 180px になっても、果物はその左で止まる', () => {
+    // Given: 根の文字サイズ 24px では 7.5rem が 180px になる
+    const area = { width: 600, height: 400, dropBandPx: 180 }
+    // When: 右端を求め、畑を作る
+    // Then: 120px ではなく、測った 180px を空ける
+    expect(playableRightPercent(area)).toBeCloseTo(100 - (180 / 600) * 100)
+    generateBalancedFruits(12, area).forEach((fruit) => {
+      expect(rightEdgePx(fruit, area)).toBeLessThanOrEqual(area.width - 180)
+    })
+  })
+
+  it('DB-N-06: 折り返した凡例の高さまで、果物の下端を止める', () => {
+    // Given: 凡例が 2 行になり、下の余白を含めて 90px を占める
+    const area = { width: 320, height: 400, reservedBottomPx: 90 }
+    // When: 畑を作る
+    // Then: どの果物も凡例の上で止まる（固定の 36px では足りない）
+    generateBalancedFruits(12, area).forEach((fruit) => {
+      const bottomPx = (fruitFootprint(fruit, area).bottom / 100) * area.height
+      expect(bottomPx).toBeLessThanOrEqual(area.height - 90 + 1e-6)
+    })
+  })
+
+  it('DB-N-07: 下へ動いても、凡例の中には入らない', () => {
+    // Given: 凡例が 90px。次の一歩でその中に入る
+    const area = { width: 600, height: 400, reservedBottomPx: 90 }
+    const fruit: Fruit = {
+      id: 1, type: 'apple', size: 'small', x: 20, y: 70, dx: 0, dy: 40,
+    }
+    // When: 下へ進める
+    const next = updateFruitPosition(fruit, 0.5, area)
+    // Then: 本体の下端は凡例の上で止まり、上へ跳ね返る
+    const bottomPx = (fruitFootprint(next, area).bottom / 100) * area.height
+    expect(bottomPx).toBeLessThanOrEqual(area.height - 90 + 1e-6)
+    expect(next.dy).toBeLessThan(0)
+  })
+
+  it('DB-N-08: 文字が 1.5 倍なら、果物の見積もりも 1.5 倍にして帯の外に置く', () => {
+    // Given: 根の文字サイズ 24px（16px の 1.5 倍）。果物の表示も rem で大きくなる
+    const area = { width: 600, height: 400, dropBandPx: 180, fontScale: 1.5 }
+    const large = { id: 1, type: 'watermelon' as const, size: 'large' as const, x: 0, y: 0, dx: 0, dy: 0 }
+    // When: 大きさを見積もり、畑を作る
+    // Then: 64px の 1.5 倍で見積もり、その本体が帯に入らない
+    expect((fruitFootprint(large, area).right / 100) * area.width).toBeCloseTo(64 * 1.5)
+    generateBalancedFruits(12, area).forEach((fruit) => {
+      expect(rightEdgePx(fruit, area)).toBeLessThanOrEqual(area.width - 180)
+    })
+  })
+
+  it('DB-A-06: 文字の倍率が 0 や負なら、1 倍に戻す', () => {
+    // Given: 測れなかった倍率
+    const large = { id: 1, type: 'apple' as const, size: 'large' as const, x: 0, y: 0, dx: 0, dy: 0 }
+    // When: 大きさを見積もる
+    // Then: 基準の 64px
+    for (const fontScale of [0, -1]) {
+      const area = { width: 600, height: 400, fontScale }
+      expect((fruitFootprint(large, area).right / 100) * area.width).toBeCloseTo(64)
+    }
+  })
+
+  it('DB-A-03: 帯の幅が 0 や負なら、120px に戻す', () => {
+    // Given: 測れなかった帯
+    // When: 右端を求める
+    // Then: ゼロ除算せず、既定の 120px を使う
+    const width = 600
+    const expected = 100 - (DROP_BAND_PX / width) * 100
+    expect(playableRightPercent({ width, height: 400, dropBandPx: 0 })).toBeCloseTo(expected)
+    expect(playableRightPercent({ width, height: 400, dropBandPx: -180 })).toBeCloseTo(expected)
+  })
+
+  it('DB-A-04: 帯がプレイエリアより広くても落ちない', () => {
+    // Given: 帯の幅がエリアより大きい
+    const area = { width: 100, height: 400, dropBandPx: 180 }
+    // When: 右端を求め、畑を作る
+    // Then: 百分率は 0 以上で、例外にならない
+    expect(playableRightPercent(area)).toBeGreaterThanOrEqual(0)
+    expect(() => generateBalancedFruits(4, area)).not.toThrow()
+  })
+
+  it('DB-A-05: 凡例の高さが 0 や負なら、既定の 36px に戻す', () => {
+    // Given: 測れなかった凡例
+    // When: 下端の予約を求める
+    // Then: 0 で割らず、既定の高さを使う
+    const area = { width: 600, height: 200 }
+    const fallback = (PLACEMENT_CONFIG.reservedBottomPx / area.height) * 100
+    expect(reservedBandsPercent({ ...area, reservedBottomPx: 0 }).bottom).toBeCloseTo(
+      Math.max(PLACEMENT_CONFIG.reservedBottomPercent, fallback)
+    )
+    expect(reservedBandsPercent({ ...area, reservedBottomPx: -90 }).bottom).toBeCloseTo(
+      Math.max(PLACEMENT_CONFIG.reservedBottomPercent, fallback)
+    )
   })
 
   it('DB-B-02: それより 1px 狭いと、帯の幅のほうを空ける', () => {

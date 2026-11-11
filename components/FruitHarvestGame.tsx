@@ -115,14 +115,28 @@ export function FruitHarvestGame(): React.ReactElement {
     if (!area) return
     const report = () => {
       const rect = area.getBoundingClientRect()
-      setPlayAreaSize(rect.width, rect.height)
+      const drop = area.querySelector('[data-testid="drop-area"]')
+      // 凡例はプレイエリアの兄弟（下端のオーバーレイ）なので、親から探す
+      const legend = area.parentElement?.querySelector('[data-testid="operation-legend"]')
+      const dropBandPx = drop ? drop.getBoundingClientRect().width : undefined
+      // 凡例の上端からプレイエリアの下端まで。bottom-1.5 の余白を含む
+      const reservedBottomPx = legend ? rect.bottom - legend.getBoundingClientRect().top : undefined
+      const rootPx = Number.parseFloat(getComputedStyle(document.documentElement).fontSize)
+      const fontScale = rootPx > 0 ? rootPx / 16 : undefined
+      setPlayAreaSize({ width: rect.width, height: rect.height, dropBandPx, reservedBottomPx, fontScale })
     }
     report()
     if (typeof ResizeObserver === 'undefined') return
     const observer = new ResizeObserver(report)
     observer.observe(area)
+    // 根の文字サイズが変わると rem の帯と凡例だけが伸び、プレイエリアの px は変わらない
+    observer.observe(document.documentElement)
+    const drop = area.querySelector('[data-testid="drop-area"]')
+    const legend = area.parentElement?.querySelector('[data-testid="operation-legend"]')
+    if (drop) observer.observe(drop)
+    if (legend) observer.observe(legend)
     return () => observer.disconnect()
-  }, [setPlayAreaSize])
+  }, [setPlayAreaSize, gameState])
 
   const isArcade = mode === 'arcade'
   const showArcadeResult = isArcade && arcadeResult !== null
@@ -575,7 +589,7 @@ export function FruitHarvestGame(): React.ReactElement {
               <FruitSprite type="apple" size={22} className="inline-block align-[-0.15em] mr-1" decorative />
               {t.gameTitle}
             </h1>
-            <div className="flex-1 min-w-0">
+            <div data-testid="score-slot" className="basis-full min-w-0 sm:basis-auto sm:flex-1">
               {showPlayHud && (
               <ScoreBar
                 score={score}
