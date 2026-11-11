@@ -139,7 +139,7 @@ e2e/              # Playwrightエンドツーエンドテスト
 6. **パーティクルエフェクト**: Framer Motionによる視覚的フィードバック
 7. **サウンドエフェクト**: 収穫時の効果音とBGM（設定で制御可能）
 8. **キーボード対応**: `useKeyboardControls`でキーボード操作をサポート
-9. **タッチのみの端末**: 遊べる。`TouchDeviceNotice`が一度だけ「スマホでもあそべるよ！ながおしでレモン、なぞってスイカをはこぼう。」と案内する（長押しは右クリックの代わり。e2e は `e2e/touch-notice.spec.ts`）。ポインタがある端末には出さない
+9. **タッチのみの端末**: 遊べる。`TouchDeviceNotice`が一度だけ「スマホでもあそべるよ！ながおしでレモン、なぞってスイカをはこぼう。」と案内する（長押しは右クリックの代わり。e2e は `e2e/touch-notice.spec.ts`）。出すのは主入力が `(hover: none) and (pointer: coarse)` のときだけ。マウスが主入力の端末には出さない
 
 ## Development Patterns
 
