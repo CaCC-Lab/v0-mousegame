@@ -83,11 +83,11 @@
 | 3-2 `file://` で動くか／案内 | △ | `next.config.mjs:3` `output:'export'`。itch 向けは `scripts/itch-path-rewrite.mjs` が HTML/CSS の絶対パスを相対化するが JS の webpack runtime に `"/_next/"` が残る（`dist-itch` の chunk で確認）。`file://` は未テスト、案内文もない。itch/PLiCy はサーバー配信なので実害は限定的。Electron は `out/index.html` を `loadFile`（`electron/main.js:26`） |
 | 3-3 `?test=1` 自動プレイ／`?debug=1` 診断 | **✗** | URL パラメータは `?lang=` のみ（`hooks/useLanguage.ts:19-27`）。自動プレイ・画面診断なし。gif は外部の Playwright スクリプトで撮影 |
 | 3-4 リズム系 | N/A | |
-| 3-5 iOS 音 | N/A | マウス専用（タッチ端末には案内バナー）。AudioContext は最初の `play()` で生成し `resume()`（`lib/soundManager.ts:43-75`）。初回音は「はじめる」クリック時 |
+| 3-5 iOS 音 | N/A | タッチでも遊べる（案内は「スマホでもあそべるよ！ながおしで…」。長押しは右クリックの代わり）。AudioContext は最初の `play()` で生成し `resume()`（`lib/soundManager.ts:43-75`）。初回音は「はじめる」時。iOS 実機の音はこの監査では未計測 |
 | 3-7／3-8 見た目とロジック分離・素材差し替え | ✓ | hooks/lib と components の分離。果物画像は `public/sprites/{apple,blueberry,lemon,watermelon}.png` 256×256 の固定名で、上書きで差し替わる（`components/game/FruitSprite.tsx:34`） |
 | 3-10 隠す・戻す手段 | **✗** | フラグなし・`git tag` なし。itch の戻し方は `docs/itch-io-release.md` §9「Replace file」のみで**前の版を保持する手順がない**。「公開してみて。すぐ戻せる？」に即答できない |
 | 3-11 canvas font inherit／文字の自動縮小 | N/A／未 | canvas 不使用。DOM テキストの枠溢れは 1280×800 では見られず（`e2e/viewport-fit.spec.ts` あり）。小さい画面は未 |
-| 3-11 iOS `100vh` | △ | `components/FruitHarvestGame.tsx:423` に `min-h-screen`（100vh）。内側は `100dvh`（`:436`）。iOS は対象外なので影響小 |
+| 3-11 iOS `100vh` | △ | `components/FruitHarvestGame.tsx:423` に `min-h-screen`（100vh）。内側は `100dvh`（`:436`）。タッチ端末でも遊べる。`100vh` の実機での影響はこの監査では未計測 |
 | 3-11 端末固有の文言 | ✓ | OS・機種名なし。タッチ案内は一般表現（`translations.ts:73`） |
 | 3-12 重ねる要素の depth | **✗** | **果物同士が重なり、下の果物が取れない**。実測: 1回目のアーケードで 12 個中 2 組が重なり、Playwright の りんごクリックが「スイカの subtree intercepts pointer events」で 30 秒失敗。配置に重なり回避がない（`lib/gameLogic.ts` の配置は乱数のみ）。果物が右端のドロップ帯（80px）の下に潜ることもあり e2e が回避している（`e2e/game-flow.spec.ts:39-52`）。パワーアップは 800×600 固定座標（`useGameLogic.ts:37`）で実プレイ領域と無関係 |
 

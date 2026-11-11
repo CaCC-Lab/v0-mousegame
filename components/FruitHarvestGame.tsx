@@ -551,7 +551,7 @@ export function FruitHarvestGame(): React.ReactElement {
         画面はスリムなHUDバー（タイトル・スコア・時間）と操作バーで挟み、
         残りの高さをすべてプレイエリアに割り当てる。
         目標や収穫数はプレイエリアの上にクリック透過のオーバーレイとして重ねる。
-        対象はマウスのあるPC（タッチ専用端末はTouchDeviceNoticeが案内する）。
+        レイアウトの基準はマウスのあるPC。タッチのみの端末は TouchDeviceNotice が長押しの案内を出し、遊べる。
         画面が低すぎる場合はmin-hを下回らず、ページ側がスクロールする。
       */}
       <div className="max-w-6xl mx-auto flex flex-col h-[calc(100dvh-1rem)] md:h-[calc(100dvh-1.5rem)] min-h-[480px]">

@@ -41,9 +41,8 @@ export default defineConfig({
       name: 'webkit',
       use: { ...devices['Desktop Safari'] },
     },
-    // Mobile Chrome プロジェクトは持たない。
-    // このゲームはマウス操作の練習ツールで、タッチのみの端末は対象外
-    // （マウスなし端末には TouchDeviceNotice が案内を表示する）
+    // 既定のプロジェクトはデスクトップの3ブラウザ。Mobile Chrome プロジェクトは持たない。
+    // タッチのみの端末でも遊べる。案内（ながおし）は e2e/touch-notice.spec.ts が iPhone 12 で確かめる。
   ],
 
   webServer: {
