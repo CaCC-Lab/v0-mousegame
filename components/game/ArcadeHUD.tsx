@@ -99,6 +99,12 @@ export function ArcadeHUD({
           </div>
         </div>
       </div>
+      <span
+        data-testid="combo-effect"
+        className="whitespace-nowrap text-[11px] font-bold leading-tight text-white"
+      >
+        {t.comboEffect}
+      </span>
 
       {isFever && (
         <motion.div

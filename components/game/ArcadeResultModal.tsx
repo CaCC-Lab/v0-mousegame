@@ -45,7 +45,7 @@ function StatCell({
   return (
     <div className="rounded-[var(--radius-md)] bg-gray-50 px-3 py-2 text-center" data-testid={testId}>
       <div className="text-xs font-semibold text-gray-500">{label}</div>
-      <div className="text-display text-xl font-bold tabular-nums">{value}</div>
+      <div data-stat-value className="text-display text-xl font-bold tabular-nums">{value}</div>
     </div>
   )
 }
@@ -105,20 +105,25 @@ export function ArcadeResultModal({
         )}
 
         {typeof result.playedSec === 'number' && (
-          // 遊びの約束「どこまで つづけられるかな？」に、まず答える（v1.2 のあとの初見テスト 1番目）
-          <p data-testid="arcade-played-seconds" className="mt-1 text-center text-display text-xl font-bold" style={{ color: 'var(--color-secondary-dark, #0f766e)' }}>
+          // 0点のときはこの行を一番大きくする（2026-11-11）。点が入っていれば得点が主役のまま
+          <p
+            data-testid="arcade-played-seconds"
+            data-emphasis={isZero ? 'hero' : 'support'}
+            className={`mt-1 text-center text-display font-bold ${isZero ? 'text-4xl' : 'text-xl'}`}
+            style={{ color: 'var(--color-secondary-dark, #0f766e)' }}
+          >
             {t.playedSeconds.replace('{seconds}', String(result.playedSec))}
           </p>
         )}
 
-        {/* 0点を大きな赤で出すと叱られたように感じる（初見テスト）。0点は控えめに出す（v1.2 D6） */}
+        {/* 0点の 0 はベスト・コンボと同じ text-xl。点が入っているときはこれまでどおり大きく出す */}
         <div
-          className="mt-2 text-center text-display font-bold tabular-nums"
+          className={`mt-2 text-center text-display font-bold tabular-nums ${isZero ? 'text-xl text-gray-400' : ''}`}
           data-testid="arcade-result-score"
           data-emphasis={isZero ? 'low' : 'high'}
           style={
             isZero
-              ? { color: 'var(--color-gray-400, #9ca3af)', fontSize: '2rem', lineHeight: 1.1 }
+              ? undefined
               : { color: 'var(--color-berry)', fontSize: '3rem', lineHeight: 1.1 }
           }
         >

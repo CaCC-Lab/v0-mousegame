@@ -634,7 +634,7 @@ export function FruitHarvestGame(): React.ReactElement {
               プレイエリアの下端に離して置く（ドロップエリアの手前まで）
             */}
             {showPlayHud && (
-            <div className="absolute bottom-1.5 left-0 right-20 z-20 px-2 pointer-events-none">
+            <div className="absolute bottom-1.5 left-0 right-[7.5rem] z-20 px-2 pointer-events-none">
               <OperationLegend t={t} />
             </div>
             )}
@@ -678,8 +678,8 @@ export function FruitHarvestGame(): React.ReactElement {
               // 画面が低いとカード2枚が入りきらずプレイエリアからはみ出し、
               // 下の操作ボタンに重なってタップを奪ってしまう。
               // オーバーレイ内でスクロールさせて外へ出さない
-              // 右端のドロップエリア（w-20）の手前に収める。狭い幅でカードがドロップエリアに重なっていた（v1.2 D8）
-              <div className="absolute inset-y-0 left-0 right-20 z-30 flex items-center justify-center overflow-y-auto bg-black/35 py-3">
+              // 右端の帯（w-[7.5rem]。「スイカをここへ」が1行で収まる幅）の手前に収める
+              <div className="absolute inset-y-0 left-0 right-[7.5rem] z-30 flex items-center justify-center overflow-y-auto bg-black/35 py-3">
                 <ModeSelector
                   onSelectMode={handleSelectMode}
                   onStart={handleStart}

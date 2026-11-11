@@ -78,7 +78,7 @@ describe('4. チャレンジ中の「ステージ選択」は出さない', () =
     localStorage.setItem('fruitHarvestLanguage', JSON.stringify('ja'))
     render(<FruitHarvestGame />)
     act(() => screen.getByTestId('mode-start').click())
-    expect(screen.queryByRole('button', { name: /ステージ選択/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /ステージをえらぶ/ })).not.toBeInTheDocument()
   })
 
   it('れんしゅう中は「ステージ選択」がある', () => {
@@ -87,6 +87,6 @@ describe('4. チャレンジ中の「ステージ選択」は出さない', () =
     render(<FruitHarvestGame />)
     act(() => screen.getByTestId('mode-select-practice').click())
     act(() => screen.getByTestId('mode-start').click())
-    expect(screen.getByRole('button', { name: /ステージ選択/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /ステージをえらぶ/ })).toBeEnabled()
   })
 })

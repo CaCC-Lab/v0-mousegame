@@ -77,7 +77,7 @@ test.describe('Electron App E2E Tests', () => {
     await window.waitForTimeout(500)
     
     // Check if game is reset (score should be 0)
-    const scoreText = await window.locator('text=/得点:|Score:/').textContent()
+    const scoreText = await window.locator('text=/てんすう:|Score:/').textContent()
     expect(scoreText).toContain('0')
   })
 
