@@ -23,6 +23,12 @@ function isFormControl(target: EventTarget | null): boolean {
   )
 }
 
+/** ダイアログの中で押されたキーかどうか（ダイアログ自身の操作を優先し、裏のゲームを動かさない） */
+function isInsideDialog(target: EventTarget | null): boolean {
+  if (!target || typeof (target as Element).closest !== 'function') return false
+  return (target as Element).closest('[role="dialog"], [role="alertdialog"]') !== null
+}
+
 export function useKeyboardControls(
   handlers: KeyboardHandlers,
   enabled: boolean = true
@@ -35,7 +41,7 @@ export function useKeyboardControls(
     // チェックボックスやセレクトにフォーカスがあるときは、その要素本来のキー操作を優先する。
     // ここで横取りすると、スペースキーでモードを切り替えられないなど
     // キーボードだけで操作できない状態になる
-    if (isFormControl(event.target)) return
+    if (isFormControl(event.target) || isInsideDialog(event.target)) return
 
     switch (event.key) {
       case ' ':
