@@ -1,6 +1,6 @@
 'use client'
 
-import React from 'react'
+import React, { useEffect, useRef } from 'react'
 import { FruitSprite } from './FruitSprite'
 import { Button } from '@/components/ui/button'
 import { buildOperationReport, type OperationTally } from '@/lib/operationReport'
@@ -21,7 +21,24 @@ function formatRate(tally: OperationTally | null): string {
 
 /** 先生・保護者むけ: 操作ごとの せいこう率（docs/game-spec.md §5） */
 export function OperationReportModal({ open, onClose, cumulativeStats, lastSessionStats, t }: OperationReportModalProps): React.ReactElement | null {
+  const closeRef = useRef<HTMLButtonElement>(null)
+
+  useEffect(() => {
+    if (open) closeRef.current?.focus()
+  }, [open])
+
   if (!open) return null
+
+  // 操作できるのは「とじる」だけなので、Tab でも後ろの画面（スタートなど）へ出さない
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault()
+      onClose()
+    } else if (e.key === 'Tab') {
+      e.preventDefault()
+      closeRef.current?.focus()
+    }
+  }
 
   const r = t.operationReport
   const rows = buildOperationReport(cumulativeStats, lastSessionStats)
@@ -34,11 +51,12 @@ export function OperationReportModal({ open, onClose, cumulativeStats, lastSessi
         aria-modal="true"
         aria-labelledby="operation-report-title"
         data-testid="operation-report"
+        onKeyDown={handleKeyDown}
         className="max-w-2xl w-full max-h-[85vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
       >
         <div className="flex items-center justify-between mb-2">
           <h2 id="operation-report-title" className="text-xl font-bold">{r.title}</h2>
-          <Button data-testid="report-close" onClick={onClose} variant="outline" size="sm">
+          <Button ref={closeRef} data-testid="report-close" onClick={onClose} variant="outline" size="sm">
             {t.close}
           </Button>
         </div>

@@ -1,5 +1,5 @@
 import React from 'react'
-import { render, screen, act, within } from '@testing-library/react'
+import { render, screen, act, within, fireEvent } from '@testing-library/react'
 import { FruitHarvestGame } from '../FruitHarvestGame'
 import { OperationReportModal } from '../game/OperationReportModal'
 import { translations } from '@/lib/i18n/translations'
@@ -17,6 +17,8 @@ import { GAMIFICATION_STORAGE_KEY, GAMIFICATION_SAVE_VERSION } from '@/types/gam
  * | ORM-A-02 | 記録なし | Boundary – 0 | 「—」と「まだ あそんでいない」 | ゼロ除算しない |
  * | ORM-A-03 | 保存データが壊れている | Invalid format | 0 回で開ける | - |
  * | ORM-A-04 | 英語 | i18n | 英語の見出し | - |
+ * | ORM-A-05 | 開いた直後に Tab / Shift+Tab | キーボード | フォーカスは「とじる」から出ない | 後ろのスタートを押させない |
+ * | ORM-N-04 | Escape | キーボード | onClose | - |
  */
 const zero = { click: { totalSuccess: 0, totalFail: 0 }, doubleClick: { totalSuccess: 0, totalFail: 0 }, rightClick: { totalSuccess: 0, totalFail: 0 }, drop: { totalSuccess: 0, totalFail: 0 } }
 const cumulative = { ...zero, click: { totalSuccess: 30, totalFail: 10 }, doubleClick: { totalSuccess: 5, totalFail: 15 } }
@@ -59,6 +61,30 @@ describe('OperationReportModal', () => {
     // Given: 英語 When: 開く Then: 英語のタイトル
     render(<OperationReportModal open onClose={() => {}} cumulativeStats={cumulative} lastSessionStats={null} t={translations.en} />)
     expect(screen.getByRole('dialog', { name: translations.en.operationReport.title })).toBeInTheDocument()
+  })
+})
+
+describe('OperationReportModal: キーボード', () => {
+  it('ORM-A-05: 開くと「とじる」にフォーカスし、Tab / Shift+Tab でも外へ出ない', () => {
+    // Given: 後ろにスタートボタンがある画面で開く
+    render(<><button>スタート</button><OperationReportModal open onClose={() => {}} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} /></>)
+    const close = screen.getByTestId('report-close')
+    expect(close).toHaveFocus()
+    // When: Tab / Shift+Tab
+    const tab = fireEvent.keyDown(close, { key: 'Tab' })
+    const shiftTab = fireEvent.keyDown(close, { key: 'Tab', shiftKey: true })
+    // Then: 既定のフォーカス移動を止め、「とじる」のまま
+    expect(tab).toBe(false)
+    expect(shiftTab).toBe(false)
+    expect(close).toHaveFocus()
+  })
+
+  it('ORM-N-04: Escape で onClose', () => {
+    // Given: 開いている When: Escape Then: onClose 1回
+    const onClose = jest.fn()
+    render(<OperationReportModal open onClose={onClose} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} />)
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
 
