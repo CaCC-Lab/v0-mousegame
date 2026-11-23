@@ -34,6 +34,7 @@ import { LevelUpNotification } from './game/LevelUpNotification'
 import { DailyPracticeCard } from './game/DailyPracticeCard'
 import { DailyGoalComplete } from './game/DailyGoalComplete'
 import { CollectionModal } from './game/CollectionModal'
+import { OperationReportModal } from './game/OperationReportModal'
 import { Button } from './ui/button'
 import { Fruit, InteractionOptions, InteractionType } from '@/types/game'
 import type { InteractionType as IT } from '@/types/game'
@@ -102,6 +103,7 @@ export function FruitHarvestGame(): React.ReactElement {
   const [selectedFruitIndex, setSelectedFruitIndex] = useState<number>(-1)
   const [showStageSelector, setShowStageSelector] = useState(false)
   const [showCollection, setShowCollection] = useState(false)
+  const [showOperationReport, setShowOperationReport] = useState(false)
   const [showStageClearMessage, setShowStageClearMessage] = useState(false)
   const [stageClearProcessed, setStageClearProcessed] = useState(false)
   const [showResultModal, setShowResultModal] = useState(false)
@@ -397,7 +399,7 @@ export function FruitHarvestGame(): React.ReactElement {
   // 結果・ステージクリアなどを出しているあいだは、キーボードでゲームを始めたり取ったりしない
   // （以前は Enter で結果が消え、ステージクリアを出したまま裏で同じステージが始まっていた。docs/game-spec.md §4.3）。
   // これらのモーダルはフォーカスを中に持たないので、useKeyboardControls のダイアログ判定だけでは防げない
-  const isModalOpen = showArcadeResult || showResultModal || showStageClearMessage || showStageSelector || showCollection
+  const isModalOpen = showArcadeResult || showResultModal || showStageClearMessage || showStageSelector || showCollection || showOperationReport
   const { gameContainerRef } = useKeyboardControls({
     onSpacePress: handleKeyboardSpace,
     onEnterPress: handleKeyboardEnter,
@@ -737,6 +739,7 @@ export function FruitHarvestGame(): React.ReactElement {
             onStageSelect={() => setShowStageSelector(true)}
             onHardModeChange={handleHardModeChange}
             onToggleLanguage={toggleLanguage}
+            onOpenReport={() => setShowOperationReport(true)}
             doubleClickSpeed={doubleClickSpeed}
             onDoubleClickSpeedChange={setDoubleClickSpeed}
             t={t}
@@ -815,6 +818,15 @@ export function FruitHarvestGame(): React.ReactElement {
           </Button>
         </div>
       )}
+
+      <OperationReportModal
+        t={t}
+        open={showOperationReport}
+        onClose={() => setShowOperationReport(false)}
+        onReset={gamification.resetOperationRecords}
+        cumulativeStats={gamification.cumulativeStats}
+        lastSessionStats={gamification.lastSessionStats}
+      />
 
       <CollectionModal
         t={t}

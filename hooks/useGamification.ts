@@ -11,17 +11,19 @@ import type {
   StarRating,
   StageStarData,
 } from '@/types/gamification'
-import { BADGE_DEFINITIONS } from '@/types/gamification'
+import { BADGE_DEFINITIONS, GAMIFICATION_STORAGE_KEY } from '@/types/gamification'
 import type { InteractionType } from '@/types/game'
 import {
   addSessionToCumulative,
   calculateAllMasteryLevels,
   calculateStarRating,
   checkBadgeEarned,
+  clearOperationRecords,
   createDefaultGamificationData,
   getProgressToNextLevel,
   loadGamificationData,
   mergeStageStarsMonotonic,
+  parseGamificationData,
   saveGamificationData,
 } from '@/lib/gamificationManager'
 
@@ -43,6 +45,8 @@ export interface UseGamificationReturn {
   ) => StarRating
   commitSession: (stageNumber: number, starRating: StarRating, sessionStats: SessionOperationStats) => void
   clearNewBadge: () => void
+  /** せいこう率の記録を消す（星とバッジは残す） */
+  resetOperationRecords: () => void
   masteryLevels: OperationMasteryData
   masteryProgress: { [K in InteractionType]: { current: number; nextThreshold: number; remaining: number } | null }
   isHydrated: boolean
@@ -113,6 +117,16 @@ export function useGamification(): UseGamificationReturn {
     }
   }, [])
 
+  // 別のタブでの保存（星・バッジの追加、記録のリセット）を取りこむ。古いデータで上書きしないため
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== null && e.key !== GAMIFICATION_STORAGE_KEY) return
+      setData(parseGamificationData(e.key === null ? null : e.newValue))
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
+  }, [])
+
   const calculateStarRatingCb = useCallback(
     (_stageNumber: number, cleared: boolean, timeLeft: number, timeLimit: number, sessionStats: SessionOperationStats) =>
       calculateStarRating(cleared, timeLeft, timeLimit, sessionStats),
@@ -136,6 +150,15 @@ export function useGamification(): UseGamificationReturn {
   )
 
   const clearNewBadge = useCallback(() => setNewlyEarnedBadge(null), [])
+
+  const resetOperationRecords = useCallback(() => {
+    setPreviousSessionStats(null)
+    setData(prev => {
+      const next = clearOperationRecords(prev)
+      saveGamificationData(next)
+      return next
+    })
+  }, [])
 
   const badgeProgress = useMemo(() => buildBadgeProgress(data.cumulativeStats), [data.cumulativeStats])
 
@@ -161,6 +184,7 @@ export function useGamification(): UseGamificationReturn {
     calculateStarRating: calculateStarRatingCb,
     commitSession,
     clearNewBadge,
+    resetOperationRecords,
     masteryLevels,
     masteryProgress,
     isHydrated,
