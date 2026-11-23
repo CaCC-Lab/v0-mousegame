@@ -25,6 +25,18 @@ export const translations = {
     stageCleared: 'をクリアしました！',
     nextStage: '次のステージへ',
     close: '閉じる',
+    operationReport: {
+      open: 'せいこう率（先生・保護者むけ）',
+      title: 'そうさごとの せいこう率（先生・保護者むけ）',
+      description: 'これまでに遊んだ れんしゅう・チャレンジの合計です。せいこう率は「とれた回数 ÷（とれた回数＋ミス）」です。',
+      operation: 'そうさ',
+      success: 'とれた',
+      miss: 'ミス',
+      totalRate: 'せいこう率',
+      lastRate: '前回',
+      empty: 'まだ あそんでいないので、記録が ありません。',
+      note: '前回 = 最後に遊んだ1回。「—」は その操作をまだ していないことを表します。記録はこのブラウザに保存されています。',
+    },
     
     // Stage Selector
     targetScore: '目標スコア',
@@ -268,6 +280,18 @@ export const translations = {
     stageCleared: 'cleared!',
     nextStage: 'Next Stage',
     close: 'Close',
+    operationReport: {
+      open: 'Success rates (for teachers & parents)',
+      title: 'Success rate by operation (for teachers & parents)',
+      description: 'Totals across all Practice and Challenge games. Success rate = harvested ÷ (harvested + misses).',
+      operation: 'Operation',
+      success: 'Harvested',
+      miss: 'Misses',
+      totalRate: 'Success rate',
+      lastRate: 'Last game',
+      empty: 'No games played yet, so there is no record.',
+      note: 'Last game = the most recent game. "—" means the operation has not been tried yet. Records are saved in this browser.',
+    },
     
     // Stage Selector
     targetScore: 'Target Score',

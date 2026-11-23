@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Play, Pause, RefreshCw, Zap, Languages, Settings, LucideIcon } from 'lucide-react'
+import { Play, Pause, RefreshCw, Zap, Languages, Settings, BarChart3, LucideIcon } from 'lucide-react'
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { DifficultySelector } from '../DifficultySelector'
@@ -45,6 +45,8 @@ interface GameControlsProps {
    * 初見テストで2回続けて指摘された（docs/audits/20260924-ai-first-look-v1.2.md）
    */
   hideStageSelect?: boolean
+  /** 先生・保護者むけの せいこう率を開く（省略時はボタンを出さない） */
+  onOpenReport?: () => void
   t: TranslationType
 }
 
@@ -195,6 +197,7 @@ export function GameControls({
   onToggleLanguage,
   showStart = true,
   hideStageSelect = false,
+  onOpenReport,
   t
 }: GameControlsProps): React.ReactElement {
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -252,6 +255,18 @@ export function GameControls({
               language={language}
               t={t}
             />
+            {onOpenReport && (
+              <Button
+                data-testid="operation-report-open"
+                onClick={onOpenReport}
+                variant="outline"
+                size="sm"
+                className="flex items-center font-semibold hover-lift bg-white"
+              >
+                <BarChart3 className="w-4 h-4 mr-1.5" aria-hidden />
+                {t.operationReport.open}
+              </Button>
+            )}
           </div>
         )}
       </div>
