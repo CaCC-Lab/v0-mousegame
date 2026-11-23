@@ -48,7 +48,7 @@ import {
   type DebugFlags,
 } from '@/lib/debugTools'
 import { DebugPanel } from './game/DebugPanel'
-import { getRequiredInteraction } from '@/lib/gameLogic'
+import { getRequiredFruit, getRequiredInteraction } from '@/lib/gameLogic'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
@@ -214,12 +214,15 @@ export function FruitHarvestGame(): React.ReactElement {
   }, [startGame, resetAnimations])
 
   // 結果の「にがてな そうさ」から、れんしゅうを始める（v1.2 D4）
+  // 1面はりんごだけなので、にがてな果物が出る面を選んでから始める
   const handlePracticeWeak = useCallback(() => {
     resetAnimations()
     setShowFeverIntro(false)
     setSelectedMode('practice')
-    startGame('practice')
-  }, [startGame, resetAnimations])
+    const weak = arcadeResult?.weakOperation
+    const practiceStage = weak ? stage?.selectStageForFruit(getRequiredFruit(weak)) : null
+    startGame('practice', practiceStage)
+  }, [startGame, resetAnimations, arcadeResult, stage])
 
   // チャレンジで果物が動き出した瞬間に一度だけ知らせる（段差を見て分かるように。v1.2 D2）
   const [showMovingNotice, setShowMovingNotice] = useState(false)

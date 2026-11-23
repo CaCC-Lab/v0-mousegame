@@ -157,8 +157,9 @@ export function useGameLogic() {
    *                 'arcade' は60秒スコアアタック。
    *                 アーケードは記録を比べる遊びなので、時間・フルーツ数・得点計算を
    *                 ステージや難易度設定から切り離して常に同じ条件にする。
+   * @param practiceStage 同じ操作の中で選び直した面（state の反映を待たずに始めるため）
    */
-  const startGame = useCallback((nextMode: GameMode = 'practice') => {
+  const startGame = useCallback((nextMode: GameMode = 'practice', practiceStage?: Stage | null) => {
     setMode(nextMode)
     modeRef.current = nextMode
     setGameState('playing')
@@ -180,7 +181,7 @@ export function useGameLogic() {
       // 最初の畑から4種類そろえて、どの操作でもすぐ点を取れるようにする
       setFruits(generateBalancedFruits(ARCADE_CONFIG.fruitCount, playAreaSizeRef.current))
     } else {
-      const currentStageInfo = stage.currentStageInfo
+      const currentStageInfo = practiceStage ?? stage.currentStageInfo
       if (currentStageInfo) {
         setTimeLeft(currentStageInfo.timeLimit)
         timeLeftRef.current = currentStageInfo.timeLimit
