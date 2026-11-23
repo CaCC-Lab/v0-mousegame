@@ -36,6 +36,10 @@ export const translations = {
       lastRate: '前回',
       empty: 'まだ あそんでいないので、記録が ありません。',
       note: '前回 = 最後に遊んだ1回。「—」は その操作をまだ していないことを表します。記録はこのブラウザに保存されています。',
+      reset: 'きろくを けす',
+      resetConfirm: 'とれた回数・ミス・前回の きろくを ぜんぶ けします。もとに もどせません。（ほし と バッジ は のこります）',
+      resetConfirmButton: 'けす',
+      resetCancel: 'やめる',
     },
     
     // Stage Selector
@@ -291,6 +295,10 @@ export const translations = {
       lastRate: 'Last game',
       empty: 'No games played yet, so there is no record.',
       note: 'Last game = the most recent game. "—" means the operation has not been tried yet. Records are saved in this browser.',
+      reset: 'Clear records',
+      resetConfirm: 'This clears all harvest, miss and last-game records. It cannot be undone. (Stars and badges are kept.)',
+      resetConfirmButton: 'Clear',
+      resetCancel: 'Cancel',
     },
     
     // Stage Selector

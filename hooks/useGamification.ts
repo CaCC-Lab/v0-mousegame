@@ -18,6 +18,7 @@ import {
   calculateAllMasteryLevels,
   calculateStarRating,
   checkBadgeEarned,
+  clearOperationRecords,
   createDefaultGamificationData,
   getProgressToNextLevel,
   loadGamificationData,
@@ -43,6 +44,8 @@ export interface UseGamificationReturn {
   ) => StarRating
   commitSession: (stageNumber: number, starRating: StarRating, sessionStats: SessionOperationStats) => void
   clearNewBadge: () => void
+  /** せいこう率の記録を消す（星とバッジは残す） */
+  resetOperationRecords: () => void
   masteryLevels: OperationMasteryData
   masteryProgress: { [K in InteractionType]: { current: number; nextThreshold: number; remaining: number } | null }
   isHydrated: boolean
@@ -137,6 +140,15 @@ export function useGamification(): UseGamificationReturn {
 
   const clearNewBadge = useCallback(() => setNewlyEarnedBadge(null), [])
 
+  const resetOperationRecords = useCallback(() => {
+    setPreviousSessionStats(null)
+    setData(prev => {
+      const next = clearOperationRecords(prev)
+      saveGamificationData(next)
+      return next
+    })
+  }, [])
+
   const badgeProgress = useMemo(() => buildBadgeProgress(data.cumulativeStats), [data.cumulativeStats])
 
   const masteryLevels = useMemo(() => calculateAllMasteryLevels(data.cumulativeStats), [data.cumulativeStats])
@@ -161,6 +173,7 @@ export function useGamification(): UseGamificationReturn {
     calculateStarRating: calculateStarRatingCb,
     commitSession,
     clearNewBadge,
+    resetOperationRecords,
     masteryLevels,
     masteryProgress,
     isHydrated,

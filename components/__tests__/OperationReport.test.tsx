@@ -24,6 +24,17 @@ import { GAMIFICATION_STORAGE_KEY, GAMIFICATION_SAVE_VERSION } from '@/types/gam
  * | ORM-A-07 | パネル内で押して背景で離す | 文字の選択 | 閉じない | - |
  * | ORM-A-09 | フォーカスがダイアログの外（body）にある | 選択・クリックでフォーカスが外れた | Escape で閉じ、Tab で「とじる」に戻る | - |
  * | ORM-A-08 | クリックでフォーカスが移らない（Safari） | ブラウザ差 | 閉じたら「せいこう率」ボタンに戻る | jsdom の click もフォーカスしない |
+ * | RST-N-01 | 記録あり・「きろくを けす」 | Equivalence – normal | 確認が出て「やめる」にフォーカス。まだ消さない | 押しまちがい対策 |
+ * | RST-N-02 | 確認で「けす」 | Equivalence – normal | onReset 1回、確認は消え「とじる」にフォーカス | - |
+ * | RST-A-01 | 確認で「やめる」 | 取り消し | onReset なし、「きろくを けす」にフォーカス | - |
+ * | RST-A-02 | 記録0回 | Boundary – 0 | 「きろくを けす」は押せない | - |
+ * | RST-A-03 | onReset を渡さない | Boundary – undefined | ボタンを出さない | - |
+ * | RST-A-04 | 確認中に Escape | キーボード | 確認だけ閉じる（onClose なし） | - |
+ * | RST-A-05 | 確認中に閉じて開き直す | 状態 | 確認は出ていない | - |
+ * | RST-A-06 | Tab / Shift+Tab | キーボード | ダイアログ内のボタンを回り、外へ出ない | ORM-A-05 の拡張 |
+ * | RST-A-07 | 英語 | i18n | 英語のボタン名 | - |
+ * | RST-N-03 | せっていから開いて消す | Integration | 表は「—」、保存も0、星とバッジは残る | - |
+ * | RST-A-08 | せっていから開いて「やめる」 | Integration | 保存は変わらない | - |
  */
 const zero = { click: { totalSuccess: 0, totalFail: 0 }, doubleClick: { totalSuccess: 0, totalFail: 0 }, rightClick: { totalSuccess: 0, totalFail: 0 }, drop: { totalSuccess: 0, totalFail: 0 } }
 const cumulative = { ...zero, click: { totalSuccess: 30, totalFail: 10 }, doubleClick: { totalSuccess: 5, totalFail: 15 } }
@@ -71,7 +82,7 @@ describe('OperationReportModal', () => {
 
 describe('OperationReportModal: キーボード', () => {
   it('ORM-A-05: 開くと「とじる」にフォーカスし、Tab / Shift+Tab でも外へ出ない', () => {
-    // Given: 後ろにスタートボタンがある画面で開く
+    // Given: 後ろにスタートボタンがある画面で開く（リセットなし＝ボタンは「とじる」だけ）
     render(<><button>スタート</button><OperationReportModal open onClose={() => {}} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} /></>)
     const close = screen.getByTestId('report-close')
     expect(close).toHaveFocus()
@@ -208,5 +219,152 @@ describe('せっていから開く', () => {
     open()
     const dialog = screen.getByRole('dialog', { name: translations.ja.operationReport.title })
     expect(within(within(dialog).getByTestId('report-row-click')).getByTestId('report-total-rate')).toHaveTextContent('—')
+  })
+})
+
+describe('OperationReportModal: きろくを けす', () => {
+  const renderModal = (props: Partial<React.ComponentProps<typeof OperationReportModal>> = {}) => {
+    const onReset = jest.fn()
+    const onClose = jest.fn()
+    const utils = render(
+      <>
+        <button>スタート</button>
+        <OperationReportModal open onClose={onClose} onReset={onReset} cumulativeStats={cumulative} lastSessionStats={last} t={translations.ja} {...props} />
+      </>
+    )
+    return { onReset, onClose, ...utils }
+  }
+  const r = translations.ja.operationReport
+
+  it('RST-N-01: 押すと確認が出て、まだ消さない', () => {
+    // Given: 記録あり When: きろくを けす
+    const { onReset } = renderModal()
+    fireEvent.click(screen.getByRole('button', { name: r.reset }))
+    // Then: 確認文と「やめる」（フォーカス）、onReset はまだ
+    expect(screen.getByText(r.resetConfirm)).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: r.resetCancel })).toHaveFocus()
+    expect(onReset).not.toHaveBeenCalled()
+  })
+
+  it('RST-N-02: 確認で「けす」を押すと onReset、確認は閉じて「とじる」へ', () => {
+    // Given: 確認を出した When: けす
+    const { onReset } = renderModal()
+    fireEvent.click(screen.getByRole('button', { name: r.reset }))
+    fireEvent.click(screen.getByRole('button', { name: r.resetConfirmButton }))
+    // Then: onReset 1回、確認なし、「とじる」にフォーカス
+    expect(onReset).toHaveBeenCalledTimes(1)
+    expect(screen.queryByText(r.resetConfirm)).not.toBeInTheDocument()
+    expect(screen.getByTestId('report-close')).toHaveFocus()
+  })
+
+  it('RST-A-01: 「やめる」なら消さず、「きろくを けす」へ戻る', () => {
+    // Given: 確認を出した When: やめる
+    const { onReset } = renderModal()
+    fireEvent.click(screen.getByRole('button', { name: r.reset }))
+    fireEvent.click(screen.getByRole('button', { name: r.resetCancel }))
+    // Then: onReset なし、確認なし、元のボタンにフォーカス
+    expect(onReset).not.toHaveBeenCalled()
+    expect(screen.queryByText(r.resetConfirm)).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: r.reset })).toHaveFocus()
+  })
+
+  it('RST-A-02: 記録が0回なら押せない', () => {
+    // Given: 記録なし When: 開く Then: 無効
+    renderModal({ cumulativeStats: zero, lastSessionStats: null })
+    expect(screen.getByRole('button', { name: r.reset })).toBeDisabled()
+  })
+
+  it('RST-A-03: onReset が無ければボタンを出さない', () => {
+    // Given: onReset なし When: 開く Then: ボタンなし
+    renderModal({ onReset: undefined })
+    expect(screen.queryByRole('button', { name: r.reset })).not.toBeInTheDocument()
+  })
+
+  it('RST-A-04: 確認中の Escape は確認だけ閉じる', () => {
+    // Given: 確認を出した When: Escape
+    const { onReset, onClose } = renderModal()
+    fireEvent.click(screen.getByRole('button', { name: r.reset }))
+    fireEvent.keyDown(document.activeElement as HTMLElement, { key: 'Escape' })
+    // Then: 確認なし、画面は開いたまま、消さない
+    expect(screen.queryByText(r.resetConfirm)).not.toBeInTheDocument()
+    expect(onClose).not.toHaveBeenCalled()
+    expect(onReset).not.toHaveBeenCalled()
+    expect(screen.getByRole('button', { name: r.reset })).toHaveFocus()
+  })
+
+  it('RST-A-05: 確認中に閉じて開き直すと、確認は出ていない', () => {
+    // Given: 確認を出した
+    const { rerender } = renderModal()
+    fireEvent.click(screen.getByRole('button', { name: r.reset }))
+    // When: 閉じて開き直す
+    rerender(<OperationReportModal open={false} onClose={() => {}} onReset={() => {}} cumulativeStats={cumulative} lastSessionStats={last} t={translations.ja} />)
+    rerender(<OperationReportModal open onClose={() => {}} onReset={() => {}} cumulativeStats={cumulative} lastSessionStats={last} t={translations.ja} />)
+    // Then: 確認なし
+    expect(screen.queryByText(r.resetConfirm)).not.toBeInTheDocument()
+  })
+
+  it('RST-A-06: Tab / Shift+Tab はダイアログ内のボタンを回り、外へ出ない', () => {
+    // Given: 「とじる」にフォーカス
+    renderModal()
+    const close = screen.getByTestId('report-close')
+    const reset = screen.getByRole('button', { name: r.reset })
+    expect(close).toHaveFocus()
+    // When: Tab Then: 「きろくを けす」
+    expect(fireEvent.keyDown(close, { key: 'Tab' })).toBe(false)
+    expect(reset).toHaveFocus()
+    // When: もう一度 Tab Then: 先頭の「とじる」へ戻る（スタートへは出ない）
+    fireEvent.keyDown(reset, { key: 'Tab' })
+    expect(close).toHaveFocus()
+    // When: Shift+Tab Then: 末尾の「きろくを けす」
+    fireEvent.keyDown(close, { key: 'Tab', shiftKey: true })
+    expect(reset).toHaveFocus()
+  })
+
+  it('RST-A-07: 英語のボタン名', () => {
+    // Given: 英語 When: 開いて押す Then: 英語のボタンと確認文
+    renderModal({ t: translations.en })
+    fireEvent.click(screen.getByRole('button', { name: translations.en.operationReport.reset }))
+    expect(screen.getByText(translations.en.operationReport.resetConfirm)).toBeInTheDocument()
+  })
+})
+
+describe('せっていから開いて きろくを けす', () => {
+  const saved = {
+    stageStars: { 1: 3 }, badges: { earnedBadges: ['clickMaster'], earnedAt: { clickMaster: 1 } },
+    cumulativeStats: cumulative, lastSessionStats: last, version: GAMIFICATION_SAVE_VERSION,
+  }
+  const r = translations.ja.operationReport
+  const stored = () => JSON.parse(localStorage.getItem(GAMIFICATION_STORAGE_KEY) ?? 'null')
+
+  beforeEach(() => {
+    localStorage.clear()
+    localStorage.setItem('fruitHarvestLanguage', JSON.stringify('ja'))
+    localStorage.setItem(GAMIFICATION_STORAGE_KEY, JSON.stringify(saved))
+    render(<FruitHarvestGame />)
+    act(() => screen.getByRole('button', { name: /せってい/ }).click())
+    act(() => screen.getByTestId('operation-report-open').click())
+  })
+
+  it('RST-N-03: 消すと表は「—」になり、保存も0、星とバッジは残る', () => {
+    // Given: 記録ありで開いた When: きろくを けす → けす
+    const dialog = screen.getByRole('dialog', { name: r.title })
+    fireEvent.click(within(dialog).getByRole('button', { name: r.reset }))
+    fireEvent.click(within(dialog).getByRole('button', { name: r.resetConfirmButton }))
+    // Then: 率はすべて「—」、保存も0、星とバッジはそのまま
+    for (const cell of within(dialog).getAllByTestId('report-total-rate')) expect(cell).toHaveTextContent('—')
+    expect(stored().cumulativeStats).toEqual(zero)
+    expect(stored().lastSessionStats).toBeNull()
+    expect(stored().stageStars).toEqual({ 1: 3 })
+    expect(stored().badges.earnedBadges).toEqual(['clickMaster'])
+  })
+
+  it('RST-A-08: 「やめる」なら保存は変わらない', () => {
+    // Given: 記録ありで開いた When: きろくを けす → やめる
+    const dialog = screen.getByRole('dialog', { name: r.title })
+    fireEvent.click(within(dialog).getByRole('button', { name: r.reset }))
+    fireEvent.click(within(dialog).getByRole('button', { name: r.resetCancel }))
+    // Then: 75% のまま、保存も同じ
+    expect(within(within(dialog).getByTestId('report-row-click')).getByTestId('report-total-rate')).toHaveTextContent('75%')
+    expect(stored().cumulativeStats).toEqual(cumulative)
   })
 })

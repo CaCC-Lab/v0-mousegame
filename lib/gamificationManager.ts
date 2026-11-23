@@ -195,6 +195,11 @@ function coerceBadges(input: unknown): GamificationSaveData['badges'] {
   return { earnedBadges, earnedAt }
 }
 
+/** せいこう率の記録（操作ごとの累計と前回）だけを消す。星とバッジは子どもの成果なので残す */
+export function clearOperationRecords(data: GamificationSaveData): GamificationSaveData {
+  return { ...data, cumulativeStats: createDefaultCumulativeStats(), lastSessionStats: null }
+}
+
 export function parseGamificationData(raw: string | null | undefined): GamificationSaveData {
   const base = createDefaultGamificationData()
   if (raw == null || raw === '') return base

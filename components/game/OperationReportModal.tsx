@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useRef } from 'react'
+import React, { useEffect, useRef, useState } from 'react'
 import { FruitSprite } from './FruitSprite'
 import { Button } from '@/components/ui/button'
 import { buildOperationReport, type OperationTally } from '@/lib/operationReport'
@@ -10,6 +10,8 @@ import { translations } from '@/lib/i18n/translations'
 export interface OperationReportModalProps {
   open: boolean
   onClose: () => void
+  /** 記録を消す。渡さなければ「きろくを けす」を出さない */
+  onReset?: () => void
   cumulativeStats: CumulativeOperationStats
   lastSessionStats: SessionOperationStats | null
   t: typeof translations.ja | typeof translations.en
@@ -20,9 +22,30 @@ function formatRate(tally: OperationTally | null): string {
 }
 
 /** 先生・保護者むけ: 操作ごとの せいこう率（docs/game-spec.md §5） */
-export function OperationReportModal({ open, onClose, cumulativeStats, lastSessionStats, t }: OperationReportModalProps): React.ReactElement | null {
+export function OperationReportModal({ open, onClose, onReset, cumulativeStats, lastSessionStats, t }: OperationReportModalProps): React.ReactElement | null {
   const closeRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useRef<HTMLDivElement>(null)
+  const resetRef = useRef<HTMLButtonElement>(null)
+  const cancelRef = useRef<HTMLButtonElement>(null)
   const pressedOnBackdropRef = useRef(false)
+  const [confirming, setConfirming] = useState(false)
+  const confirmingRef = useRef(confirming)
+  confirmingRef.current = confirming
+
+  useEffect(() => {
+    if (!open) setConfirming(false)
+  }, [open])
+
+  useEffect(() => {
+    if (confirming) cancelRef.current?.focus()
+  }, [confirming])
+
+  const cancelReset = () => {
+    setConfirming(false)
+    resetRef.current?.focus()
+  }
+  const cancelResetRef = useRef(cancelReset)
+  cancelResetRef.current = cancelReset
 
   useEffect(() => {
     if (!open) return
@@ -34,17 +57,25 @@ export function OperationReportModal({ open, onClose, cumulativeStats, lastSessi
   const onCloseRef = useRef(onClose)
   onCloseRef.current = onClose
 
-  // 操作できるのは「とじる」だけなので、Tab でも後ろの画面（スタートなど）へ出さない。
+  // Tab はダイアログ内のボタンだけを回し、後ろの画面（スタートなど）へ出さない。
   // 文字の選択などでフォーカスが外れても効くよう、document で受ける
   useEffect(() => {
     if (!open) return
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         e.preventDefault()
-        onCloseRef.current()
+        if (confirmingRef.current) cancelResetRef.current()
+        else onCloseRef.current()
       } else if (e.key === 'Tab') {
         e.preventDefault()
-        closeRef.current?.focus()
+        const buttons = Array.from(dialogRef.current?.querySelectorAll<HTMLButtonElement>('button:not([disabled])') ?? [])
+        const index = buttons.indexOf(document.activeElement as HTMLButtonElement)
+        if (index === -1) {
+          closeRef.current?.focus()
+          return
+        }
+        const step = e.shiftKey ? -1 : 1
+        buttons[(index + step + buttons.length) % buttons.length]?.focus()
       }
     }
     document.addEventListener('keydown', handleKeyDown)
@@ -69,6 +100,7 @@ export function OperationReportModal({ open, onClose, cumulativeStats, lastSessi
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
     >
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="operation-report-title"
@@ -120,6 +152,44 @@ export function OperationReportModal({ open, onClose, cumulativeStats, lastSessi
 
         {!hasRecord && <p className="mt-4 text-sm text-gray-600">{r.empty}</p>}
         <p className="mt-4 text-xs text-gray-500">{r.note}</p>
+
+        {onReset && (
+          <div className="mt-4 border-t pt-4">
+            <Button
+              ref={resetRef}
+              data-testid="report-reset"
+              onClick={() => setConfirming(true)}
+              disabled={!hasRecord}
+              variant="outline"
+              size="sm"
+              className="text-red-700"
+            >
+              {r.reset}
+            </Button>
+            {confirming && (
+              <div role="group" aria-label={r.reset} className="mt-3 rounded-lg border border-red-200 bg-red-50 p-3">
+                <p className="text-sm text-red-900 mb-3">{r.resetConfirm}</p>
+                <div className="flex gap-2">
+                  <Button
+                    data-testid="report-reset-confirm"
+                    onClick={() => {
+                      onReset()
+                      setConfirming(false)
+                      closeRef.current?.focus()
+                    }}
+                    size="sm"
+                    className="bg-red-600 text-white hover:bg-red-700"
+                  >
+                    {r.resetConfirmButton}
+                  </Button>
+                  <Button ref={cancelRef} data-testid="report-reset-cancel" onClick={cancelReset} variant="outline" size="sm">
+                    {r.resetCancel}
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   )

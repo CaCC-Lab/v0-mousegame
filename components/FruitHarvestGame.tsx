@@ -811,6 +811,7 @@ export function FruitHarvestGame(): React.ReactElement {
         t={t}
         open={showOperationReport}
         onClose={() => setShowOperationReport(false)}
+        onReset={gamification.resetOperationRecords}
         cumulativeStats={gamification.cumulativeStats}
         lastSessionStats={gamification.lastSessionStats}
       />
