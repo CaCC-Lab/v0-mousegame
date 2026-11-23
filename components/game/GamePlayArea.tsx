@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useCallback, useState } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { Fruit as FruitComponent } from '../Fruit'
 import { PowerUp } from '../PowerUp'
@@ -16,6 +16,7 @@ import { StreakIndicator } from './StreakIndicator'
 import { translations } from '@/lib/i18n/translations'
 import type { MissHint } from '@/types/game'
 import { isValidHarvestAction } from '@/lib/gameLogic'
+import { exceedsDragThreshold } from '@/lib/touchGestures'
 
 interface GamePlayAreaProps {
   fruits: FruitType[]
@@ -119,6 +120,9 @@ export function GamePlayArea({
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
   const [harvestAnimations, setHarvestAnimations] = useState<HarvestAnimation[]>([])
 
+  const dragStartRef = useRef<{ x: number; y: number } | null>(null)
+  const isMouseDragRef = useRef(false)
+
   const handleFruitClickWithAnimation = useCallback((fruit: FruitType, action: InteractionType) => {
     const gameArea = gameAreaRef.current
     // 誤操作では収穫の演出を出さない（docs/game-spec.md §2）。判定そのものは useGameLogic が行う
@@ -154,6 +158,7 @@ export function GamePlayArea({
   /**
    * ドロップの成否を判定して通知する。マウスとタッチで共通。
    * 領域外で離した場合は missedTarget つきの 'drop' で通知し、上位でミス（得点0）にする。
+   * 動かさずに離したのはクリック・タップなので、ここでは数えない（果物側が click として判定する）。
    */
   const resolveDrop = useCallback((fruit: FruitType, clientX: number, clientY: number) => {
     const dropArea = gameAreaRef.current?.querySelector('.drop-area')
@@ -168,6 +173,8 @@ export function GamePlayArea({
     if (isInDropArea) {
       handleFruitClickWithAnimation(fruit, 'drop')
     } else {
+      const start = dragStartRef.current
+      if (start && !exceedsDragThreshold(clientX - start.x, clientY - start.y)) return
       // AC-5.2a: ドロップ領域外リリースは失敗記録
       onFruitClick(fruit, 'drop', { missedTarget: true })
     }
@@ -184,6 +191,8 @@ export function GamePlayArea({
 
   /** タッチでスイカを持ち上げる */
   const handleTouchDragStart = useCallback((e: React.PointerEvent, fruit: FruitType) => {
+    dragStartRef.current = { x: e.clientX, y: e.clientY }
+    isMouseDragRef.current = false
     setDraggedFruit(fruit)
     setMousePosition({ x: e.clientX, y: e.clientY })
   }, [])
@@ -215,6 +224,8 @@ export function GamePlayArea({
         onFruitClick(fruit, 'rightClick')
       }
     } else if (e.button === 0 && fruit.type === 'watermelon') {
+      dragStartRef.current = { x: e.clientX, y: e.clientY }
+      isMouseDragRef.current = true
       setDraggedFruit(fruit)
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
@@ -226,11 +237,15 @@ export function GamePlayArea({
     }
   }, [draggedFruit])
 
-  const handleMouseUp = useCallback((e: React.MouseEvent) => {
-    if (draggedFruit) {
+  // 畑の外で離しても、その場で判定してドラッグを終える（次のクリックへ持ち越さない）
+  useEffect(() => {
+    if (!draggedFruit || !isMouseDragRef.current) return
+    const handleMouseUp = (e: MouseEvent) => {
       resolveDrop(draggedFruit, e.clientX, e.clientY)
       setDraggedFruit(null)
     }
+    window.addEventListener('mouseup', handleMouseUp)
+    return () => window.removeEventListener('mouseup', handleMouseUp)
   }, [draggedFruit, resolveDrop])
 
   const handleAnimationComplete = useCallback((id: number) => {
@@ -247,7 +262,6 @@ export function GamePlayArea({
       className="relative flex-1 min-h-[200px] overflow-hidden select-none bg-pattern-dots"
       style={{ background: 'linear-gradient(180deg, #A8DADC 0%, #4ECDC4 100%)' }}
       onMouseMove={handleMouseMove}
-      onMouseUp={handleMouseUp}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
       onPointerCancel={handlePointerCancel}
