@@ -19,6 +19,8 @@ import { GAMIFICATION_STORAGE_KEY, GAMIFICATION_SAVE_VERSION } from '@/types/gam
  * | ORM-A-04 | 英語 | i18n | 英語の見出し | - |
  * | ORM-A-05 | 開いた直後に Tab / Shift+Tab | キーボード | フォーカスは「とじる」から出ない | 後ろのスタートを押させない |
  * | ORM-N-04 | Escape | キーボード | onClose | - |
+ * | ORM-N-05 | 開いたボタンから開いて閉じる | キーボード | フォーカスが開いたボタンに戻る | - |
+ * | ORM-A-06 | 背景をクリック | マウス | onClose（パネル内クリックでは閉じない） | - |
  */
 const zero = { click: { totalSuccess: 0, totalFail: 0 }, doubleClick: { totalSuccess: 0, totalFail: 0 }, rightClick: { totalSuccess: 0, totalFail: 0 }, drop: { totalSuccess: 0, totalFail: 0 } }
 const cumulative = { ...zero, click: { totalSuccess: 30, totalFail: 10 }, doubleClick: { totalSuccess: 5, totalFail: 15 } }
@@ -84,6 +86,44 @@ describe('OperationReportModal: キーボード', () => {
     const onClose = jest.fn()
     render(<OperationReportModal open onClose={onClose} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} />)
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('OperationReportModal: 閉じかた', () => {
+  function Harness() {
+    const [open, setOpen] = React.useState(false)
+    return (
+      <>
+        <button onClick={() => setOpen(true)}>ひらく</button>
+        <OperationReportModal open={open} onClose={() => setOpen(false)} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} />
+      </>
+    )
+  }
+
+  it('ORM-N-05: 閉じたら、開いたボタンにフォーカスを戻す', () => {
+    // Given: ボタンにフォーカスして開く
+    render(<Harness />)
+    const opener = screen.getByRole('button', { name: 'ひらく' })
+    opener.focus()
+    act(() => opener.click())
+    expect(screen.getByTestId('report-close')).toHaveFocus()
+    // When: Escape で閉じる
+    fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    // Then: 開いたボタンに戻る
+    expect(screen.queryByRole('dialog')).not.toBeInTheDocument()
+    expect(opener).toHaveFocus()
+  })
+
+  it('ORM-A-06: 背景をクリックすると閉じる（パネルの中では閉じない）', () => {
+    // Given: 開いている
+    const onClose = jest.fn()
+    render(<OperationReportModal open onClose={onClose} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} />)
+    // When: パネルの中 → 背景 の順にクリック
+    fireEvent.click(screen.getByRole('dialog'))
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.click(screen.getByTestId('operation-report-backdrop'))
+    // Then: 背景のときだけ閉じる
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })

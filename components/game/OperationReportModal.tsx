@@ -24,7 +24,10 @@ export function OperationReportModal({ open, onClose, cumulativeStats, lastSessi
   const closeRef = useRef<HTMLButtonElement>(null)
 
   useEffect(() => {
-    if (open) closeRef.current?.focus()
+    if (!open) return
+    const opener = document.activeElement instanceof HTMLElement ? document.activeElement : null
+    closeRef.current?.focus()
+    return () => opener?.focus()
   }, [open])
 
   if (!open) return null
