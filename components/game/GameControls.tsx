@@ -258,7 +258,11 @@ export function GameControls({
             {onOpenReport && (
               <Button
                 data-testid="operation-report-open"
-                onClick={onOpenReport}
+                onClick={(e) => {
+                  // Safari はクリックしたボタンにフォーカスしないので、閉じたあとに戻れるよう先に当てる
+                  e.currentTarget.focus()
+                  onOpenReport()
+                }}
                 variant="outline"
                 size="sm"
                 className="flex items-center font-semibold hover-lift bg-white"
