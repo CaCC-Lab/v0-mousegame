@@ -21,6 +21,8 @@ import { GAMIFICATION_STORAGE_KEY, GAMIFICATION_SAVE_VERSION } from '@/types/gam
  * | ORM-N-04 | Escape | キーボード | onClose | - |
  * | ORM-N-05 | 開いたボタンから開いて閉じる | キーボード | フォーカスが開いたボタンに戻る | - |
  * | ORM-A-06 | 背景をクリック | マウス | onClose（パネル内クリックでは閉じない） | - |
+ * | ORM-A-07 | パネル内で押して背景で離す | 文字の選択 | 閉じない | - |
+ * | ORM-A-08 | クリックでフォーカスが移らない（Safari） | ブラウザ差 | 閉じたら「せいこう率」ボタンに戻る | jsdom の click もフォーカスしない |
  */
 const zero = { click: { totalSuccess: 0, totalFail: 0 }, doubleClick: { totalSuccess: 0, totalFail: 0 }, rightClick: { totalSuccess: 0, totalFail: 0 }, drop: { totalSuccess: 0, totalFail: 0 } }
 const cumulative = { ...zero, click: { totalSuccess: 30, totalFail: 10 }, doubleClick: { totalSuccess: 5, totalFail: 15 } }
@@ -122,8 +124,24 @@ describe('OperationReportModal: 閉じかた', () => {
     // When: パネルの中 → 背景 の順にクリック
     fireEvent.click(screen.getByRole('dialog'))
     expect(onClose).not.toHaveBeenCalled()
+    fireEvent.mouseDown(screen.getByTestId('operation-report-backdrop'))
     fireEvent.click(screen.getByTestId('operation-report-backdrop'))
     // Then: 背景のときだけ閉じる
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+
+  it('ORM-A-07: パネルの中で押して背景で離しても閉じない（文字の選択）', () => {
+    // Given: 開いている
+    const onClose = jest.fn()
+    render(<OperationReportModal open onClose={onClose} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} />)
+    const backdrop = screen.getByTestId('operation-report-backdrop')
+    // When: パネル内で mousedown、背景で click
+    fireEvent.mouseDown(screen.getByRole('dialog'))
+    fireEvent.click(backdrop)
+    // Then: 閉じない。背景で押して離したときは閉じる
+    expect(onClose).not.toHaveBeenCalled()
+    fireEvent.mouseDown(backdrop)
+    fireEvent.click(backdrop)
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })
@@ -149,6 +167,18 @@ describe('せっていから開く', () => {
     open()
     const dialog = screen.getByRole('dialog', { name: translations.ja.operationReport.title })
     expect(within(within(dialog).getByTestId('report-row-click')).getByTestId('report-total-rate')).toHaveTextContent('75%')
+  })
+
+  it('ORM-A-08: クリックでフォーカスが移らないブラウザでも、閉じたら「せいこう率」ボタンに戻る', () => {
+    // Given: Safari と同じく click でフォーカスしない（fireEvent.click）
+    render(<FruitHarvestGame />)
+    act(() => screen.getByRole('button', { name: /せってい/ }).click())
+    const opener = screen.getByTestId('operation-report-open')
+    // When: 開いて Escape で閉じる
+    fireEvent.click(opener)
+    fireEvent.keyDown(screen.getByRole('dialog', { name: translations.ja.operationReport.title }), { key: 'Escape' })
+    // Then: 開いたボタンにフォーカス
+    expect(opener).toHaveFocus()
   })
 
   it('ORM-A-03: 保存データが壊れていても 0 回で開ける', () => {

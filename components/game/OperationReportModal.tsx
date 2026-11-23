@@ -22,6 +22,7 @@ function formatRate(tally: OperationTally | null): string {
 /** 先生・保護者むけ: 操作ごとの せいこう率（docs/game-spec.md §5） */
 export function OperationReportModal({ open, onClose, cumulativeStats, lastSessionStats, t }: OperationReportModalProps): React.ReactElement | null {
   const closeRef = useRef<HTMLButtonElement>(null)
+  const pressedOnBackdropRef = useRef(false)
 
   useEffect(() => {
     if (!open) return
@@ -50,7 +51,12 @@ export function OperationReportModal({ open, onClose, cumulativeStats, lastSessi
   return (
     <div
       data-testid="operation-report-backdrop"
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+      onMouseDown={e => { pressedOnBackdropRef.current = e.target === e.currentTarget }}
+      onClick={e => {
+        // パネル内で押して背景で離した（文字の選択など）ときは閉じない
+        if (pressedOnBackdropRef.current && e.target === e.currentTarget) onClose()
+        pressedOnBackdropRef.current = false
+      }}
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4"
     >
       <div
