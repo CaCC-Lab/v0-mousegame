@@ -11,6 +11,7 @@ import {
   generateFruit,
   generateFruits,
   generateFruitForField,
+  pickStageFruitType,
   generateBalancedFruits,
   calculateScore,
   getRequiredInteraction,
@@ -28,6 +29,8 @@ import { useGamification } from './useGamification'
 import { useArcadeMode } from './useArcadeMode'
 import { calculateArcadePoints, addHarvestTime, subtractMissTime } from '@/lib/arcadeManager'
 import { ARCADE_CONFIG, ArcadeResult, GameMode } from '@/types/arcade'
+import { STAGE_FOCUS_RATIO, type Stage } from '@/types/stage'
+import type { FruitType } from '@/types/game'
 
 const INITIAL_HARVESTED_FRUITS: HarvestedFruits = {
   apple: 0,
@@ -40,6 +43,12 @@ const GAME_AREA_DIMENSIONS = { width: 800, height: 600 }
 
 function createInitialHarvestedFruits(): HarvestedFruits {
   return { ...INITIAL_HARVESTED_FRUITS }
+}
+
+/** れんしゅうのステージで出す果物の種類を選ぶ関数。ステージが無ければ undefined（4種類からランダム） */
+function stageFruitPicker(stageInfo: Stage | null | undefined): (() => FruitType) | undefined {
+  if (!stageInfo) return undefined
+  return () => pickStageFruitType(stageInfo.fruitTypes ?? [], stageInfo.focusFruit, STAGE_FOCUS_RATIO)
 }
 
 export function useGameLogic() {
@@ -148,8 +157,9 @@ export function useGameLogic() {
    *                 'arcade' は60秒スコアアタック。
    *                 アーケードは記録を比べる遊びなので、時間・フルーツ数・得点計算を
    *                 ステージや難易度設定から切り離して常に同じ条件にする。
+   * @param practiceStage 同じ操作の中で選び直した面（state の反映を待たずに始めるため）
    */
-  const startGame = useCallback((nextMode: GameMode = 'practice') => {
+  const startGame = useCallback((nextMode: GameMode = 'practice', practiceStage?: Stage | null) => {
     setMode(nextMode)
     modeRef.current = nextMode
     setGameState('playing')
@@ -171,11 +181,11 @@ export function useGameLogic() {
       // 最初の畑から4種類そろえて、どの操作でもすぐ点を取れるようにする
       setFruits(generateBalancedFruits(ARCADE_CONFIG.fruitCount, playAreaSizeRef.current))
     } else {
-      const currentStageInfo = stage.currentStageInfo
+      const currentStageInfo = practiceStage ?? stage.currentStageInfo
       if (currentStageInfo) {
         setTimeLeft(currentStageInfo.timeLimit)
         timeLeftRef.current = currentStageInfo.timeLimit
-        setFruits(generateFruits(currentStageInfo.difficulty.fruitCount, [], playAreaSizeRef.current))
+        setFruits(generateFruits(currentStageInfo.difficulty.fruitCount, [], playAreaSizeRef.current, stageFruitPicker(currentStageInfo)))
       } else {
         const adjustedTime = difficulty.getAdjustedGameTime(GAME_CONFIG.gameDuration)
         setTimeLeft(adjustedTime)
@@ -294,7 +304,8 @@ export function useGameLogic() {
       const updatedFruits = prevFruits.filter(f => f.id !== fruit.id)
       // アーケードは4種類が畑に揃い続けるように補充する（手が止まらないようにするため）
       const area = playAreaSizeRef.current
-      const spawn = (field: Fruit[]) => (isArcade ? generateFruitForField(field, area) : generateFruit(undefined, field, area))
+      const pickType = stageFruitPicker(stageRef.current.currentStageInfo)
+      const spawn = (field: Fruit[]) => (isArcade ? generateFruitForField(field, area) : generateFruit(pickType?.(), field, area))
 
       const newFruits = [...updatedFruits, spawn(updatedFruits)]
       // Task 7.3: 5回連続成功時にボーナスフルーツ追加
@@ -473,7 +484,7 @@ export function useGameLogic() {
     } else if (effect.type === 'extraFruits') {
       setFruits(prevFruits => {
         // 追加分も、いまある果物と重ならない位置に置く（docs/game-spec.md §3）
-        const newFruits = generateFruits(effect.value, prevFruits, playAreaSizeRef.current)
+        const newFruits = generateFruits(effect.value, prevFruits, playAreaSizeRef.current, stageFruitPicker(stageRef.current.currentStageInfo))
         return [...prevFruits, ...newFruits]
       })
     }

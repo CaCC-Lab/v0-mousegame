@@ -11,6 +11,7 @@ const mockStages: Stage[] = [
     targetScore: 100,
     targetFruits: { total: 10 },
     timeLimit: 60,
+    fruitTypes: ['apple'],
     unlocked: true,
     completed: true,
     highScore: 150,
@@ -23,6 +24,7 @@ const mockStages: Stage[] = [
     targetScore: 200,
     targetFruits: { apple: 10, total: 20 },
     timeLimit: 90,
+    fruitTypes: ['apple', 'blueberry'],
     unlocked: true,
     completed: false,
     highScore: 0,
@@ -35,6 +37,7 @@ const mockStages: Stage[] = [
     targetScore: 300,
     targetFruits: { blueberry: 15, total: 30 },
     timeLimit: 90,
+    fruitTypes: ['apple', 'blueberry'],
     unlocked: false,
     completed: false,
     highScore: 0,
@@ -69,9 +72,9 @@ describe('StageSelector', () => {
         />
       )
       
-      expect(screen.getByText('フルーツ畑')).toBeInTheDocument()
       expect(screen.getByText('リンゴ園')).toBeInTheDocument()
       expect(screen.getByText('ブルーベリー農園')).toBeInTheDocument()
+      expect(screen.getByText('レモン畑')).toBeInTheDocument()
     })
 
     it('should show stage descriptions', () => {
@@ -84,8 +87,8 @@ describe('StageSelector', () => {
         />
       )
       
-      expect(screen.getByText('フルーツ収穫の基本を学びましょう')).toBeInTheDocument()
-      expect(screen.getByText('リンゴを中心に収穫しましょう')).toBeInTheDocument()
+      expect(screen.getByText('クリックで りんごを とろう')).toBeInTheDocument()
+      expect(screen.getByText('ダブルクリックで ブルーベリーを とろう')).toBeInTheDocument()
     })
 
     it('should show target requirements', () => {
@@ -99,7 +102,7 @@ describe('StageSelector', () => {
       )
       
       // Find stage 1 container
-      const stage1 = screen.getByText('フルーツ畑').closest('div[role="button"]')!
+      const stage1 = screen.getByText('リンゴ園').closest('div[role="button"]')!
       
       // Check stage 1 requirements
       expect(stage1).toHaveTextContent('目標スコア:')
@@ -146,7 +149,7 @@ describe('StageSelector', () => {
         />
       )
       
-      const stage2Element = screen.getByText('リンゴ園').closest('div[role="button"]')
+      const stage2Element = screen.getByText('ブルーベリー農園').closest('div[role="button"]')
       expect(stage2Element).toHaveClass('ring-2')
     })
   })
@@ -162,7 +165,7 @@ describe('StageSelector', () => {
         />
       )
       
-      const stage2 = screen.getByText('リンゴ園').closest('div[role="button"]')!
+      const stage2 = screen.getByText('ブルーベリー農園').closest('div[role="button"]')!
       fireEvent.click(stage2)
       
       expect(mockOnSelectStage).toHaveBeenCalledWith(2)
@@ -178,7 +181,7 @@ describe('StageSelector', () => {
         />
       )
       
-      const stage3 = screen.getByText('ブルーベリー農園').closest('div[role="button"]')!
+      const stage3 = screen.getByText('レモン畑').closest('div[role="button"]')!
       fireEvent.click(stage3)
       
       expect(mockOnSelectStage).not.toHaveBeenCalled()
@@ -194,7 +197,7 @@ describe('StageSelector', () => {
         />
       )
       
-      const stage2 = screen.getByText('リンゴ園').closest('div[role="button"]')!
+      const stage2 = screen.getByText('ブルーベリー農園').closest('div[role="button"]')!
       fireEvent.keyDown(stage2, { key: 'Enter' })
       
       expect(mockOnSelectStage).toHaveBeenCalledWith(2)
@@ -210,7 +213,7 @@ describe('StageSelector', () => {
         />
       )
       
-      const stage2 = screen.getByText('リンゴ園').closest('div[role="button"]')!
+      const stage2 = screen.getByText('ブルーベリー農園').closest('div[role="button"]')!
       fireEvent.keyDown(stage2, { key: ' ' })
       
       expect(mockOnSelectStage).toHaveBeenCalledWith(2)
@@ -262,7 +265,7 @@ describe('StageSelector', () => {
         />
       )
       
-      const stage1 = screen.getByText('フルーツ畑').closest('div[role="button"]')!
+      const stage1 = screen.getByText('リンゴ園').closest('div[role="button"]')!
       expect(stage1).toHaveAttribute('role', 'button')
       expect(stage1).toHaveAttribute('tabIndex', '0')
       expect(stage1).toHaveAttribute('aria-label', expect.stringContaining('ステージ 1'))
@@ -278,7 +281,7 @@ describe('StageSelector', () => {
         />
       )
       
-      const stage3 = screen.getByText('ブルーベリー農園').closest('div[role="button"]')!
+      const stage3 = screen.getByText('レモン畑').closest('div[role="button"]')!
       expect(stage3).toHaveAttribute('aria-disabled', 'true')
     })
   })
