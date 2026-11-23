@@ -3,8 +3,9 @@ import { motion } from 'framer-motion'
 import { Fruit as FruitType, FRUIT_NAME } from '@/types/game'
 import { FruitSprite } from './game/FruitSprite'
 import {
-  MOUSE_CONFIG,
+  DOUBLE_CLICK_SPEEDS,
   TOUCH_CONFIG,
+  type DoubleClickSpeed,
   classifyTap,
   exceedsDragThreshold,
   isGhostClick,
@@ -21,6 +22,8 @@ interface FruitProps {
   onLongPress?: () => void
   /** タッチでのドラッグ開始（スイカ用） */
   onTouchDragStart?: (e: React.PointerEvent) => void
+  /** ブルーベリーのダブルクリックをどれだけ待つか（省略時は 'normal'） */
+  doubleClickSpeed?: DoubleClickSpeed
 }
 
 const FRUIT_STYLES = {
@@ -158,8 +161,10 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
   onDoubleClick,
   onMouseDown,
   onLongPress,
-  onTouchDragStart
+  onTouchDragStart,
+  doubleClickSpeed = 'normal'
 }) {
+  const timing = DOUBLE_CLICK_SPEEDS[doubleClickSpeed] ?? DOUBLE_CLICK_SPEEDS.normal
   const elementRef = useRef<HTMLDivElement>(null)
   const [isHovered, setIsHovered] = useState(false)
   const [isPressed, setIsPressed] = useState(false)
@@ -256,7 +261,7 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
 
     const now = Date.now()
     if (fruit.type === 'blueberry') {
-      const kind = classifyTap(lastTapAtRef.current, now)
+      const kind = classifyTap(lastTapAtRef.current, now, timing.touchWindowMs)
 
       if (kind === 'double') {
         clearPendingTapTimer()
@@ -271,12 +276,12 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
         pendingTapTimerRef.current = null
         lastTapAtRef.current = 0
         onClick()
-      }, TOUCH_CONFIG.doubleTapMs)
+      }, timing.touchWindowMs)
       return
     }
 
     onClick()
-  }, [clearLongPressTimer, clearPendingTapTimer, fruit.type, onClick, onDoubleClick])
+  }, [clearLongPressTimer, clearPendingTapTimer, fruit.type, onClick, onDoubleClick, timing.touchWindowMs])
 
   /**
    * タッチ操作のあとにブラウザが合成するマウスイベントを、仕様どおり抑止する。
@@ -303,21 +308,27 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
     // ブルーベリーは「ダブルクリックの途中のクリック」をミスとして数えない（docs/game-spec.md §2）。
     // 1回目は保留し、2回目（detail >= 2）と dblclick が来たら取り消す。
     // 来なければ待ち時間のあとでクリックとして判定する（＝ミスのヒントが出る）。
+    // OS のダブルクリック間隔より遅い2回目は detail=1 で届き dblclick も来ないので、
+    // 保留中に届いた2回目のクリックはここでダブルクリックにする（ゆっくりダブルクリック）。
     if (fruit.type === 'blueberry') {
       if (e.detail >= 2) {
         clearPendingTapTimer()
         return
       }
-      clearPendingTapTimer()
+      if (pendingTapTimerRef.current !== null) {
+        clearPendingTapTimer()
+        onDoubleClick()
+        return
+      }
       pendingTapTimerRef.current = setTimeout(() => {
         pendingTapTimerRef.current = null
         onClick()
-      }, MOUSE_CONFIG.doubleClickWaitMs)
+      }, timing.mouseWaitMs)
       return
     }
 
     onClick()
-  }, [shouldIgnoreMouseEvent, fruit.type, clearPendingTapTimer, onClick])
+  }, [shouldIgnoreMouseEvent, fruit.type, clearPendingTapTimer, onClick, onDoubleClick, timing.mouseWaitMs])
 
   const handleDoubleClick = useCallback(() => {
     if (shouldIgnoreMouseEvent()) return
@@ -402,6 +413,7 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
     && prevProps.fruit.y === nextProps.fruit.y
     && prevProps.isHardMode === nextProps.isHardMode
     && prevProps.isSelected === nextProps.isSelected
+    && prevProps.doubleClickSpeed === nextProps.doubleClickSpeed
 })
 
 export const Fruit = FruitComponent

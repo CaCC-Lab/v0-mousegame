@@ -45,14 +45,39 @@ export const MOUSE_CONFIG: MouseConfig = {
   doubleClickWaitMs: 500,
 }
 
+/** ダブルクリックの「はやさ」設定。ゆっくりダブルクリックする子のために待ち時間を長くする */
+export type DoubleClickSpeed = 'normal' | 'slow' | 'verySlow'
+
+export interface DoubleClickTiming {
+  /** マウス: ブルーベリーへの1回目のクリックを保留する時間（ミリ秒）。この間の2回目はダブルクリック */
+  mouseWaitMs: number
+  /** タッチ: ダブルタップとみなす2回のタップの間隔（ミリ秒） */
+  touchWindowMs: number
+}
+
+export const DOUBLE_CLICK_SPEED_ORDER: readonly DoubleClickSpeed[] = ['normal', 'slow', 'verySlow']
+
+export const DOUBLE_CLICK_SPEEDS: Record<DoubleClickSpeed, DoubleClickTiming> = {
+  normal: { mouseWaitMs: MOUSE_CONFIG.doubleClickWaitMs, touchWindowMs: 300 },
+  slow: { mouseWaitMs: 900, touchWindowMs: 600 },
+  verySlow: { mouseWaitMs: 1400, touchWindowMs: 1000 },
+}
+
+/** 保存データなど信用できない値を DoubleClickSpeed にそろえる。知らない値は 'normal' */
+export function normalizeDoubleClickSpeed(value: unknown): DoubleClickSpeed {
+  return typeof value === 'string' && (DOUBLE_CLICK_SPEED_ORDER as readonly string[]).includes(value)
+    ? (value as DoubleClickSpeed)
+    : 'normal'
+}
+
 export type TapKind = 'single' | 'double'
 
 /**
  * 直前のタップ時刻から、今回のタップがシングルかダブルかを判定する。
  */
-export function classifyTap(lastTapAt: number, now: number): TapKind {
+export function classifyTap(lastTapAt: number, now: number, windowMs: number = TOUCH_CONFIG.doubleTapMs): TapKind {
   if (lastTapAt <= 0) return 'single'
-  return now - lastTapAt <= TOUCH_CONFIG.doubleTapMs ? 'double' : 'single'
+  return now - lastTapAt <= windowMs ? 'double' : 'single'
 }
 
 /**
