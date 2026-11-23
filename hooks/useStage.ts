@@ -1,7 +1,7 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
 import { StageManager } from '../lib/stageManager'
 import { Stage } from '../types/stage'
-import { HarvestedFruits } from '../types/game'
+import { FruitType, HarvestedFruits } from '../types/game'
 
 interface UseStageReturn {
   currentStage: number
@@ -12,6 +12,8 @@ interface UseStageReturn {
   checkStageCompletion: (score: number, harvestedFruits: HarvestedFruits) => boolean
   nextStage: () => boolean
   selectStage: (stageNumber: number) => boolean
+  /** その果物が出るれんしゅうの面を選び、選んだ面を返す（見つからなければ null） */
+  selectStageForFruit: (fruit: FruitType) => Stage | null
   reset: () => void
   isHydrated: boolean
 }
@@ -78,6 +80,16 @@ export function useStage(): UseStageReturn {
     return selected
   }, [updateState, isHydrated])
 
+  const selectStageForFruit = useCallback((fruit: FruitType): Stage | null => {
+    if (!managerRef.current || !isHydrated) return null
+
+    const selected = managerRef.current.selectStageForFruit(fruit)
+    if (selected === null) return null
+    updateState()
+
+    return managerRef.current.getStageInfo(selected)
+  }, [updateState, isHydrated])
+
   const reset = useCallback(() => {
     if (!managerRef.current || !isHydrated) return
 
@@ -94,6 +106,7 @@ export function useStage(): UseStageReturn {
     checkStageCompletion,
     nextStage,
     selectStage,
+    selectStageForFruit,
     reset,
     isHydrated
   }

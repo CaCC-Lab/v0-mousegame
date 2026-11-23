@@ -15,6 +15,7 @@ const mockStages: Stage[] = [
     targetScore: 100,
     targetFruits: { total: 10 },
     timeLimit: 60,
+    fruitTypes: ['apple'],
     unlocked: true,
     completed: true,
     highScore: 10,

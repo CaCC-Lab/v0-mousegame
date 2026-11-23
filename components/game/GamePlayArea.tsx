@@ -16,6 +16,7 @@ import { StreakIndicator } from './StreakIndicator'
 import { translations } from '@/lib/i18n/translations'
 import type { MissHint } from '@/types/game'
 import { isValidHarvestAction } from '@/lib/gameLogic'
+import type { DoubleClickSpeed } from '@/lib/touchGestures'
 
 interface GamePlayAreaProps {
   fruits: FruitType[]
@@ -36,6 +37,8 @@ interface GamePlayAreaProps {
   missHint?: MissHint | null
   /** コンボの数を出すか（アーケードは ArcadeHUD に出すので false） */
   showStreakCount?: boolean
+  /** ブルーベリーのダブルクリックをどれだけ待つか（せってい） */
+  doubleClickSpeed?: DoubleClickSpeed
 }
 
 function DraggedFruitOverlay({
@@ -113,7 +116,8 @@ export function GamePlayArea({
   lastStreakBonus,
   t,
   missHint,
-  showStreakCount = true
+  showStreakCount = true,
+  doubleClickSpeed = 'normal'
 }: GamePlayAreaProps): React.ReactElement {
   const [draggedFruit, setDraggedFruit] = useState<FruitType | null>(null)
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
@@ -264,6 +268,7 @@ export function GamePlayArea({
           onMouseDown={(e) => handleMouseDown(e, fruit)}
           onLongPress={() => handleLongPress(fruit)}
           onTouchDragStart={(e) => handleTouchDragStart(e, fruit)}
+          doubleClickSpeed={doubleClickSpeed}
         />
       ))}
 

@@ -21,7 +21,7 @@ describe('待機中のヘッダと Enter での開始は、選んでいるモー
 
     expect(screen.getByTestId('mode-select-arcade')).toHaveAttribute('aria-pressed', 'true')
     expect(screen.queryByText(/ステージ目標/)).not.toBeInTheDocument()
-    expect(screen.queryByText('フルーツ畑')).not.toBeInTheDocument()
+    expect(screen.queryByText('リンゴ園')).not.toBeInTheDocument()
   })
 
   it('れんしゅうを選んで始めると、ステージの表示とステージ目標が出る', async () => {
@@ -33,7 +33,7 @@ describe('待機中のヘッダと Enter での開始は、選んでいるモー
     await user.click(screen.getByTestId('mode-start'))
 
     expect(screen.getByText(/ステージ目標/)).toBeInTheDocument()
-    expect(screen.getByText('フルーツ畑')).toBeInTheDocument()
+    expect(screen.getByText('リンゴ園')).toBeInTheDocument()
   })
 
   it('アーケードを選んだまま Enter を押すと、アーケードで始まる', () => {

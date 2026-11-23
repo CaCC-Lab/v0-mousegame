@@ -7,6 +7,8 @@ import { useKeyboardControls } from '@/hooks/useKeyboardControls'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useAnimation } from '@/hooks/useAnimation'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { normalizeDoubleClickSpeed, type DoubleClickSpeed } from '@/lib/touchGestures'
 import { StageSelector } from './StageSelector'
 import {
   ScoreBar,
@@ -49,7 +51,7 @@ import {
   type DebugFlags,
 } from '@/lib/debugTools'
 import { DebugPanel } from './game/DebugPanel'
-import { getRequiredInteraction } from '@/lib/gameLogic'
+import { getRequiredFruit, getRequiredInteraction } from '@/lib/gameLogic'
 
 const GAME_CONTAINER_ANIMATION = {
   initial: { scale: 0.9, opacity: 0 },
@@ -147,6 +149,10 @@ export function FruitHarvestGame(): React.ReactElement {
     setIsHardMode(checked)
   }, [setIsHardMode])
 
+  // ゆっくりダブルクリックする子のための待ち時間（docs/game-spec.md §2）。壊れた保存値は「ふつう」
+  const [storedDoubleClickSpeed, setDoubleClickSpeed] = useLocalStorage<DoubleClickSpeed>('fruitHarvestDoubleClickSpeed', 'normal')
+  const doubleClickSpeed = normalizeDoubleClickSpeed(storedDoubleClickSpeed)
+
   // 待機中に選んでいるモード。カードを押しても始めず、「はじめる」で始める
   // （押した瞬間にタイマーが走ると、初見のプレイヤーは何が起きたか分からない）
   const [selectedMode, setSelectedMode] = useState<GameMode>('arcade')
@@ -216,12 +222,15 @@ export function FruitHarvestGame(): React.ReactElement {
   }, [startGame, resetAnimations])
 
   // 結果の「にがてな そうさ」から、れんしゅうを始める（v1.2 D4）
+  // 1面はりんごだけなので、にがてな果物が出る面を選んでから始める
   const handlePracticeWeak = useCallback(() => {
     resetAnimations()
     setShowFeverIntro(false)
     setSelectedMode('practice')
-    startGame('practice')
-  }, [startGame, resetAnimations])
+    const weak = arcadeResult?.weakOperation
+    const practiceStage = weak ? stage?.selectStageForFruit(getRequiredFruit(weak)) : null
+    startGame('practice', practiceStage)
+  }, [startGame, resetAnimations, arcadeResult, stage])
 
   // チャレンジで果物が動き出した瞬間に一度だけ知らせる（段差を見て分かるように。v1.2 D2）
   const [showMovingNotice, setShowMovingNotice] = useState(false)
@@ -630,6 +639,7 @@ export function FruitHarvestGame(): React.ReactElement {
               // 途切れた瞬間の表示はアーケードでも出す
               streak={showPlayHud ? operationStats.streak : undefined}
               showStreakCount={!isArcade}
+              doubleClickSpeed={doubleClickSpeed}
               lastStreakBonus={operationStats.lastStreakBonus}
             />
             {/* pointer-events-none でクリックを下のフルーツへ通す */}
@@ -652,7 +662,7 @@ export function FruitHarvestGame(): React.ReactElement {
             */}
             {showPlayHud && (
             <div className={`absolute bottom-1.5 left-0 ${DROP_BAND_INSET_CLASS} z-20 px-2 pointer-events-none`}>
-              <OperationLegend t={t} />
+              <OperationLegend t={t} fruits={isArcade ? undefined : stage?.currentStageInfo?.fruitTypes} />
             </div>
             )}
 
@@ -730,6 +740,8 @@ export function FruitHarvestGame(): React.ReactElement {
             onHardModeChange={handleHardModeChange}
             onToggleLanguage={toggleLanguage}
             onOpenReport={() => setShowOperationReport(true)}
+            doubleClickSpeed={doubleClickSpeed}
+            onDoubleClickSpeedChange={setDoubleClickSpeed}
             t={t}
           />
         </motion.div>

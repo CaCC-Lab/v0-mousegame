@@ -72,4 +72,19 @@ describe('チャレンジの画面の流れ', () => {
     expect(screen.getByText(/ステージ目標/)).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /ちゅうだん/ })).toBeInTheDocument()
   })
+
+  it('「れんしゅうで ためす」は、にがてな果物が出る面で始まる（1面はりんごだけ）', () => {
+    // Given: 1面しか開いていない状態でレモンをミスしてチャレンジを終える
+    render(<FruitHarvestGame />)
+    act(() => screen.getByTestId('mode-start').click())
+    missOnLemon()
+    tick(ARCADE_CONFIG.startTimeSec + 2)
+
+    // When: 「れんしゅうで ためす」を押す
+    act(() => within(screen.getByRole('dialog')).getByRole('button', { name: 'れんしゅうで ためす' }).click())
+
+    // Then: レモンの面（3面）で始まり、凡例にもレモンが出る
+    expect(screen.getByText('レモン畑')).toBeInTheDocument()
+    expect(screen.getByTestId('legend-lemon')).toBeInTheDocument()
+  })
 })

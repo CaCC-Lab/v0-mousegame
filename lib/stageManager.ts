@@ -1,5 +1,5 @@
 import { Stage, StageProgress, STAGES } from '../types/stage'
-import { HarvestedFruits } from '../types/game'
+import { FruitType, HarvestedFruits } from '../types/game'
 
 const STORAGE_KEYS = {
   progress: 'stageProgress',
@@ -211,6 +211,33 @@ export class StageManager {
     this.progress.currentStage = stageNumber
     this.saveProgress()
     return true
+  }
+
+  /**
+   * チャレンジの「にがてな そうさ」から、その果物が出るれんしゅうの面を選ぶ。
+   * 今の面に出るならそのまま。出なければ、その果物を多めに出す面を（まだでも）開けて選ぶ。
+   * 見つからない果物なら null を返し、何も変えない。
+   */
+  selectStageForFruit(fruit: FruitType): number | null {
+    if (!this.stages.some(stage => stage.fruitTypes.includes(fruit))) return null
+
+    const current = this.findStage(this.currentStage)
+    if (current?.fruitTypes.includes(fruit)) return this.currentStage
+
+    const target = this.stages.find(stage => stage.focusFruit === fruit)
+      ?? this.stages.find(stage => stage.fruitTypes.includes(fruit))
+    if (!target) return null
+
+    if (!target.unlocked) {
+      target.unlocked = true
+      if (!this.progress.unlockedStages.includes(target.number)) {
+        this.progress.unlockedStages.push(target.number)
+      }
+    }
+    this.currentStage = target.number
+    this.progress.currentStage = target.number
+    this.saveProgress()
+    return target.number
   }
 
   getTotalScore(): number {
