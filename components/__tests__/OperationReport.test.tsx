@@ -22,6 +22,7 @@ import { GAMIFICATION_STORAGE_KEY, GAMIFICATION_SAVE_VERSION } from '@/types/gam
  * | ORM-N-05 | 開いたボタンから開いて閉じる | キーボード | フォーカスが開いたボタンに戻る | - |
  * | ORM-A-06 | 背景をクリック | マウス | onClose（パネル内クリックでは閉じない） | - |
  * | ORM-A-07 | パネル内で押して背景で離す | 文字の選択 | 閉じない | - |
+ * | ORM-A-09 | フォーカスがダイアログの外（body）にある | 選択・クリックでフォーカスが外れた | Escape で閉じ、Tab で「とじる」に戻る | - |
  * | ORM-A-08 | クリックでフォーカスが移らない（Safari） | ブラウザ差 | 閉じたら「せいこう率」ボタンに戻る | jsdom の click もフォーカスしない |
  */
 const zero = { click: { totalSuccess: 0, totalFail: 0 }, doubleClick: { totalSuccess: 0, totalFail: 0 }, rightClick: { totalSuccess: 0, totalFail: 0 }, drop: { totalSuccess: 0, totalFail: 0 } }
@@ -88,6 +89,25 @@ describe('OperationReportModal: キーボード', () => {
     const onClose = jest.fn()
     render(<OperationReportModal open onClose={onClose} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} />)
     fireEvent.keyDown(screen.getByRole('dialog'), { key: 'Escape' })
+    expect(onClose).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('OperationReportModal: フォーカスが外れたとき', () => {
+  it('ORM-A-09: フォーカスが body にあっても、Tab で「とじる」に戻り、Escape で閉じる', () => {
+    // Given: 開いたあと、文字の選択などでフォーカスが外れた
+    const onClose = jest.fn()
+    render(<><button>スタート</button><OperationReportModal open onClose={onClose} cumulativeStats={cumulative} lastSessionStats={null} t={translations.ja} /></>)
+    act(() => (document.activeElement as HTMLElement).blur())
+    expect(document.body).toHaveFocus()
+    // When: body で Tab
+    const tab = fireEvent.keyDown(document.body, { key: 'Tab' })
+    // Then: 後ろへ行かず「とじる」へ
+    expect(tab).toBe(false)
+    expect(screen.getByTestId('report-close')).toHaveFocus()
+    // When: もう一度外して Escape Then: 閉じる
+    act(() => (document.activeElement as HTMLElement).blur())
+    fireEvent.keyDown(document.body, { key: 'Escape' })
     expect(onClose).toHaveBeenCalledTimes(1)
   })
 })

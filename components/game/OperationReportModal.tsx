@@ -31,18 +31,27 @@ export function OperationReportModal({ open, onClose, cumulativeStats, lastSessi
     return () => opener?.focus()
   }, [open])
 
-  if (!open) return null
+  const onCloseRef = useRef(onClose)
+  onCloseRef.current = onClose
 
-  // 操作できるのは「とじる」だけなので、Tab でも後ろの画面（スタートなど）へ出さない
-  const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.preventDefault()
-      onClose()
-    } else if (e.key === 'Tab') {
-      e.preventDefault()
-      closeRef.current?.focus()
+  // 操作できるのは「とじる」だけなので、Tab でも後ろの画面（スタートなど）へ出さない。
+  // 文字の選択などでフォーカスが外れても効くよう、document で受ける
+  useEffect(() => {
+    if (!open) return
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onCloseRef.current()
+      } else if (e.key === 'Tab') {
+        e.preventDefault()
+        closeRef.current?.focus()
+      }
     }
-  }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [open])
+
+  if (!open) return null
 
   const r = t.operationReport
   const rows = buildOperationReport(cumulativeStats, lastSessionStats)
@@ -64,7 +73,6 @@ export function OperationReportModal({ open, onClose, cumulativeStats, lastSessi
         aria-modal="true"
         aria-labelledby="operation-report-title"
         data-testid="operation-report"
-        onKeyDown={handleKeyDown}
         className="max-w-2xl w-full max-h-[85vh] overflow-y-auto rounded-xl bg-white p-6 shadow-xl"
       >
         <div className="flex items-center justify-between mb-2">
