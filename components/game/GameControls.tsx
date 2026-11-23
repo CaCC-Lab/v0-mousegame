@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { DifficultySelector } from '../DifficultySelector'
 import { SoundControls } from '../SoundControls'
+import { DoubleClickSpeedSelector } from './DoubleClickSpeedSelector'
+import type { DoubleClickSpeed } from '@/lib/touchGestures'
 import { GameState } from '@/types/game'
 import { DifficultyLevel } from '@/types/difficulty'
 import { translations } from '@/lib/i18n/translations'
@@ -45,6 +47,9 @@ interface GameControlsProps {
    * 初見テストで2回続けて指摘された（docs/audits/20260924-ai-first-look-v1.2.md）
    */
   hideStageSelect?: boolean
+  /** ダブルクリックの はやさ（省略時は設定を出さない） */
+  doubleClickSpeed?: DoubleClickSpeed
+  onDoubleClickSpeedChange?: (speed: DoubleClickSpeed) => void
   t: TranslationType
 }
 
@@ -195,6 +200,8 @@ export function GameControls({
   onToggleLanguage,
   showStart = true,
   hideStageSelect = false,
+  doubleClickSpeed,
+  onDoubleClickSpeedChange,
   t
 }: GameControlsProps): React.ReactElement {
   const [settingsOpen, setSettingsOpen] = useState(false)
@@ -252,6 +259,9 @@ export function GameControls({
               language={language}
               t={t}
             />
+            {doubleClickSpeed && onDoubleClickSpeedChange && (
+              <DoubleClickSpeedSelector value={doubleClickSpeed} onChange={onDoubleClickSpeedChange} t={t} />
+            )}
           </div>
         )}
       </div>

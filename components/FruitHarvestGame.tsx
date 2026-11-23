@@ -7,6 +7,8 @@ import { useKeyboardControls } from '@/hooks/useKeyboardControls'
 import { useLanguage } from '@/hooks/useLanguage'
 import { useAnimation } from '@/hooks/useAnimation'
 import { useMediaQuery } from '@/hooks/useMediaQuery'
+import { useLocalStorage } from '@/hooks/useLocalStorage'
+import { normalizeDoubleClickSpeed, type DoubleClickSpeed } from '@/lib/touchGestures'
 import { StageSelector } from './StageSelector'
 import {
   ScoreBar,
@@ -144,6 +146,10 @@ export function FruitHarvestGame(): React.ReactElement {
   const handleHardModeChange = useCallback((checked: boolean) => {
     setIsHardMode(checked)
   }, [setIsHardMode])
+
+  // ゆっくりダブルクリックする子のための待ち時間（docs/game-spec.md §2）。壊れた保存値は「ふつう」
+  const [storedDoubleClickSpeed, setDoubleClickSpeed] = useLocalStorage<DoubleClickSpeed>('fruitHarvestDoubleClickSpeed', 'normal')
+  const doubleClickSpeed = normalizeDoubleClickSpeed(storedDoubleClickSpeed)
 
   // 待機中に選んでいるモード。カードを押しても始めず、「はじめる」で始める
   // （押した瞬間にタイマーが走ると、初見のプレイヤーは何が起きたか分からない）
@@ -628,6 +634,7 @@ export function FruitHarvestGame(): React.ReactElement {
               // 途切れた瞬間の表示はアーケードでも出す
               streak={showPlayHud ? operationStats.streak : undefined}
               showStreakCount={!isArcade}
+              doubleClickSpeed={doubleClickSpeed}
               lastStreakBonus={operationStats.lastStreakBonus}
             />
             {/* pointer-events-none でクリックを下のフルーツへ通す */}
@@ -727,6 +734,8 @@ export function FruitHarvestGame(): React.ReactElement {
             onStageSelect={() => setShowStageSelector(true)}
             onHardModeChange={handleHardModeChange}
             onToggleLanguage={toggleLanguage}
+            doubleClickSpeed={doubleClickSpeed}
+            onDoubleClickSpeedChange={setDoubleClickSpeed}
             t={t}
           />
         </motion.div>
