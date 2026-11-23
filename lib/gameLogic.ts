@@ -230,12 +230,33 @@ export function generateFruitForField(existing: Fruit[], area?: AreaSize): Fruit
 /**
  * Generates multiple fruits.（互いに重ならないよう1つずつ置く）
  */
-export function generateFruits(count: number, existing: readonly Fruit[] = [], area?: AreaSize): Fruit[] {
+export function generateFruits(
+  count: number,
+  existing: readonly Fruit[] = [],
+  area?: AreaSize,
+  pickType?: () => FruitType
+): Fruit[] {
   const fruits: Fruit[] = []
   for (let i = 0; i < count; i++) {
-    fruits.push(generateFruit(undefined, [...existing, ...fruits], area))
+    fruits.push(generateFruit(pickType?.(), [...existing, ...fruits], area))
   }
   return fruits
+}
+
+/**
+ * れんしゅうのステージで次に出す果物の種類を選ぶ。
+ * focusFruit は focusRatio の割合で出し、残りは fruitTypes から均等に選ぶ。
+ * fruitTypes が空なら4種類すべてから選ぶ（ステージ情報が壊れていても遊べるように）。
+ */
+export function pickStageFruitType(
+  fruitTypes: readonly FruitType[],
+  focusFruit: FruitType | undefined,
+  focusRatio: number,
+  rng: () => number = Math.random
+): FruitType {
+  const pool = fruitTypes.length > 0 ? fruitTypes : FRUIT_TYPES
+  if (focusFruit && pool.includes(focusFruit) && rng() < focusRatio) return focusFruit
+  return pool[Math.min(pool.length - 1, Math.floor(rng() * pool.length))]
 }
 
 /**

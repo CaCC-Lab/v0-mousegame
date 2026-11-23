@@ -47,7 +47,7 @@ describe('StageManager', () => {
     it('returns stage information', () => {
       const stage1 = manager.getStageInfo(1)
       expect(stage1).toBeDefined()
-      expect(stage1?.name).toBe('フルーツ畑')
+      expect(stage1?.name).toBe('リンゴ園')
       expect(stage1?.targetScore).toBe(100)
     })
 
@@ -98,14 +98,22 @@ describe('StageManager', () => {
     it('checks specific fruit requirements', () => {
       const score = 250
       const harvestedFruits: HarvestedFruits = {
-        apple: 12,
-        blueberry: 5,
-        lemon: 3,
-        watermelon: 2
+        apple: 7,
+        blueberry: 8,
+        lemon: 0,
+        watermelon: 0
       }
       
-      // Stage 2 requires 200 score, 10 apples, and 20 total fruits
+      // Stage 2 requires 200 score, 8 blueberries, and 15 total fruits
       expect(manager.isStageCompleted(2, score, harvestedFruits)).toBe(true)
+    })
+
+    it('fails when the focus fruit is one short', () => {
+      // Given: Stage 2 で合計は足りるが、ブルーベリーが 8 に1つ足りない
+      const harvestedFruits: HarvestedFruits = { apple: 10, blueberry: 7, lemon: 0, watermelon: 0 }
+      // When: 判定する
+      // Then: クリアにならない
+      expect(manager.isStageCompleted(2, 250, harvestedFruits)).toBe(false)
     })
   })
 

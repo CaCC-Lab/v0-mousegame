@@ -1,3 +1,5 @@
+import type { FruitType } from './game'
+
 export interface Stage {
   number: number
   name: string
@@ -11,6 +13,10 @@ export interface Stage {
     total?: number
   }
   timeLimit: number // in seconds
+  /** このステージで畑に出す果物。1面はりんごだけにして、操作を1つずつ覚える */
+  fruitTypes: FruitType[]
+  /** このステージで新しく覚える果物。ほかより多めに出す（STAGE_FOCUS_RATIO） */
+  focusFruit?: FruitType
   unlocked: boolean
   completed: boolean
   highScore: number
@@ -28,54 +34,68 @@ export interface StageProgress {
   unlockedStages: number[]
 }
 
+/** 覚える果物（focusFruit）を出す割合。残りは fruitTypes から均等に選ぶ */
+export const STAGE_FOCUS_RATIO = 0.5
+
+/**
+ * れんしゅうのステージ。操作を1つずつ増やす順に並べる。
+ * 1面はクリック（りんご）だけ。2〜4面で1つずつ操作が加わり、加わった果物を多めに出す。
+ * 目標スコアは、目標の果物数をいちばん安い組み合わせで取ったときの点以下にしてある。
+ */
 export const STAGES: Stage[] = [
   {
     number: 1,
-    name: 'フルーツ畑',
-    description: 'フルーツ収穫の基本を学びましょう',
+    name: 'リンゴ園',
+    description: 'クリックで りんごを とろう',
     targetScore: 100,
     targetFruits: {
       total: 10
     },
     timeLimit: 60,
+    fruitTypes: ['apple'],
+    focusFruit: 'apple',
     unlocked: true,
     completed: false,
     highScore: 0,
     difficulty: {
-      fruitCount: 8,
+      fruitCount: 6,
       fruitSpeed: 1.0,
       powerUpSpawnRate: 0.1
     }
   },
   {
     number: 2,
-    name: 'リンゴ園',
-    description: 'リンゴを中心に収穫しましょう',
+    name: 'ブルーベリー農園',
+    description: 'ダブルクリックで ブルーベリーを とろう',
     targetScore: 200,
     targetFruits: {
-      apple: 10,
-      total: 20
+      blueberry: 8,
+      total: 15
     },
     timeLimit: 90,
+    fruitTypes: ['apple', 'blueberry'],
+    focusFruit: 'blueberry',
     unlocked: false,
     completed: false,
     highScore: 0,
     difficulty: {
-      fruitCount: 10,
+      fruitCount: 8,
       fruitSpeed: 1.2,
       powerUpSpawnRate: 0.15
     }
   },
   {
     number: 3,
-    name: 'ブルーベリー農園',
-    description: 'ブルーベリーのダブルクリックに挑戦',
-    targetScore: 300,
+    name: 'レモン畑',
+    description: '右クリックで レモンを とろう',
+    targetScore: 240,
     targetFruits: {
-      blueberry: 15,
-      total: 30
+      lemon: 8,
+      total: 20
     },
     timeLimit: 90,
+    fruitTypes: ['apple', 'blueberry', 'lemon'],
+    focusFruit: 'lemon',
     unlocked: false,
     completed: false,
     highScore: 0,
@@ -87,33 +107,39 @@ export const STAGES: Stage[] = [
   },
   {
     number: 4,
-    name: 'レモン畑',
-    description: 'レモンの右クリックをマスターしよう',
-    targetScore: 400,
+    name: 'スイカ畑',
+    description: 'ドラッグで スイカを はこぼう',
+    targetScore: 340,
     targetFruits: {
-      lemon: 10,
-      total: 35
+      watermelon: 6,
+      total: 25
     },
     timeLimit: 120,
+    fruitTypes: ['apple', 'blueberry', 'lemon', 'watermelon'],
+    focusFruit: 'watermelon',
     unlocked: false,
     completed: false,
     highScore: 0,
     difficulty: {
-      fruitCount: 12,
+      fruitCount: 10,
       fruitSpeed: 1.4,
       powerUpSpawnRate: 0.2
     }
   },
   {
     number: 5,
-    name: 'スイカ畑',
-    description: 'スイカドラッグの技を極めよう',
+    name: 'フルーツ畑',
+    description: '4つの そうさを ぜんぶ つかおう',
     targetScore: 500,
     targetFruits: {
-      watermelon: 8,
-      total: 40
+      apple: 5,
+      blueberry: 5,
+      lemon: 5,
+      watermelon: 5,
+      total: 35
     },
     timeLimit: 120,
+    fruitTypes: ['apple', 'blueberry', 'lemon', 'watermelon'],
     unlocked: false,
     completed: false,
     highScore: 0,
@@ -136,6 +162,7 @@ export const STAGES: Stage[] = [
       total: 50
     },
     timeLimit: 150,
+    fruitTypes: ['apple', 'blueberry', 'lemon', 'watermelon'],
     unlocked: false,
     completed: false,
     highScore: 0,

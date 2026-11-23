@@ -650,7 +650,7 @@ export function FruitHarvestGame(): React.ReactElement {
             */}
             {showPlayHud && (
             <div className={`absolute bottom-1.5 left-0 ${DROP_BAND_INSET_CLASS} z-20 px-2 pointer-events-none`}>
-              <OperationLegend t={t} />
+              <OperationLegend t={t} fruits={isArcade ? undefined : stage?.currentStageInfo?.fruitTypes} />
             </div>
             )}
 
