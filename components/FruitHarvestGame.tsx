@@ -35,7 +35,7 @@ import { DailyPracticeCard } from './game/DailyPracticeCard'
 import { DailyGoalComplete } from './game/DailyGoalComplete'
 import { CollectionModal } from './game/CollectionModal'
 import { Button } from './ui/button'
-import { Fruit, InteractionType } from '@/types/game'
+import { Fruit, InteractionOptions, InteractionType } from '@/types/game'
 import type { InteractionType as IT } from '@/types/game'
 import type { MasteryLevel } from '@/types/gamification'
 import type { GameMode } from '@/types/arcade'
@@ -279,11 +279,11 @@ export function FruitHarvestGame(): React.ReactElement {
     debugPrevGameStateRef.current = gameState
   }, [gameState])
 
-  const handleFruitClick = useCallback((fruit: Fruit, action: InteractionType) => {
+  const handleFruitClick = useCallback((fruit: Fruit, action: InteractionType, options?: InteractionOptions) => {
     if (debugEnabled && gameState === 'playing') {
       setDebugStats((stats) => recordInteraction(stats, fruit.type, action))
     }
-    handleFruitInteraction(fruit, action)
+    handleFruitInteraction(fruit, action, options)
     // AC-8.2: 収穫成功時にリアルタイムで目標更新。
     // ただし「きょうのれんしゅう」は練習モードの日課なので、
     // 60秒スコアアタックのアーケードでは埋めない

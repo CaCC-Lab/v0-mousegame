@@ -3,6 +3,7 @@ import {
   Fruit,
   GameState,
   HarvestedFruits,
+  InteractionOptions,
   InteractionType,
   MissHint,
   GAME_CONFIG,
@@ -244,11 +245,11 @@ export function useGameLogic() {
     resetPowerUps()
   }, [resetPowerUps, arcade])
 
-  const handleFruitInteraction = useCallback((fruit: Fruit, action: InteractionType) => {
+  const handleFruitInteraction = useCallback((fruit: Fruit, action: InteractionType, options?: InteractionOptions) => {
     if (gameState !== 'playing') return
 
     const isArcade = modeRef.current === 'arcade'
-    const basePoints = calculateScore(fruit.type, action)
+    const basePoints = options?.missedTarget ? 0 : calculateScore(fruit.type, action)
 
     if (basePoints <= 0) {
       operationStatsRef.current.recordFailure(action)
