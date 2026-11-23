@@ -49,7 +49,7 @@ describe('FruitHarvestGame', () => {
       startPlaying()
       // 複数のスコア表示がある場合は最初のものを取得
       const scoreElements = screen.getAllByText((content) => 
-        content.includes('Score:') || content.includes('得点:')
+        content.includes('Score:') || content.includes('てんすう:')
       )
       expect(scoreElements.length).toBeGreaterThan(0)
       
@@ -359,7 +359,7 @@ describe('FruitHarvestGame', () => {
 
       // The stage selector button should always be visible
       const stageSelectButton = screen.getAllByRole('button').find(btn =>
-        btn.textContent?.match(/Stage Select|ステージ選択/i)
+        btn.textContent?.match(/Select Stage|ステージをえらぶ/i)
       )
       expect(stageSelectButton || screen.getByRole('application')).toBeInTheDocument()
     })

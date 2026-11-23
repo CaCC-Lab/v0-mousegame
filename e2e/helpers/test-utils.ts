@@ -36,7 +36,7 @@ export async function closeDialog(page: Page) {
 }
 
 export async function getScore(page: Page): Promise<number> {
-  const scoreText = await page.getByText(/得点:|Score:/).locator('..').textContent()
+  const scoreText = await page.getByText(/てんすう:|Score:/).locator('..').textContent()
   const match = scoreText?.match(/\d+/)
   return match ? parseInt(match[0]) : 0
 }

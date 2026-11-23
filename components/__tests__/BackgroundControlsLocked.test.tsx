@@ -34,7 +34,7 @@ describe('結果表示中・アーケード中の背後の操作', () => {
     render(<FruitHarvestGame />)
     startArcade()
 
-    expect(screen.queryByRole('button', { name: /ステージ選択/ })).not.toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: /ステージをえらぶ/ })).not.toBeInTheDocument()
   })
 
   it('アーケードの結果が出ているあいだ、結果の外に押せる「はじめる」は無い', () => {
@@ -64,6 +64,6 @@ describe('結果表示中・アーケード中の背後の操作', () => {
       screen.getByRole('button', { name: /せってい/ }).click()
     })
 
-    expect(screen.getByRole('button', { name: /ステージ選択/ })).toBeEnabled()
+    expect(screen.getByRole('button', { name: /ステージをえらぶ/ })).toBeEnabled()
   })
 })

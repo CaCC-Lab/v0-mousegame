@@ -124,8 +124,8 @@ describe('モーダルを出しているあいだのキーボード', () => {
     render(<FruitHarvestGame />)
     act(() => screen.getByTestId('mode-select-practice').click())
     act(() => screen.getByRole('button', { name: /せってい/ }).click())
-    act(() => screen.getByRole('button', { name: /ステージ選択/ }).click())
-    expect(screen.getByRole('heading', { name: 'ステージ選択' })).toBeInTheDocument()
+    act(() => screen.getByRole('button', { name: /ステージをえらぶ/ }).click())
+    expect(screen.getByRole('heading', { name: 'ステージをえらぶ' })).toBeInTheDocument()
 
     // When: Enter を押す
     press('Enter')

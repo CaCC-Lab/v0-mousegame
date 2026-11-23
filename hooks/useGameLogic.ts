@@ -69,16 +69,28 @@ export function useGameLogic() {
   // 実際のプレイエリアの大きさ（px）。果物の配置に使う（docs/game-spec.md §3）。
   // 画面側が測って setPlayAreaSize で知らせる。知らせが無いあいだは 1280×800 の埋め込みを基準にする
   const playAreaSizeRef = useRef<AreaSize | undefined>(undefined)
-  const setPlayAreaSize = useCallback((width: number, height: number) => {
+  const setPlayAreaSize = useCallback((next: AreaSize) => {
     // 描画前（0×0）は測れていないので使わない
-    if (width <= 0 || height <= 0) return
+    if (!(next.width > 0) || !(next.height > 0)) return
     const previous = playAreaSizeRef.current
-    const next = { width, height }
-    playAreaSizeRef.current = next
-    if (previous && Math.round(previous.width) === Math.round(width) && Math.round(previous.height) === Math.round(height)) return
-    // 大きさが変わったら（遊び始めてヘッダが折り返した、窓の大きさを変えた、など）、
+    const normalized: AreaSize = {
+      width: next.width,
+      height: next.height,
+      ...(next.dropBandPx && next.dropBandPx > 0 ? { dropBandPx: next.dropBandPx } : {}),
+      ...(next.reservedBottomPx && next.reservedBottomPx > 0 ? { reservedBottomPx: next.reservedBottomPx } : {}),
+      ...(next.fontScale && next.fontScale > 0 ? { fontScale: next.fontScale } : {}),
+    }
+    playAreaSizeRef.current = normalized
+    const same = previous
+      && Math.round(previous.width) === Math.round(normalized.width)
+      && Math.round(previous.height) === Math.round(normalized.height)
+      && Math.round(previous.dropBandPx ?? 0) === Math.round(normalized.dropBandPx ?? 0)
+      && Math.round(previous.reservedBottomPx ?? 0) === Math.round(normalized.reservedBottomPx ?? 0)
+      && Math.round((previous.fontScale ?? 1) * 100) === Math.round((normalized.fontScale ?? 1) * 100)
+    if (same) return
+    // 大きさが変わったら（遊び始めてヘッダが折り返した、窓の大きさを変えた、文字サイズで帯や凡例が伸びた、など）、
     // 重なった果物・帯にはみ出した果物だけを置き直す。問題の無い果物は動かさない
-    setFruits((prev) => (prev.length > 0 ? relayoutFruits(prev, next) : prev))
+    setFruits((prev) => (prev.length > 0 ? relayoutFruits(prev, normalized) : prev))
   }, [])
   const timeLeftRef = useRef<number>(60)
   const harvestedFruitsRef = useRef<HarvestedFruits>(createInitialHarvestedFruits())
@@ -335,7 +347,7 @@ export function useGameLogic() {
     const speedBoostMultiplier = getEffectValue('speedBoost')
     deltaTime *= speedBoostMultiplier
 
-    setFruits(prevFruits => prevFruits.map(fruit => updateFruitPosition(fruit, deltaTime)))
+    setFruits(prevFruits => prevFruits.map(fruit => updateFruitPosition(fruit, deltaTime, playAreaSizeRef.current)))
 
     animationFrameRef.current = requestAnimationFrame(moveFruits)
   }, [gameState, fruitsMove, getEffectValue])

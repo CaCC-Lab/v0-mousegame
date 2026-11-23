@@ -17,7 +17,7 @@ describe('DropArea', () => {
     render(<DropArea t={translations.ja} />)
 
     const label = screen.getByTestId('drop-area-label')
-    expect(label).toHaveTextContent('ここへ')
+    expect(label).toHaveTextContent('スイカをここへ')
     // 縦積みにすると読みにくいので、1行に収まる語だけを出す
     expect(label).not.toHaveClass('flex-col')
   })

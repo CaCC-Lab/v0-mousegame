@@ -134,7 +134,7 @@ describe('FruitHarvestGame Integration Tests', () => {
       render(<FruitHarvestGame />)
 
       // The stage selector button should be visible
-      const stageSelectButton = findButtonByPattern(/Stage Select|ステージ選択/i)
+      const stageSelectButton = findButtonByPattern(/Select Stage|ステージをえらぶ/i)
       expect(stageSelectButton || screen.getByRole('application')).toBeInTheDocument()
     })
   })
