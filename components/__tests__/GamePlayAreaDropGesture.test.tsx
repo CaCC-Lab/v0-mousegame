@@ -17,6 +17,8 @@ import type { Fruit } from '@/types/game'
  * | DG-A-02 | 畑の外で離す | 外で離す | その場で drop のミス。あとで畑の中で離しても数えない | 古いドラッグを持ち越さない |
  * | DG-A-03 | タッチでスイカを動かさずにタップ | タッチ | drop のミスは数えない | - |
  * | DG-A-04 | タッチで 20px なぞって離す | タッチ | drop のミス | - |
+ * | DG-A-05 | 20px 動かしてから押した場所へもどって離す | 行って戻る | drop のミス | 一度こえたらドラッグ |
+ * | DG-A-06 | タッチで 20px なぞってから戻って離す | タッチ・行って戻る | drop のミス | 果物側はタップを取り消し済み |
  */
 const watermelon: Fruit = { id: 1, type: 'watermelon', size: 'medium', x: 20, y: 20, dx: 0, dy: 0 }
 
@@ -43,7 +45,7 @@ function renderArea() {
 
 const dropCalls = (fn: jest.Mock) => fn.mock.calls.filter(c => c[1] === 'drop')
 
-function touch(kind: 'pointerDown' | 'pointerUp', target: Element, x: number, y: number) {
+function touch(kind: 'pointerDown' | 'pointerMove' | 'pointerUp', target: Element, x: number, y: number) {
   const ev = createEvent[kind](target)
   Object.defineProperty(ev, 'pointerType', { value: 'touch' })
   Object.defineProperty(ev, 'clientX', { value: x })
@@ -120,6 +122,26 @@ describe('GamePlayArea: スイカのドロップ判定', () => {
     const { onFruitClick, area, node } = renderArea()
     touch('pointerDown', node, 100, 100)
     touch('pointerUp', area, 120, 100)
+    expect(dropCalls(onFruitClick)).toEqual([[expect.objectContaining({ id: 1 }), 'drop', { missedTarget: true }]])
+  })
+
+  it('DG-A-05: 動かしてから押した場所へもどって離しても drop のミス', () => {
+    // Given: スイカ When: 20px 動かしてから元の場所で離す
+    const { onFruitClick, area, node } = renderArea()
+    fireEvent.mouseDown(node, { button: 0, clientX: 100, clientY: 100 })
+    fireEvent.mouseMove(area, { clientX: 120, clientY: 100 })
+    fireEvent.mouseUp(area, { clientX: 100, clientY: 100 })
+    // Then: ミスの drop
+    expect(dropCalls(onFruitClick)).toEqual([[expect.objectContaining({ id: 1 }), 'drop', { missedTarget: true }]])
+  })
+
+  it('DG-A-06: タッチでなぞってから戻って離しても drop のミス', () => {
+    // Given: スイカ When: タッチで 20px 動かしてから元の場所で離す
+    const { onFruitClick, area, node } = renderArea()
+    touch('pointerDown', node, 100, 100)
+    touch('pointerMove', area, 120, 100)
+    touch('pointerUp', area, 100, 100)
+    // Then: ミスの drop
     expect(dropCalls(onFruitClick)).toEqual([[expect.objectContaining({ id: 1 }), 'drop', { missedTarget: true }]])
   })
 })

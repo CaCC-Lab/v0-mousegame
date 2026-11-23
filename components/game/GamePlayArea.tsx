@@ -122,6 +122,13 @@ export function GamePlayArea({
 
   const dragStartRef = useRef<{ x: number; y: number } | null>(null)
   const isMouseDragRef = useRef(false)
+  /** 一度でもしきい値をこえて動かしたか（もどって離してもドラッグとして数える） */
+  const dragMovedRef = useRef(false)
+
+  const trackDragMove = useCallback((clientX: number, clientY: number) => {
+    const start = dragStartRef.current
+    if (start && exceedsDragThreshold(clientX - start.x, clientY - start.y)) dragMovedRef.current = true
+  }, [])
 
   const handleFruitClickWithAnimation = useCallback((fruit: FruitType, action: InteractionType) => {
     const gameArea = gameAreaRef.current
@@ -173,12 +180,12 @@ export function GamePlayArea({
     if (isInDropArea) {
       handleFruitClickWithAnimation(fruit, 'drop')
     } else {
-      const start = dragStartRef.current
-      if (start && !exceedsDragThreshold(clientX - start.x, clientY - start.y)) return
+      trackDragMove(clientX, clientY)
+      if (dragStartRef.current && !dragMovedRef.current) return
       // AC-5.2a: ドロップ領域外リリースは失敗記録
       onFruitClick(fruit, 'drop', { missedTarget: true })
     }
-  }, [gameAreaRef, handleFruitClickWithAnimation, onFruitClick])
+  }, [gameAreaRef, handleFruitClickWithAnimation, onFruitClick, trackDragMove])
 
   /** タッチの長押し ＝ 右クリック相当 */
   const handleLongPress = useCallback((fruit: FruitType) => {
@@ -192,6 +199,7 @@ export function GamePlayArea({
   /** タッチでスイカを持ち上げる */
   const handleTouchDragStart = useCallback((e: React.PointerEvent, fruit: FruitType) => {
     dragStartRef.current = { x: e.clientX, y: e.clientY }
+    dragMovedRef.current = false
     isMouseDragRef.current = false
     setDraggedFruit(fruit)
     setMousePosition({ x: e.clientX, y: e.clientY })
@@ -199,8 +207,9 @@ export function GamePlayArea({
 
   const handlePointerMove = useCallback((e: React.PointerEvent) => {
     if (e.pointerType !== 'touch' || !draggedFruit) return
+    trackDragMove(e.clientX, e.clientY)
     setMousePosition({ x: e.clientX, y: e.clientY })
-  }, [draggedFruit])
+  }, [draggedFruit, trackDragMove])
 
   const handlePointerUp = useCallback((e: React.PointerEvent) => {
     if (e.pointerType !== 'touch' || !draggedFruit) return
@@ -225,6 +234,7 @@ export function GamePlayArea({
       }
     } else if (e.button === 0 && fruit.type === 'watermelon') {
       dragStartRef.current = { x: e.clientX, y: e.clientY }
+    dragMovedRef.current = false
       isMouseDragRef.current = true
       setDraggedFruit(fruit)
       setMousePosition({ x: e.clientX, y: e.clientY })
@@ -233,9 +243,10 @@ export function GamePlayArea({
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (draggedFruit) {
+      trackDragMove(e.clientX, e.clientY)
       setMousePosition({ x: e.clientX, y: e.clientY })
     }
-  }, [draggedFruit])
+  }, [draggedFruit, trackDragMove])
 
   // 畑の外で離しても、その場で判定してドラッグを終える（次のクリックへ持ち越さない）
   useEffect(() => {
