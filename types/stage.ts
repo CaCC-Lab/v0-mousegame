@@ -41,13 +41,14 @@ export const STAGE_FOCUS_RATIO = 0.5
  * れんしゅうのステージ。操作を1つずつ増やす順に並べる。
  * 1面はクリック（りんご）だけ。2〜4面で1つずつ操作が加わり、加わった果物を多めに出す。
  * 目標スコアは、目標の果物数をいちばん安い組み合わせで取ったときの点以下にしてある。
+ * 1面はりんごだけなので、かんたん（0.8倍）でも10こで届く80点にする。
  */
 export const STAGES: Stage[] = [
   {
     number: 1,
     name: 'リンゴ園',
     description: 'クリックで りんごを とろう',
-    targetScore: 100,
+    targetScore: 80,
     targetFruits: {
       total: 10
     },

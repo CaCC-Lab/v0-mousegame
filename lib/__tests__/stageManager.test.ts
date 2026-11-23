@@ -48,7 +48,7 @@ describe('StageManager', () => {
       const stage1 = manager.getStageInfo(1)
       expect(stage1).toBeDefined()
       expect(stage1?.name).toBe('リンゴ園')
-      expect(stage1?.targetScore).toBe(100)
+      expect(stage1?.targetScore).toBe(80)
     })
 
     it('returns null for invalid stage', () => {
