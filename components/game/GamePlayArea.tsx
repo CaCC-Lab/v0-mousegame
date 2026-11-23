@@ -234,7 +234,7 @@ export function GamePlayArea({
       }
     } else if (e.button === 0 && fruit.type === 'watermelon') {
       dragStartRef.current = { x: e.clientX, y: e.clientY }
-    dragMovedRef.current = false
+      dragMovedRef.current = false
       isMouseDragRef.current = true
       setDraggedFruit(fruit)
       setMousePosition({ x: e.clientX, y: e.clientY })
@@ -254,6 +254,12 @@ export function GamePlayArea({
     const handleMouseUp = (e: MouseEvent) => {
       resolveDrop(draggedFruit, e.clientX, e.clientY)
       setDraggedFruit(null)
+      // スイカの上で離すとブラウザが click も送る。ドラッグとして数えたので click のミスは数えない
+      if (dragMovedRef.current) {
+        const swallowClick = (ev: MouseEvent) => ev.stopPropagation()
+        window.addEventListener('click', swallowClick, { capture: true, once: true })
+        setTimeout(() => window.removeEventListener('click', swallowClick, { capture: true }), 0)
+      }
     }
     window.addEventListener('mouseup', handleMouseUp)
     return () => window.removeEventListener('mouseup', handleMouseUp)

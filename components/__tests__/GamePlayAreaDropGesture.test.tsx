@@ -19,6 +19,8 @@ import type { Fruit } from '@/types/game'
  * | DG-A-04 | タッチで 20px なぞって離す | タッチ | drop のミス | - |
  * | DG-A-05 | 20px 動かしてから押した場所へもどって離す | 行って戻る | drop のミス | 一度こえたらドラッグ |
  * | DG-A-06 | タッチで 20px なぞってから戻って離す | タッチ・行って戻る | drop のミス | 果物側はタップを取り消し済み |
+ * | DG-A-07 | 動かしてからスイカの上で離し、ブラウザが click も送る | 1回の操作で2回ミスにしない | drop のミスだけ（click は数えない） | - |
+ * | DG-A-08 | DG-A-07 のあと、あらためてクリック | 抑止は1回だけ | click として数える | 次の操作に持ち越さない |
  */
 const watermelon: Fruit = { id: 1, type: 'watermelon', size: 'medium', x: 20, y: 20, dx: 0, dy: 0 }
 
@@ -54,6 +56,9 @@ function touch(kind: 'pointerDown' | 'pointerMove' | 'pointerUp', target: Elemen
 }
 
 describe('GamePlayArea: スイカのドロップ判定', () => {
+  // ドラッグ直後の click 抑止（setTimeout 0 で解除）を次のテストへ持ち越さない
+  afterEach(() => new Promise(resolve => setTimeout(resolve, 0)))
+
   it('DG-N-01: 動かしてエリアの外で離すと、drop のミスを1回だけ数える', () => {
     // Given: スイカ When: (100,100) で押して (120,100) で離す
     const { onFruitClick, area, node } = renderArea()
@@ -143,5 +148,31 @@ describe('GamePlayArea: スイカのドロップ判定', () => {
     touch('pointerUp', area, 100, 100)
     // Then: ミスの drop
     expect(dropCalls(onFruitClick)).toEqual([[expect.objectContaining({ id: 1 }), 'drop', { missedTarget: true }]])
+  })
+
+  it('DG-A-07: 動かしてからスイカの上で離しても、click のミスは数えない', () => {
+    // Given: スイカ When: 20px 動かして戻り、スイカの上で離す（ブラウザは click も送る）
+    const { onFruitClick, area, node } = renderArea()
+    fireEvent.mouseDown(node, { button: 0, clientX: 100, clientY: 100 })
+    fireEvent.mouseMove(area, { clientX: 120, clientY: 100 })
+    fireEvent.mouseUp(node, { clientX: 100, clientY: 100 })
+    fireEvent.click(node, { clientX: 100, clientY: 100 })
+    // Then: drop のミス1回だけ
+    expect(onFruitClick.mock.calls).toEqual([[expect.objectContaining({ id: 1 }), 'drop', { missedTarget: true }]])
+  })
+
+  it('DG-A-08: そのあとの別のクリックは click として数える', async () => {
+    // Given: DG-A-07 のドラッグを終えた
+    const { onFruitClick, area, node } = renderArea()
+    fireEvent.mouseDown(node, { button: 0, clientX: 100, clientY: 100 })
+    fireEvent.mouseMove(area, { clientX: 120, clientY: 100 })
+    fireEvent.mouseUp(area, { clientX: 100, clientY: 100 })
+    await new Promise(resolve => setTimeout(resolve, 0))
+    // When: あらためてクリック
+    fireEvent.mouseDown(node, { button: 0, clientX: 100, clientY: 100 })
+    fireEvent.mouseUp(node, { clientX: 100, clientY: 100 })
+    fireEvent.click(node, { clientX: 100, clientY: 100 })
+    // Then: click として数える
+    expect(onFruitClick.mock.calls.map(c => c[1])).toEqual(['drop', 'click'])
   })
 })
