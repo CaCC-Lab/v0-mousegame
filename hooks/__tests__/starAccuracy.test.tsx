@@ -187,7 +187,7 @@ describe('starAccuracy (Task 9)', () => {
       expect(onFruitClick).toHaveBeenCalledWith(expect.objectContaining({ type: 'apple' }), 'rightClick')
     })
 
-    it('スイカをドロップ領域外にリリースすると onFruitClick(fruit, "drop") が呼ばれ失敗記録に繋がる（§7.1a）', () => {
+    it('スイカをドロップ領域外にリリースすると onFruitClick(fruit, "drop", { missedTarget: true }) が呼ばれ失敗記録に繋がる（§7.1a）', () => {
       // Given: ドラッグ開始はスイカのみ可能（他フルーツは drop 操作が発生しない）
       const watermelon = baseFruit({ id: 202, type: 'watermelon' })
       const onFruitClick = jest.fn()
@@ -209,8 +209,26 @@ describe('starAccuracy (Task 9)', () => {
         clientY: (dropRect.top + dropRect.bottom) / 2,
       })
 
-      // Then: design §7.1a — 領域外 drop が伝わり recordFailure('drop')
-      expect(onFruitClick).toHaveBeenCalledWith(expect.objectContaining({ type: 'watermelon', id: 202 }), 'drop')
+      // Then: design §7.1a — 領域外 drop は missedTarget つきで伝わり recordFailure('drop')
+      expect(onFruitClick).toHaveBeenCalledWith(expect.objectContaining({ type: 'watermelon', id: 202 }), 'drop', { missedTarget: true })
+    })
+
+    it('スイカをドロップ領域内でリリースすると onFruitClick(fruit, "drop") が missedTarget なしで呼ばれる', () => {
+      // Given: スイカが1つある畑
+      const watermelon = baseFruit({ id: 203, type: 'watermelon' })
+      const onFruitClick = jest.fn()
+      renderArea([watermelon], onFruitClick)
+      const gameArea = screen.getByTestId('game-area')
+      const node = gameArea.querySelector('[data-fruit-id="203"]')
+      const dropRect = gameArea.querySelector('.drop-area')!.getBoundingClientRect()
+
+      // When: ドロップ領域の中でリリース
+      fireEvent.mouseDown(node!, { button: 0 })
+      fireEvent.mouseUp(gameArea, { clientX: dropRect.left, clientY: dropRect.top })
+
+      // Then: 成功の drop（第3引数なし）
+      expect(onFruitClick).toHaveBeenCalledWith(expect.objectContaining({ type: 'watermelon', id: 203 }), 'drop')
+      expect(onFruitClick.mock.calls[0]).toHaveLength(2)
     })
   })
 

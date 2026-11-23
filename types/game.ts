@@ -3,6 +3,11 @@ export type FruitSize = 'small' | 'medium' | 'large'
 export type GameState = 'idle' | 'playing' | 'paused'
 export type InteractionType = 'click' | 'doubleClick' | 'rightClick' | 'drop'
 
+export interface InteractionOptions {
+  /** スイカをかご（ドロップ領域）の外で離した。正しい果物でもミスにする */
+  missedTarget?: boolean
+}
+
 export interface Fruit {
   id: number
   type: FruitType

@@ -5,7 +5,7 @@ import { AnimatePresence, motion } from 'framer-motion'
 import { Fruit as FruitComponent } from '../Fruit'
 import { PowerUp } from '../PowerUp'
 import { ParticleContainer } from '../ParticleContainer'
-import { Fruit as FruitType, HarvestAnimation, InteractionType } from '@/types/game'
+import { Fruit as FruitType, HarvestAnimation, InteractionOptions, InteractionType } from '@/types/game'
 import { FruitSprite } from './FruitSprite'
 import { MissHintToast } from './MissHintToast'
 import { DropArea } from './DropArea'
@@ -23,7 +23,7 @@ interface GamePlayAreaProps {
   particles: ParticleEffect[]
   isHardMode: boolean
   selectedFruitIndex: number
-  onFruitClick: (fruit: FruitType, action: InteractionType) => void
+  onFruitClick: (fruit: FruitType, action: InteractionType, options?: InteractionOptions) => void
   onPowerUpCollect: (powerUpId: string) => void
   onTriggerAnimation: (type: 'fruitCollect' | 'powerUpCollect', x: number, y: number) => void
   onFruitCollected: () => void
@@ -153,7 +153,7 @@ export function GamePlayArea({
 
   /**
    * ドロップの成否を判定して通知する。マウスとタッチで共通。
-   * 領域外で離した場合も 'drop' で通知し、成否（得点0）の判断は上位に任せる。
+   * 領域外で離した場合は missedTarget つきの 'drop' で通知し、上位でミス（得点0）にする。
    */
   const resolveDrop = useCallback((fruit: FruitType, clientX: number, clientY: number) => {
     const dropArea = gameAreaRef.current?.querySelector('.drop-area')
@@ -169,7 +169,7 @@ export function GamePlayArea({
       handleFruitClickWithAnimation(fruit, 'drop')
     } else {
       // AC-5.2a: ドロップ領域外リリースは失敗記録
-      onFruitClick(fruit, 'drop')
+      onFruitClick(fruit, 'drop', { missedTarget: true })
     }
   }, [gameAreaRef, handleFruitClickWithAnimation, onFruitClick])
 
