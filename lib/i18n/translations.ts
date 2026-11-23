@@ -6,6 +6,13 @@ export const translations = {
     resume: 'さいかい',
     reset: 'リセット',
     hardMode: 'うごくモード',
+    doubleClickSpeed: 'ダブルクリックの はやさ',
+    doubleClickSpeedOptions: {
+      normal: 'ふつう',
+      slow: 'ゆっくり',
+      verySlow: 'もっとゆっくり',
+    },
+    doubleClickSpeedHint: 'ゆっくり カチ、カチ でも ブルーベリーが とれるよ',
     howToPlay: 'あそびかた',
     language: '日本語',
     muteSound: 'おとをけす',
@@ -38,24 +45,24 @@ export const translations = {
     // Stage Names and Descriptions
     stages: {
       stage1: {
-        name: 'フルーツ畑',
-        description: 'フルーツ収穫の基本を学びましょう'
+        name: 'リンゴ園',
+        description: 'クリックで りんごを とろう'
       },
       stage2: {
-        name: 'リンゴ園',
-        description: 'リンゴを中心に収穫しましょう'
+        name: 'ブルーベリー農園',
+        description: 'ダブルクリックで ブルーベリーを とろう'
       },
       stage3: {
-        name: 'ブルーベリー農園',
-        description: 'ブルーベリーのダブルクリックに挑戦'
+        name: 'レモン畑',
+        description: '右クリックで レモンを とろう'
       },
       stage4: {
-        name: 'レモン畑',
-        description: 'レモンの右クリックをマスターしよう'
+        name: 'スイカ畑',
+        description: 'ドラッグで スイカを はこぼう'
       },
       stage5: {
-        name: 'スイカ畑',
-        description: 'スイカドラッグの技を極めよう'
+        name: 'フルーツ畑',
+        description: '4つの そうさを ぜんぶ つかおう'
       },
       stage6: {
         name: 'フルーツパラダイス',
@@ -250,6 +257,13 @@ export const translations = {
     resume: 'Resume',
     reset: 'Reset',
     hardMode: 'Moving Mode',
+    doubleClickSpeed: 'Double-click speed',
+    doubleClickSpeedOptions: {
+      normal: 'Normal',
+      slow: 'Slow',
+      verySlow: 'Very slow',
+    },
+    doubleClickSpeedHint: 'Slower clicks still count as a double-click on blueberries',
     howToPlay: 'How to Play',
     language: 'English',
     muteSound: 'Mute sound',
@@ -281,24 +295,24 @@ export const translations = {
     // Stage Names and Descriptions
     stages: {
       stage1: {
-        name: 'Fruit Farm',
-        description: 'Learn the basics of fruit harvesting'
+        name: 'Apple Orchard',
+        description: 'Click to pick apples'
       },
       stage2: {
-        name: 'Apple Orchard',
-        description: 'Focus on harvesting apples'
+        name: 'Blueberry Farm',
+        description: 'Double-click to pick blueberries'
       },
       stage3: {
-        name: 'Blueberry Farm',
-        description: 'Take on the blueberry double-click'
+        name: 'Lemon Grove',
+        description: 'Right-click to pick lemons'
       },
       stage4: {
-        name: 'Lemon Grove',
-        description: 'Master the right-click with lemons'
+        name: 'Watermelon Field',
+        description: 'Drag watermelons to the drop zone'
       },
       stage5: {
-        name: 'Watermelon Field',
-        description: 'Perfect your watermelon drag'
+        name: 'Fruit Farm',
+        description: 'Use all four mouse moves'
       },
       stage6: {
         name: 'Fruit Paradise',

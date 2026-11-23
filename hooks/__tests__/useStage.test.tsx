@@ -17,7 +17,7 @@ describe('useStage', () => {
       
       expect(result.current.currentStage).toBe(1)
       expect(result.current.currentStageInfo).toBeDefined()
-      expect(result.current.currentStageInfo?.name).toBe('フルーツ畑')
+      expect(result.current.currentStageInfo?.name).toBe('リンゴ園')
       expect(result.current.currentStageInfo?.unlocked).toBe(true)
     })
 
@@ -127,7 +127,7 @@ describe('useStage', () => {
       
       expect(moved).toBe(true)
       expect(result.current.currentStage).toBe(2)
-      expect(result.current.currentStageInfo?.name).toBe('リンゴ園')
+      expect(result.current.currentStageInfo?.name).toBe('ブルーベリー農園')
     })
 
     it('does not move if next stage is locked', () => {

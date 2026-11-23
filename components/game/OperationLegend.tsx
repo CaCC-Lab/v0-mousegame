@@ -12,6 +12,8 @@ const FRUIT_ORDER: FruitType[] = ['apple', 'blueberry', 'lemon', 'watermelon']
 export interface OperationLegendProps {
   /** 表示言語。省略時は日本語（既定の表示言語） */
   t?: typeof translations.ja
+  /** 出す果物。省略時は4種類。れんしゅうではそのステージに出る果物だけを渡す */
+  fruits?: readonly FruitType[]
 }
 
 /**
@@ -26,7 +28,7 @@ export interface OperationLegendProps {
  * 見た目が似ていると「操作説明なのか進捗なのか一瞬分からない」と言われた。
  * 見出しを付け、色も反転させて、ひと目で別物と分かるようにしている。
  */
-export function OperationLegend({ t = translations.ja }: OperationLegendProps): React.ReactElement {
+export function OperationLegend({ t = translations.ja, fruits }: OperationLegendProps): React.ReactElement {
   return (
     <div
       data-testid="operation-legend"
@@ -38,7 +40,7 @@ export function OperationLegend({ t = translations.ja }: OperationLegendProps): 
       >
         {t.gamification.legendTitle}
       </span>
-      {FRUIT_ORDER.map(fruit => (
+      {FRUIT_ORDER.filter(fruit => !fruits || fruits.length === 0 || fruits.includes(fruit)).map(fruit => (
         <span key={fruit} data-testid={`legend-${fruit}`} className="flex items-center gap-1">
           <FruitSprite type={fruit} size={16} decorative />
           <span className="text-xs font-bold text-white">
