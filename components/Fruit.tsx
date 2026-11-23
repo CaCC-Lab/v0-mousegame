@@ -413,6 +413,7 @@ const FruitComponent = React.memo<FruitProps>(function FruitComponent({
     && prevProps.fruit.y === nextProps.fruit.y
     && prevProps.isHardMode === nextProps.isHardMode
     && prevProps.isSelected === nextProps.isSelected
+    && prevProps.doubleClickSpeed === nextProps.doubleClickSpeed
 })
 
 export const Fruit = FruitComponent

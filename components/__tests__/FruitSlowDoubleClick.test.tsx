@@ -19,6 +19,7 @@ import { DOUBLE_CLICK_SPEEDS } from '@/lib/touchGestures'
  * | FS-A-03 | slow、窓 +1ms で2回目 | Boundary – +1 | クリック2回 |
  * | FS-A-04 | タッチ slow、500ms 間隔 | normal | ダブルクリック1回（タッチも同じ設定） |
  * | FS-A-05 | りんご、slow | Equivalence | 待たずにクリック |
+ * | FS-A-06 | 止まったまま normal→slow に変更 | 設定の変更（別タブ） | 新しい窓で判定 |
  */
 describe('Fruit: ゆっくりダブルクリック', () => {
   const base: FruitType = { id: 1, type: 'blueberry', size: 'medium', x: 50, y: 50, dx: 0, dy: 0 }
@@ -127,5 +128,17 @@ describe('Fruit: ゆっくりダブルクリック', () => {
     render(<Fruit fruit={{ ...base, type: 'apple' }} doubleClickSpeed="slow" {...h} />)
     fireEvent.click(screen.getByRole('button'), { detail: 1 })
     expect(h.onClick).toHaveBeenCalledTimes(1)
+  })
+
+  it('FS-A-06: 止まったままの果物も、設定を変えたら新しい待ち時間で判定する', () => {
+    // Given: normal で描画した止まっているブルーベリー
+    const h = handlers()
+    const { rerender } = render(<Fruit fruit={base} doubleClickSpeed="normal" {...h} />)
+    // When: 位置は同じまま slow に変え、800ms 間隔で2回クリック
+    rerender(<Fruit fruit={base} doubleClickSpeed="slow" {...h} />)
+    clickTwice(screen.getByRole('button'), 800)
+    // Then: ダブルクリック1回
+    expect(h.onDoubleClick).toHaveBeenCalledTimes(1)
+    expect(h.onClick).not.toHaveBeenCalled()
   })
 })
