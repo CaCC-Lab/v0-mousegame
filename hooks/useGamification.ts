@@ -11,7 +11,7 @@ import type {
   StarRating,
   StageStarData,
 } from '@/types/gamification'
-import { BADGE_DEFINITIONS } from '@/types/gamification'
+import { BADGE_DEFINITIONS, GAMIFICATION_STORAGE_KEY } from '@/types/gamification'
 import type { InteractionType } from '@/types/game'
 import {
   addSessionToCumulative,
@@ -23,6 +23,7 @@ import {
   getProgressToNextLevel,
   loadGamificationData,
   mergeStageStarsMonotonic,
+  parseGamificationData,
   saveGamificationData,
 } from '@/lib/gamificationManager'
 
@@ -114,6 +115,16 @@ export function useGamification(): UseGamificationReturn {
     } finally {
       setIsHydrated(true)
     }
+  }, [])
+
+  // 別のタブでの保存（星・バッジの追加、記録のリセット）を取りこむ。古いデータで上書きしないため
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== null && e.key !== GAMIFICATION_STORAGE_KEY) return
+      setData(parseGamificationData(e.key === null ? null : e.newValue))
+    }
+    window.addEventListener('storage', onStorage)
+    return () => window.removeEventListener('storage', onStorage)
   }, [])
 
   const calculateStarRatingCb = useCallback(
